@@ -1,0 +1,13 @@
+reads1:
+  class: File
+  format: edam:format_1930  # FASTQ
+  path: ../resources/ERR_1.fastq.gz
+reads2:
+  class: File
+  format: edam:format_1930  # FASTQ
+  path: ../resources/ERR_2.fastq.gz
+scaffolds:
+  class: File
+  format: edam:format_1929 #FASTA
+  path: ../resources/ERR.fasta.gz
+threads: 4

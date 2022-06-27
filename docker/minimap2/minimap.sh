@@ -42,14 +42,27 @@ else
     THREADS_SAM=$((${THREADS}-1))
 fi
 
-name=${FASTQ_R1%_*}
 
-#option for single end?
+# ?? option for single end ??
+
+filename_scaffolds=$(basename -- "$SCAFFOLDS")
+name_scaffolds=${filename_scaffolds%_*}
+echo $name_scaffolds
+cp ${SCAFFOLDS} ${filename_scaffolds}
+
+filename_reads1=$(basename -- "$FASTQ_R1")
+filename_reads2=$(basename -- "$FASTQ_R2")
+cp ${FASTQ_R1} ${filename_reads1}
+cp ${FASTQ_R2} ${filename_reads2}
+
 echo "mapping reads to contigs"
-minimap2 -ax sr -t $THREADS_SAM $SCAFFOLDS $FASTQ_R1 $FASTQ_R2 |
+minimap2 -ax sr -t $THREADS_SAM ${filename_scaffolds} ${filename_reads1} ${filename_reads2} |
 samtools view -q 20 -Sb - | \
-samtools sort -@ $THREADS_SAM -O bam - -o ${name}.bam
-samtools index ${name}.bam
+samtools sort -@ $THREADS_SAM -O bam - -o ${name_scaffolds}.bam
+echo "index reads"
+samtools index ${name_scaffolds}.bam
+
+rm ${filename_scaffolds} ${filename_reads1} ${filename_reads2}
 
 
 

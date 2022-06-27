@@ -1,1 +1,0 @@
-../../../scripts/binlinks.py

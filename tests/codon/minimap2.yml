@@ -1,0 +1,13 @@
+reads1:
+  class: File
+  format: edam:format_1930  # FASTQ
+  path: /hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_1.fastq.gz
+reads2:
+  class: File
+  format: edam:format_1930  # FASTQ
+  path: /hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_2.fastq.gz
+scaffolds:
+  class: File
+  format: edam:format_1929 #FASTA
+  path: /hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/assembly/ERP010700_ERR912198_ERZ857996_clean.fasta.gz
+threads: 4

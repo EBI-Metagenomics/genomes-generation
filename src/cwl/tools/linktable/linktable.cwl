@@ -5,17 +5,17 @@ doc: |
       Select reads aligning to bin with criteria: minimum ANI & contig mapping location
 
 requirements:
-  InitialWorkDirRequirement:
-    listing:
-      - $(inputs.bins)
+  #InitialWorkDirRequirement:
+  #  listing:
+  #   - $(inputs.bins)
   ResourceRequirement:
     coresMin: 4
     ramMin: 5000
 hints:
-  #DockerRequirement:
-  #  dockerPull: todo
+  DockerRequirement:
+    dockerPull: quay.io/microbiome-informatics/eukrecover.python3_scripts:v1
 
-baseCommand: [ 'python', 'binlinks.py' ]
+baseCommand: [ 'python3', 'binlinks.py' ]
 
 arguments:
   - valueFrom: $(inputs.bam.basename).links.csv
@@ -28,26 +28,27 @@ inputs:
     inputBinding:
       position: 1
       prefix: --ANI
-      default: 99
+    default: 99
   within:
     type: int
     label: keep reads mapping within the first or last n basepairs of contig
     inputBinding:
       position: 2
       prefix: --within
-      default: 1500
+    default: 1500
   bam:
     type: string
     label: output filename
     inputBinding:
-      position: 3
+      position: 5
+      prefix: --bam
   bins:
     type: Directory
     label: directory containing bins with ext *.fa
     inputBinding:
       position: 4
+      prefix: --bindir
 
-#edit if outreads1 there should be outreads2
 outputs:
   linktable:
     type: File

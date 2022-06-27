@@ -9,8 +9,8 @@ requirements:
     coresMin: 4
     ramMin: 5000
 hints:
-  #DockerRequirement:
-  #  dockerPull: todo
+  DockerRequirement:
+    dockerPull: "quay.io/microbiome-informatics/genomes-pipeline.drep:v2"
 
 baseCommand: [ 'dRep', 'dereplicate', 'working_directory' ]
 

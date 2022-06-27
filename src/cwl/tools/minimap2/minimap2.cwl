@@ -9,14 +9,10 @@ requirements:
     coresMin: 4
     ramMin: 5000
 hints:
-  #DockerRequirement:
-  #  dockerPull: todo
+  DockerRequirement:
+    dockerPull: quay.io/microbiome-informatics/eukrecover.minimap2.sh:v2
 
 baseCommand: [ 'minimap.sh' ]
-
-arguments:
-- -t
-- $(runtime.cores)
 
 inputs:
   reads1:
@@ -39,8 +35,13 @@ inputs:
     inputBinding:
       position: 3
       prefix: -s
+  threads:
+    type: int?
+    inputBinding:
+      position: 4
+      prefix: -t
+    default: 4
 
-#edit if outreads1 there should be outreads2
 outputs:
   bamfile:
     type: File
