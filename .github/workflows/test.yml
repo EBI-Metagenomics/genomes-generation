@@ -1,0 +1,29 @@
+name: Testing
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install Dependencies
+      run: pip install -r requirements-test.txt
+
+    - name: CWL Validation
+      working-directory: tests
+      run: |
+        bash cwl-validation.sh
+    - name: Unit tests for the tools
+      working-directory: tests
+      run: |
+        bash tools.sh
+    - name: Unit tests for the workflows
+      working-directory: tests
+      run: |
+        bash workflows.sh
