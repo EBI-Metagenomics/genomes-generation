@@ -1,0 +1,12 @@
+#cwltest
+
+- job: gunzip.yml
+  tool: ../../../src/cwl/utils/gunzip.cwl
+  short_name: gunzip.cwl
+  doc: "uncompress file"
+  output:
+    uncompressed_file:
+      basename: ERR_1.fastq
+      class: File
+      checksum: sha1$ec85d3e0da5acb2f27af4286cc281ad91829966a
+      size: 1541

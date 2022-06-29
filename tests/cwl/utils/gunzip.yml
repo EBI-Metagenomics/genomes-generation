@@ -1,0 +1,3 @@
+compressed_file:
+  class: File
+  path: ../resources/ERR_1.fastq.gz

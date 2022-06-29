@@ -13,15 +13,15 @@ requirements:
   ScatterFeatureRequirement: {}
 
 inputs:
-    raw_reads1:
-      type: File
-      format: edam:format_1930  # FASTQ
-    raw_reads2:
-      type: File
-      format: edam:format_1930  # FASTQ
-    spades_scaffolds:
-      type: File
-      format: edam:format_1929 # FASTA
+  raw_reads1:
+    type: File
+    format: edam:format_1930  # FASTQ
+  raw_reads2:
+    type: File
+    format: edam:format_1930  # FASTQ
+  spades_scaffolds:
+    type: File
+    format: edam:format_1929 # FASTA
 
 
 outputs:
