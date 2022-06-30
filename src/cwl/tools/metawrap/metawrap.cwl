@@ -4,9 +4,11 @@ class: CommandLineTool
 
 label: "metaWrap binning tool"
 
+hints:
+  DockerRequirement:
+    dockerPull: "quay.io/microbiome-informatics/metawrap:latest"
+
 requirements:
-#  DockerRequirement:
-#    dockerPull: "quay.io/biocontainers/metawrap:1.1--0"
   InlineJavascriptRequirement: {}
   InitialWorkDirRequirement:
     listing: $(inputs.reads)
@@ -16,8 +18,6 @@ requirements:
 baseCommand: [ 'metawrap', 'binning', '--concoct', '--metabat2']
 
 arguments:
-  - valueFrom: $(runtime.outdir)
-    prefix: -o
   - valueFrom: $(runtime.ram)
     prefix: -m
   - valueFrom: $(runtime.cores)
@@ -26,10 +26,12 @@ arguments:
 inputs:
   contigs:
     type: File
+    format: edam:format_1929 # FASTA
     inputBinding:
       prefix: "-a"
   reads:
     type: File[]
+    format: edam:format_1930 # FASTQ
     inputBinding:
       position: 1
   min_length:
@@ -40,6 +42,12 @@ inputs:
     type: boolean?
     inputBinding:
       prefix: "--run-checkm"
+    default: false
+  outdir:
+    type: string?
+    inputBinding:
+      prefix: "-o"
+    default: "output_metawrap"
 
 
 outputs:
@@ -55,12 +63,14 @@ outputs:
     type: Directory?
     outputBinding:
       glob: $("maxbin2_bins")
-$namespaces:
- iana: https://www.iana.org/assignments/media-types/
- s: http://schema.org/
 
+
+$namespaces:
+ edam: http://edamontology.org/
+ s: http://schema.org/
 $schemas:
- - https://schema.org/docs/schema_org_rdfa.html
+ - http://edamontology.org/EDAM_1.16.owl
+ - https://schema.org/version/latest/schemaorg-current-https.rdf
 
 s:license: "https://www.apache.org/licenses/LICENSE-2.0"
 s:copyrightHolder: "EMBL - European Bioinformatics Institute"

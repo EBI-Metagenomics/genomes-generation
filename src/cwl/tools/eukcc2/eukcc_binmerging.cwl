@@ -5,22 +5,23 @@ doc: |
       Identify medium quality bins and merge based on linked reads and improved completeness/contamination thresholds
 
 requirements:
-  InitialWorkDirRequirement:
-    listing:
-      - $(inputs.bins)
+  #InitialWorkDirRequirement:
+  #  listing:
+  #    - $(inputs.bins)
   ResourceRequirement:
     coresMin: 4
     ramMin: 5000
 hints:
-  #DockerRequirement:
-  #  dockerPull: todo
+  DockerRequirement:
+    dockerPull: "quay.io/microbiome-informatics/eukcc:latest"
 
-baseCommand: [ 'eukcc folder' ]
+baseCommand: [ 'eukcc' ]
 
 arguments:
-  - --debug
-  - --suffix
-  - ".fa"
+  - valueFrom: debug_$(inputs.bins.basename)
+    prefix: "--debug"
+  - valueFrom: ".fa"
+    prefix: "--suffix"
   - valueFrom: $(runtime.cores)
     prefix: "--threads"
   - valueFrom: $(inputs.links.basename)_merged.
@@ -34,28 +35,28 @@ inputs:
     inputBinding:
       position: 1
       prefix: --improve_percent
-      default: 10
+    default: 10
   n_combine:
     type: int?
     label: compare n primary bins with secondary bins
     inputBinding:
       position: 2
       prefix: --n_combine
-      default: 1
+    default: 1
   improve_ratio:
     type: int?
     label: increased n * contamination should be less than gained completeness of merged bin
     inputBinding:
       position: 3
       prefix: --improve_ratio
-      default: 5
+    default: 5
   min_links:
     type: int?
     label: find bins linked by at least n number of paired reads
     inputBinding:
       position: 4
       prefix: --min_links
-      default: 100
+    default: 100
   links:
     type: File
     label: csv of linking reads
@@ -69,11 +70,17 @@ inputs:
     inputBinding:
       position: 6
       prefix: --out
+  db:
+    type: Directory
+    label: directory containing eukcc database
+    inputBinding:
+      position: 7
+      prefix: --db
   bins:
     type: Directory
     label: directory containing bins with ext *.fa
     inputBinding:
-      position: 7
+      position: 8
 
 outputs:
   eukcc_dir:

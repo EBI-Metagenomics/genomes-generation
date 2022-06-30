@@ -41,15 +41,27 @@ steps:
     out:
       - bamfile
 
-
-  linktable:
-    run: ../tools/linktable/linktable.cwl
+  binning:
+    run: subwfs/metawrap_subwf.cwl
     in:
-      reads1: raw_reads1
-      reads2: raw_reads2
-      scaffolds: spades_scaffolds
+      raw_reads1: raw_reads1
+      raw_reads2: raw_reads2
+      spades_scaffolds: spades_scaffolds
     out:
-      - bamfile
+      - bins_concoct
+      - bins_metabat2
+
+  process_concoct:
+    run: subwfs/process_binner_subwf.cwl
+    in:
+
+    out:
+
+  process_metabat2:
+    run: subwfs/process_binner_subwf.cwl
+    in:
+
+    out:
 
 
 $namespaces:

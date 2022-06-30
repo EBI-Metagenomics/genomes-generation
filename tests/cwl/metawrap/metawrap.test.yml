@@ -1,0 +1,8 @@
+contigs:
+  class: File
+  path: ../resources/ERR.fasta
+reads:
+  - class: File
+    path: ../resources/ERR_1.fastq
+  - class: File
+    path: ../resources/ERR_2.fastq
