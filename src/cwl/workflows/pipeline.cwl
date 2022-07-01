@@ -22,13 +22,35 @@ inputs:
   spades_scaffolds:
     type: File
     format: edam:format_1929 # FASTA
+  eukcc_db: Directory
 
 
 outputs:
 
-  checkm_stderr:
-    type: File?
-    outputSource: checkm_subwf/checkm_err
+  bam_out:
+    type: File
+    outputSource: minimap_align/bamfile
+
+  concoct_binning:
+    type: Directory
+    outputSource: binning/bins_concoct
+  metabat2_binning:
+    type: Directory
+    outputSource: binning/bins_metabat2
+
+  concoct_eukcc:
+    type: Directory
+    outputSource: process_concoct/eukcc_out
+  metabat2_eukcc:
+    type: Directory
+    outputSource: process_metabat2/eukcc_out
+
+  concoct_linktable:
+    type: Directory
+    outputSource: process_concoct/linktable_file
+  metabat2_linktable:
+    type: Directory
+    outputSource: process_metabat2/linktable_file
 
 steps:
 
@@ -54,15 +76,22 @@ steps:
   process_concoct:
     run: subwfs/process_binner_subwf.cwl
     in:
-
+      bam:
+      bins:
+      eukcc_db: eukcc_db
     out:
+      - linktable_file
+      - eukcc_out
 
   process_metabat2:
     run: subwfs/process_binner_subwf.cwl
     in:
-
+      bam:
+      bins:
+      eukcc_db: eukcc_db
     out:
-
+      - linktable_file
+      - eukcc_out
 
 $namespaces:
  edam: http://edamontology.org/

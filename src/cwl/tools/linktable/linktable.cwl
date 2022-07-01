@@ -5,9 +5,7 @@ doc: |
       Select reads aligning to bin with criteria: minimum ANI & contig mapping location
 
 requirements:
-  #InitialWorkDirRequirement:
-  #  listing:
-  #   - $(inputs.bins)
+  InlineJavascriptRequirement: {}
   ResourceRequirement:
     coresMin: 4
     ramMin: 5000
@@ -15,7 +13,7 @@ hints:
   DockerRequirement:
     dockerPull: quay.io/microbiome-informatics/eukrecover.python3_scripts:v1
 
-baseCommand: [ 'python3', 'binlinks.py' ]
+baseCommand: [ binlinks.py ]
 
 arguments:
   - valueFrom: $(inputs.bam.basename).links.csv
@@ -37,21 +35,20 @@ inputs:
       prefix: --within
     default: 1500
   bam:
-    type: string
+    type: File
     label: output filename
     inputBinding:
       position: 5
-      prefix: --bam
+    secondaryFiles: .bai
   bins:
     type: Directory
     label: directory containing bins with ext *.fa
     inputBinding:
       position: 4
-      prefix: --bindir
 
 outputs:
   linktable:
-    type: File
+    type: File?
     format: edam:format_3752
     outputBinding:
       glob: "*.links.csv"

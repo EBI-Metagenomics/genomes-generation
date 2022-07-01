@@ -1,8 +1,15 @@
 contigs:
   class: File
   path: ../resources/ERR.fasta
+  format: edam:format_1929 # FASTA
 reads:
   - class: File
     path: ../resources/ERR_1.fastq
+    format: edam:format_1930
   - class: File
     path: ../resources/ERR_2.fastq
+    format: edam:format_1930
+
+$namespaces:
+ edam: http://edamontology.org/
+ s: http://schema.org/

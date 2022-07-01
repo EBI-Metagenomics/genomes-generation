@@ -1,0 +1,8 @@
+#cwltest
+
+- job: linktable.test.yml
+  tool: ../../../src/cwl/tools/linktable/linktable.cwl
+  short_name: metawrap.cwl
+  doc: "linkmerge empty"
+  output:
+    linktable: null

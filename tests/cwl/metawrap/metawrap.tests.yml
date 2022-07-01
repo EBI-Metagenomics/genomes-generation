@@ -1,0 +1,20 @@
+#cwltest
+
+- job: metawrap.test.yml
+  tool: ../../../src/cwl/tools/metawrap/metawrap.cwl
+  short_name: metawrap.cwl
+  doc: "metawrap concoct+metabat2"
+  output:
+    concoct_bins:
+      basename: concoct_bins
+      class: Directory
+      listing:
+        - class: File
+          basename: bin.3.fa
+          checksum: sha1$03c561bb0461cac33a419fbd2d8da35cd7831ab6
+          size: 2302932
+    maxbin2_bins: null
+    metabat2_bins:
+      basename: metabat2_bins
+      class: Directory
+      listing: []

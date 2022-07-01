@@ -197,12 +197,13 @@ def main():
             for bin_2, links in dic.items():
                 out_data.append({"bin_1": bin_1, "bin_2": bin_2, "links": links})
     # results
-    logging.info("Writing output")
-    with open(args.out, "w") as fout:
-        cout = csv.DictWriter(fout, fieldnames=list(out_data[0].keys()))
-        cout.writeheader()
-        for row in out_data:
-            cout.writerow(row)
+    if len(out_data) > 0:
+        logging.info("Writing output")
+        with open(args.out, "w") as fout:
+            cout = csv.DictWriter(fout, fieldnames=list(out_data[0].keys()))
+            cout.writeheader()
+            for row in out_data:
+                cout.writerow(row)
 
 
 if __name__ == "__main__":

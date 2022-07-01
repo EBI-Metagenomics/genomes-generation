@@ -6,8 +6,8 @@ RUN apt-get update && rm -rf /var/lib/apt/lists/*
 
 RUN /usr/local/bin/python -m pip install --upgrade pip && pip install --no-cache-dir -q biopython
 
-#COPY requirements.txt /
-#RUN pip install -r /requirements.txt
+COPY requirements.txt /
+RUN pip install -r /requirements.txt
 
 COPY binlinks.py \
      create_qc_table.py \

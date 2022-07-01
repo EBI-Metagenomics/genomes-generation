@@ -54,15 +54,15 @@ outputs:
   concoct_bins:
     type: Directory?
     outputBinding:
-      glob: $("concoct_bins")
+      glob: $(inputs.outdir)/concoct_bins
   metabat2_bins:
     type: Directory?
     outputBinding:
-      glob: $("metabat2_bins")
+      glob: $(inputs.outdir)/metabat2_bins
   maxbin2_bins:
     type: Directory?
     outputBinding:
-      glob: $("maxbin2_bins")
+      glob: $(inputs.outdir)/maxbin2_bins
 
 
 $namespaces:
