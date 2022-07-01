@@ -12,4 +12,4 @@ spades_scaffolds:
   path: /hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/assembly/ERP010700_ERR912198_ERZ857996_clean.fasta.gz
 eukcc_db:
   class: Directory
-  path:
+  path: /hps/nobackup/rdf/metagenomics/service-team/ref-dbs/eukccdb/eukcc2_db_ver_1.1
