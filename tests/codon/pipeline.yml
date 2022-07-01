@@ -1,3 +1,7 @@
+$namespaces:
+ edam: http://edamontology.org/
+ s: http://schema.org/
+
 raw_reads1:
   class: File
   format: edam:format_1930  # FASTQ

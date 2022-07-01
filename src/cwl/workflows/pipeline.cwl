@@ -2,8 +2,6 @@
 cwlVersion: v1.2
 class: Workflow
 
-doc: |
-
 
 requirements:
   SubworkflowFeatureRequirement: {}
@@ -22,7 +20,7 @@ inputs:
   spades_scaffolds:
     type: File
     format: edam:format_1929 # FASTA
-  eukcc_db: Directory
+  input_eukcc_db: Directory
 
 
 outputs:
@@ -32,10 +30,10 @@ outputs:
     outputSource: minimap_align/bamfile
 
   concoct_binning:
-    type: Directory
+    type: Directory?
     outputSource: binning/bins_concoct
   metabat2_binning:
-    type: Directory
+    type: Directory?
     outputSource: binning/bins_metabat2
 
   concoct_eukcc:
@@ -51,6 +49,7 @@ outputs:
   metabat2_linktable:
     type: Directory
     outputSource: process_metabat2/linktable_file
+
 
 steps:
 
@@ -76,9 +75,9 @@ steps:
   process_concoct:
     run: subwfs/process_binner_subwf.cwl
     in:
-      bam:
-      bins:
-      eukcc_db: eukcc_db
+      input_bam: minimap_align/bamfile
+      input_bins: binning/bins_concoct
+      eukcc_db: input_eukcc_db
     out:
       - linktable_file
       - eukcc_out
@@ -86,8 +85,8 @@ steps:
   process_metabat2:
     run: subwfs/process_binner_subwf.cwl
     in:
-      bam:
-      bins:
+      input_bam: minimap_align/bamfile
+      input_bins: binning/bins_metabat2
       eukcc_db: eukcc_db
     out:
       - linktable_file
