@@ -31,7 +31,7 @@ outputs:
 steps:
 
   linktable:
-    run: ../tools/linktable/linktable.cwl
+    run: ../../tools/linktable/linktable.cwl
     in:
       bam: bam
       bins: bins
@@ -39,7 +39,7 @@ steps:
       - linktable
 
   eukCC:
-    run: ../tools/eukcc2/eukcc_binmerging.cwl
+    run: ../../tools/eukcc2/eukcc_binmerging.cwl
     in:
       links: linktable/linktable
       outdir:
