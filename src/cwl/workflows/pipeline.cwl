@@ -55,7 +55,7 @@ outputs:
 steps:
 
   minimap_align:
-    run: ../tools/minimap/minimap.cwl
+    run: ../tools/minimap2/minimap2.cwl
     in:
       reads1: raw_reads1
       reads2: raw_reads2
