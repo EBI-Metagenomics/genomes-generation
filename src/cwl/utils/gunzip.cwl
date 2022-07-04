@@ -22,6 +22,7 @@ stdout: $(inputs.compressed_file.nameroot)
 outputs:
   uncompressed_file:
     type: stdout
+    format: edam:format_1930 # FASTQ
 
 hints:
   - class: DockerRequirement
