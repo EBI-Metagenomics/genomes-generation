@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: CommandLineTool
 label: Create table of linking reads
@@ -28,7 +29,7 @@ inputs:
       prefix: --ANI
     default: 99
   within:
-    type: int
+    type: int?
     label: keep reads mapping within the first or last n basepairs of contig
     inputBinding:
       position: 2
@@ -47,7 +48,7 @@ inputs:
       position: 4
 
 outputs:
-  linktable:
+  link_table:
     type: File?
     format: edam:format_3752
     outputBinding:

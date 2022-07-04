@@ -44,10 +44,10 @@ outputs:
     outputSource: process_metabat2/eukcc_out
 
   concoct_linktable:
-    type: Directory
+    type: File?
     outputSource: process_concoct/linktable_file
   metabat2_linktable:
-    type: Directory
+    type: File?
     outputSource: process_metabat2/linktable_file
 
 
@@ -78,6 +78,7 @@ steps:
       input_bam: minimap_align/bamfile
       input_bins: binning/bins_concoct
       eukcc_db: input_eukcc_db
+      binner_outdir: {default: "concoct_eukcc"}
     out:
       - linktable_file
       - eukcc_out
@@ -87,7 +88,8 @@ steps:
     in:
       input_bam: minimap_align/bamfile
       input_bins: binning/bins_metabat2
-      eukcc_db: eukcc_db
+      eukcc_db: input_eukcc_db
+      binner_outdir: {default: "metabat2_eukcc"}
     out:
       - linktable_file
       - eukcc_out

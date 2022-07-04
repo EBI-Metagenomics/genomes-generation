@@ -2,40 +2,58 @@
 cwlVersion: v1.2
 class: Workflow
 
+requirements:
+  SubworkflowFeatureRequirement: {}
+  MultipleInputFeatureRequirement: {}
+  InlineJavascriptRequirement: {}
+  StepInputExpressionRequirement: {}
+
+
 inputs:
-  input_bam: File
+  input_bam:
+    type: File
+    secondaryFiles: .bai
   input_bins: Directory
+  binner_outdir: string
   eukcc_db: Directory
 
-
 outputs:
-
   linktable_file:
-    type: File
-    outputSource: linktable_bins/linktable
+    type: File?
+    outputSource: linktable_step/link_table
+
   eukcc_out:
-    type: File
+    type: Directory
     outputSource: eukCC/eukcc_dir
 
 steps:
 
-  linktable_bins:
+  linktable_step:
     run: ../../tools/linktable/linktable.cwl
     in:
       bam: input_bam
       bins: input_bins
     out:
-      - linktable
-
+      - link_table
 
   eukCC:
     run: ../../tools/eukcc2/eukcc_binmerging.cwl
     in:
-      links: linktable_bins/linktable
-      outdir:
-        source: input_bins
-        valueFrom: "$(self.basename)_eukcc"
+      links: linktable_step/link_table
+      outdir: binner_outdir
       db: eukcc_db
       bins: input_bins
     out:
       - eukcc_dir
+
+
+$namespaces:
+ edam: http://edamontology.org/
+ s: http://schema.org/
+$schemas:
+ - http://edamontology.org/EDAM_1.16.owl
+ - https://schema.org/version/latest/schemaorg-current-https.rdf
+
+s:license: "https://www.apache.org/licenses/LICENSE-2.0"
+s:copyrightHolder: "EMBL - European Bioinformatics Institute"
+s:dateCreated: 2022-06-20
