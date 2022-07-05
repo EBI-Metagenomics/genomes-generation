@@ -10,3 +10,27 @@
       class: File
       checksum: sha1$ec85d3e0da5acb2f27af4286cc281ad91829966a
       size: 1541
+
+- job: sed.dot_to_underscore.yml
+  tool: ../../../src/cwl/utils/sed.cwl
+  short_name: sed.cwl
+  doc: "change dots to underscores"
+  output:
+    output_file:
+      basename: renamed.fasta
+      class: File
+      checksum: "sha1$4d6eaee990cc8a31468d771f9308bc139e6986e6"
+      size: 44
+      format: "http://edamontology.org/format_1929"
+
+- job: sed.underscore_to_dot.yml
+  tool: ../../../src/cwl/utils/sed.cwl
+  short_name: sed.cwl
+  doc: "change underscores to dots"
+  output:
+    output_file:
+      basename: renamed1.fasta
+      class: File
+      checksum: "sha1$4d6eaee990cc8a31468d771f9308bc139e6986e6"
+      size: 44
+      format: "http://edamontology.org/format_1929"

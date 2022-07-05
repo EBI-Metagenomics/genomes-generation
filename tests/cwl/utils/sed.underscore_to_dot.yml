@@ -1,0 +1,6 @@
+input_file:
+  class: File
+  path: ../resources/test_sed.fasta
+  format: edam:format_1929
+command: 's/_/\./'
+output_name: renamed1.fasta

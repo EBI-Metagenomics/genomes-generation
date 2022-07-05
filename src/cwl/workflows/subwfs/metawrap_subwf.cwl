@@ -50,10 +50,21 @@ steps:
     out:
       - uncompressed_file
 
+  change_dots_to_underscores:
+    run: ../../utils/sed.cwl
+    in:
+      input_file: spades_scaffolds
+      command: { default: 's/\./_/' }
+      output_name:
+        source: output_name
+        valueFrom: $(self.nameroot)_renamed.fasta
+    out:
+      - output_file
+
   metawrap:
     run: ../../tools/metawrap/metawrap.cwl
     in:
-      contigs: spades_scaffolds
+      contigs: change_dots_to_underscores/output_file
       reads:
         - uncompress_fq1/uncompressed_file
         - uncompress_fq2/uncompressed_file
