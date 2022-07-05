@@ -56,7 +56,7 @@ steps:
       input_file: spades_scaffolds
       command: { default: 's/\./_/' }
       output_name:
-        source: output_name
+        source: spades_scaffolds
         valueFrom: $(self.nameroot)_renamed.fasta
     out:
       - output_file
