@@ -6,13 +6,13 @@
   doc: "minimap2 and samtools"
   output:
     bamfile:
-      basename: ERR.fasta.gz.bam
+      basename: ERR.fasta.bam
       class: File
-      checksum: sha1$d664b517d202ad9a9a39ab45abcfdad6ab1c5f56
-      size: 283
+      checksum: sha1$f059db2c9729e54a5f697c366c07c5cfa07e4ce6
+      size: 92
       secondaryFiles:
-        - basename: ERR.fasta.gz.bam.bai
+        - basename: ERR.fasta.bam.bai
           class: File
-          checksum: sha1$29d8fa47d74d2b4ce71d49e62386e1c08d418398
-          size: 64
+          checksum: sha1$29ce0f48bb61f12ddc6f1bd7ae3e689327356da832
+          size: 16
       format: http://edamontology.org/format_2572
