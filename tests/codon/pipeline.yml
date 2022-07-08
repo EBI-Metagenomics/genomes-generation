@@ -5,18 +5,18 @@ $namespaces:
 raw_reads1:
   class: File
   format: edam:format_1930  # FASTQ
-  path: /hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/reads/qc/public/ERR4179389/ERR4179389_1.fastq.gz
- #/hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_1.fastq.gz
-raw_reads2:
+  path: /hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_1.fastq.gz
+ #/hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/reads/qc/public/ERR4179389/ERR4179389_1.fastq.gz
+ raw_reads2:
   class: File
   format: edam:format_1930  # FASTQ
-  path: /hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/reads/qc/public/ERR4179389/ERR4179389_2.fastq.gz
- #/hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_2.fastq.gz
-spades_scaffolds:
+  path: /hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_2.fastq.gz
+ #/hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/reads/qc/public/ERR4179389/ERR4179389_2.fastq.gz
+ spades_scaffolds:
   class: File
   format: edam:format_1929 #FASTA
-  path: /hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/assembly/spades/public/ERR4179389/spades_output/contigs.fasta
- #/hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/assembly/ERP010700_ERR912198_ERZ857996_clean.fasta.gz
-input_eukcc_db:
+  path: /hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/assembly/ERP010700_ERR912198_ERZ857996_clean.fasta.gz
+ #/hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/assembly/spades/public/ERR4179389/spades_output/contigs.fasta
+ input_eukcc_db:
   class: Directory
   path: /hps/nobackup/rdf/metagenomics/service-team/ref-dbs/eukccdb/eukcc2_db_ver_1.1
