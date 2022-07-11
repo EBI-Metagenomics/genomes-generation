@@ -87,6 +87,10 @@ outputs:
     type: Directory
     outputBinding:
       glob: "$(inputs.outdir)"
+  csv:
+    type: File
+    outputBinding:
+      glob: "$(inputs.outdir)/eukcc.csv"
 
 
 $namespaces:

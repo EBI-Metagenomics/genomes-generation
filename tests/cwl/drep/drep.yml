@@ -1,0 +1,4 @@
+genomes_seqs:
+  class: Directory
+  path: ../resources/
+genomes:

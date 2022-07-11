@@ -94,6 +94,7 @@ steps:
     out:
       - linktable_file
       - eukcc_out
+      - eukcc_csv
 
   process_metabat2:
     run: subwfs/process_binner_subwf.cwl
@@ -105,6 +106,7 @@ steps:
     out:
       - linktable_file
       - eukcc_out
+      - eukcc_csv
 
 $namespaces:
  edam: http://edamontology.org/

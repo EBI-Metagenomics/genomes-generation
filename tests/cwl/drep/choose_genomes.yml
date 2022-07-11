@@ -1,0 +1,15 @@
+concoct_csv:
+  class: File
+  path: ../resources/concoct_eukcc.csv
+
+metabat2_csv:
+  class: File
+  path: ../resources/metabat2_eukcc.csv
+
+concoct_merged:
+  class: Directory
+  path: ../resources/concoct
+
+metabat2_merged:
+  class: Directory
+  path: ../resources/metabat2

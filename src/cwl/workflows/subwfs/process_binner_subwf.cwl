@@ -25,6 +25,9 @@ outputs:
   eukcc_out:
     type: Directory
     outputSource: eukCC/eukcc_dir
+  eukcc_csv:
+    type: Directory
+    outputSource: eukCC/csv
 
 steps:
 
@@ -45,6 +48,7 @@ steps:
       bins: input_bins
     out:
       - eukcc_dir
+      - csv
 
 
 $namespaces:
