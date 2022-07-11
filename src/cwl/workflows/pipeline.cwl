@@ -53,12 +53,19 @@ outputs:
 
 steps:
 
+  unzip_scaffolds:
+    run: ../utils/gunzip.cwl
+    in:
+      compressed_file: spades_scaffolds
+    out:
+      - uncompressed_file
+
   minimap_align:
     run: ../tools/minimap2/minimap2.cwl
     in:
       reads1: raw_reads1
       reads2: raw_reads2
-      scaffolds: spades_scaffolds
+      scaffolds: unzip_scaffolds/uncompressed_file
     out:
       - bamfile
 
@@ -67,7 +74,7 @@ steps:
     in:
       raw_reads1: raw_reads1
       raw_reads2: raw_reads2
-      spades_scaffolds: spades_scaffolds
+      spades_scaffolds: unzip_scaffolds/uncompressed_file
     out:
       - bins_concoct
       - bins_metabat2

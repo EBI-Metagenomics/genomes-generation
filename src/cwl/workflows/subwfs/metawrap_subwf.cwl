@@ -26,7 +26,9 @@ inputs:
 
 
 outputs:
-
+  fasta:
+    type: File
+    outputSource: change_dots_to_underscores/output_file
   bins_concoct:
     type: Directory?
     outputSource: metawrap/concoct_bins
