@@ -2,7 +2,7 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-label: "metaWrap binning tool (binning)"
+label: "metaWrap binning tool (binrefine)"
 
 hints:
   DockerRequirement:
@@ -13,9 +13,9 @@ requirements:
   InitialWorkDirRequirement:
     listing: $(inputs.reads)
   ResourceRequirement:
-    coresMin: 4
+    coresMin: 8
 
-baseCommand: [ 'metawrap', 'binning', '--concoct', '--metabat2']
+baseCommand: ['metawrap', 'bin_refinement', '--quick']
 
 arguments:
   - valueFrom: $(runtime.ram)
@@ -24,43 +24,40 @@ arguments:
     prefix: -t
 
 inputs:
-  contigs:
-    type: File
+  concoct_bin_dir:
+    type: Directory?
     inputBinding:
-      prefix: "-a"
-  reads:
-    type: File[]
+      prefix: "-A"
+  metabat_bin_dir:
+    type: Directory?
     inputBinding:
-      position: 1
-  min_length:
-    type: int?
+      prefix: "-B"
+  maxbin_bin_dir:
+    type: Directory?
     inputBinding:
-      prefix: "-l"
-  run_check_m:
-    type: boolean?
+      prefix: "-C"
+  completion:
+    type: int
+    default: 50
     inputBinding:
-      prefix: "--run-checkm"
-    default: false
-  outdir:
+      prefix: "-c"
+  contamination:
+    type: int
+    default: 10
+    inputBinding:
+      prefix: "-x"
+  out_dir:
     type: string?
+    default: "metaWrap_binrefine"
     inputBinding:
       prefix: "-o"
-    default: "output_metawrap"
 
 
 outputs:
-  concoct_bins:
-    type: Directory?
+  bins:
+    type: Directory
     outputBinding:
-      glob: $(inputs.outdir)/concoct_bins
-  metabat2_bins:
-    type: Directory?
-    outputBinding:
-      glob: $(inputs.outdir)/metabat2_bins
-  maxbin2_bins:
-    type: Directory?
-    outputBinding:
-      glob: $(inputs.outdir)/maxbin2_bins
+      glob: $(inputs.out_dir)
 
 
 $namespaces:

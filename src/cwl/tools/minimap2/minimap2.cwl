@@ -17,21 +17,18 @@ baseCommand: [ 'minimap.sh' ]
 inputs:
   reads1:
     type: File
-    format: edam:format_1930  # FASTQ
     label: cleaned reads forward file
     inputBinding:
       position: 1
       prefix: -f
   reads2:
     type: File?
-    format: edam:format_1930  # FASTQ
     label: cleaned reads reverse file
     inputBinding:
       position: 2
       prefix: -r
   scaffolds:
     type: File
-    format: edam:format_1929 #FASTA
     inputBinding:
       position: 3
       prefix: -s
@@ -45,7 +42,6 @@ inputs:
 outputs:
   bamfile:
     type: File
-    format: edam:format_2572
     secondaryFiles: .bai
     outputBinding:
       glob: "*.bam"

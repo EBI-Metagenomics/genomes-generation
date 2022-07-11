@@ -13,13 +13,10 @@ requirements:
 inputs:
   raw_reads1:
     type: File
-    format: edam:format_1930  # FASTQ
   raw_reads2:
     type: File
-    format: edam:format_1930  # FASTQ
   spades_scaffolds:
     type: File
-    format: edam:format_1929 # FASTA
   input_eukcc_db: Directory
 
 
@@ -35,6 +32,10 @@ outputs:
   metabat2_binning:
     type: Directory?
     outputSource: binning/bins_metabat2
+
+  binrefine_bins_out:
+    type: Directory
+    outputSource: binning/binrefine_bins
 
   concoct_eukcc:
     type: Directory
@@ -52,6 +53,9 @@ outputs:
 
 
 steps:
+
+# TODO: cmseq -> coverage
+# TODO: remove unbinned folders?
 
   unzip_scaffolds:
     run: ../utils/gunzip.cwl
@@ -78,6 +82,7 @@ steps:
     out:
       - bins_concoct
       - bins_metabat2
+      - binrefine_bins
 
   process_concoct:
     run: subwfs/process_binner_subwf.cwl

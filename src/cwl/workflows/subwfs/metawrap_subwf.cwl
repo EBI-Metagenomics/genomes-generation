@@ -16,13 +16,10 @@ requirements:
 inputs:
   raw_reads1:
     type: File
-    format: edam:format_1930  # FASTQ
   raw_reads2:
     type: File
-    format: edam:format_1930  # FASTQ
   spades_scaffolds:
     type: File
-    format: edam:format_1929 # FASTA
 
 
 outputs:
@@ -35,6 +32,10 @@ outputs:
   bins_metabat2:
     type: Directory?
     outputSource: metawrap/metabat2_bins
+
+  binrefine_bins:
+    type: Directory
+    outputSource: binrefine/bins
 
 steps:
 
@@ -74,6 +75,16 @@ steps:
       - concoct_bins
       - metabat2_bins
 
+  binrefine:
+    run: ../../tools/metawrap/binrefine.cwl
+    in:
+      concoct_bin_dir: metawrap/concoct_bins
+      metabat_bin_dir: metawrap/metabat2_bins
+    out:
+      - bins
+
+
+# remove unbinned ??
 
 $namespaces:
  edam: http://edamontology.org/

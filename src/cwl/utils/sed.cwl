@@ -15,7 +15,6 @@ inputs:
     type: File
     inputBinding:
       position: 2
-    format: edam:format_1929
   command:
     type: string
     inputBinding:
@@ -29,7 +28,6 @@ stdout: $(inputs.output_name)
 outputs:
   output_file:
     type: stdout
-    format: edam:format_1929
 
 hints:
   - class: DockerRequirement
