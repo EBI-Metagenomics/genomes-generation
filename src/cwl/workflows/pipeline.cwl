@@ -11,102 +11,34 @@ requirements:
   ScatterFeatureRequirement: {}
 
 inputs:
-  raw_reads1:
-    type: File
-  raw_reads2:
-    type: File
-  spades_scaffolds:
-    type: File
+  raw_reads_f:
+    type: File[]
+  raw_reads_b:
+    type: File[]
+  scaffolds:
+    type: File[]
   input_eukcc_db: Directory
 
 
-outputs:
-
-  bam_out:
-    type: File
-    outputSource: minimap_align/bamfile
-
-  concoct_binning:
-    type: Directory?
-    outputSource: binning/bins_concoct
-  metabat2_binning:
-    type: Directory?
-    outputSource: binning/bins_metabat2
-
-  binrefine_bins_out:
-    type: Directory
-    outputSource: binning/binrefine_bins
-
-  concoct_eukcc:
-    type: Directory
-    outputSource: process_concoct/eukcc_out
-  metabat2_eukcc:
-    type: Directory
-    outputSource: process_metabat2/eukcc_out
-
-  concoct_linktable:
-    type: File?
-    outputSource: process_concoct/linktable_file
-  metabat2_linktable:
-    type: File?
-    outputSource: process_metabat2/linktable_file
-
+outputs: []
 
 steps:
 
 # TODO: cmseq -> coverage
-# TODO: remove unbinned folders?
+# TODO: remove unbinned files?
 
-  unzip_scaffolds:
-    run: ../utils/gunzip.cwl
+  process_sample:
+    scatter:
+    run: per_sample_pipeline.cwl
     in:
-      compressed_file: spades_scaffolds
+      raw_reads1: raw_reads_f
+      raw_reads2: raw_reads_b
+      spades_scaffolds: scaffolds
+      input_eukcc_db: input_eukcc_db
     out:
-      - uncompressed_file
+      -
 
-  minimap_align:
-    run: ../tools/minimap2/minimap2.cwl
-    in:
-      reads1: raw_reads1
-      reads2: raw_reads2
-      scaffolds: unzip_scaffolds/uncompressed_file
-    out:
-      - bamfile
 
-  binning:
-    run: subwfs/metawrap_subwf.cwl
-    in:
-      raw_reads1: raw_reads1
-      raw_reads2: raw_reads2
-      spades_scaffolds: unzip_scaffolds/uncompressed_file
-    out:
-      - bins_concoct
-      - bins_metabat2
-      - binrefine_bins
-
-  process_concoct:
-    run: subwfs/process_binner_subwf.cwl
-    in:
-      input_bam: minimap_align/bamfile
-      input_bins: binning/bins_concoct
-      eukcc_db: input_eukcc_db
-      binner_outdir: {default: "concoct_eukcc"}
-    out:
-      - linktable_file
-      - eukcc_out
-      - eukcc_csv
-
-  process_metabat2:
-    run: subwfs/process_binner_subwf.cwl
-    in:
-      input_bam: minimap_align/bamfile
-      input_bins: binning/bins_metabat2
-      eukcc_db: input_eukcc_db
-      binner_outdir: {default: "metabat2_eukcc"}
-    out:
-      - linktable_file
-      - eukcc_out
-      - eukcc_csv
 
 $namespaces:
  edam: http://edamontology.org/

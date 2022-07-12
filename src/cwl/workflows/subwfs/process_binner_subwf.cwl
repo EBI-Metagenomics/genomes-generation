@@ -26,7 +26,7 @@ outputs:
     type: Directory
     outputSource: eukCC/eukcc_dir
   eukcc_csv:
-    type: Directory
+    type: File
     outputSource: eukCC/csv
 
 steps:
