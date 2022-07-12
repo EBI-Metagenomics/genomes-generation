@@ -10,8 +10,6 @@ hints:
 
 requirements:
   InlineJavascriptRequirement: {}
-  InitialWorkDirRequirement:
-    listing: $(inputs.reads)
   ResourceRequirement:
     coresMin: 8
 

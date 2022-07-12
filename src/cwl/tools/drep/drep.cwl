@@ -85,11 +85,11 @@ inputs:
     default: "drep_out"
 
 
-outputs: []
-  #drep_genomes:
-  #  type: Directory
-  #  outputBinding:
-   #   glob: "dereplicated_genomes"
+outputs:
+  drep_genomes:
+    type: Directory
+    outputBinding:
+      glob: $(inputs.drep_outfolder)/dereplicated_genomes
 
 
 $namespaces:

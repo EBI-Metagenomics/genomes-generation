@@ -15,7 +15,10 @@ inputs:
   concoct_bins: Directory
   metabat2_bins: Directory
 
-outputs: []
+outputs:
+  dereplicated_genomes:
+    type: Directory
+    outputSource: dRep/drep_genomes
 
 steps:
 
@@ -35,8 +38,8 @@ steps:
     in:
       genomes: choose_genomes/input_genomes
       quality: choose_genomes/quality
-    out: []
-#      - drep_genomes
+    out:
+      - drep_genomes
 
 
 $namespaces:
