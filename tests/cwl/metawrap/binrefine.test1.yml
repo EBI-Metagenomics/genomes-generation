@@ -1,0 +1,9 @@
+concoct_bin_dir:
+  class: Directory
+  path: /hps/nobackup/rdf/metagenomics/service-team/users/kates/outdir/test-euk/concoct_bins
+metabat_bin_dir:
+  class: Directory
+  path: /hps/nobackup/rdf/metagenomics/service-team/users/kates/outdir/test-euk/metabat2_bins
+refdata:
+  class: Directory
+  path: /hps/nobackup/rdf/metagenomics/service-team/ref-dbs/checkm

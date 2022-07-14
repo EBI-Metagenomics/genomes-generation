@@ -14,12 +14,10 @@ requirements:
   ScatterFeatureRequirement: {}
 
 inputs:
-  raw_reads1:
-    type: File
-  raw_reads2:
-    type: File
-  spades_scaffolds:
-    type: File
+  raw_reads1: File
+  raw_reads2: File
+  spades_scaffolds: File
+  checkM_db: Directory
 
 
 outputs:
@@ -80,6 +78,7 @@ steps:
     in:
       concoct_bin_dir: metawrap/concoct_bins
       metabat_bin_dir: metawrap/metabat2_bins
+      refdata: checkM_db
     out:
       - bins
 

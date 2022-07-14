@@ -18,6 +18,7 @@ inputs:
   scaffolds:
     type: File[]
   input_eukcc_db: Directory
+  checkM_db: Directory
 
 
 outputs: []
@@ -35,6 +36,7 @@ steps:
       raw_reads2: raw_reads_b
       spades_scaffolds: scaffolds
       input_eukcc_db: input_eukcc_db
+      checkM_db: checkM_db
     out:
       -
 

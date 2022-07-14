@@ -12,6 +12,10 @@ requirements:
   InlineJavascriptRequirement: {}
   ResourceRequirement:
     coresMin: 8
+  InitialWorkDirRequirement:
+    listing:
+      - entry: $(inputs.refdata)
+        entryname: $("/dbs/checkm_db")
 
 baseCommand: ['metawrap', 'bin_refinement', '--quick']
 
@@ -49,6 +53,8 @@ inputs:
     default: "metaWrap_binrefine"
     inputBinding:
       prefix: "-o"
+  refdata:
+    type: Directory
 
 
 outputs:

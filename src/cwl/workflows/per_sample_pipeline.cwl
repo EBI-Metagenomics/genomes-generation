@@ -18,6 +18,7 @@ inputs:
   spades_scaffolds:
     type: File
   input_eukcc_db: Directory
+  checkM_db: Directory
 
 
 outputs:
@@ -79,6 +80,7 @@ steps:
       raw_reads1: raw_reads1
       raw_reads2: raw_reads2
       spades_scaffolds: unzip_scaffolds/uncompressed_file
+      checkM_db: checkM_db
     out:
       - bins_concoct
       - bins_metabat2
