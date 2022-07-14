@@ -4,10 +4,6 @@ class: CommandLineTool
 
 label: "metaWrap binning tool (binrefine)"
 
-hints:
-  DockerRequirement:
-    dockerPull: "quay.io/microbiome-informatics/metawrap:latest"
-
 requirements:
   InlineJavascriptRequirement: {}
   ResourceRequirement:
@@ -16,6 +12,8 @@ requirements:
     listing:
       - entry: $(inputs.refdata)
         entryname: $("/dbs/checkm_db")
+  DockerRequirement:
+    dockerPull: "quay.io/microbiome-informatics/metawrap:latest"
 
 baseCommand: ['metawrap', 'bin_refinement', '--quick']
 
