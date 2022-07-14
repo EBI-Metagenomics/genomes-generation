@@ -1,5 +1,5 @@
 #!/usr/bin/env
-cwlVersion: v1.0
+cwlVersion: v1.2
 class: CommandLineTool
 
 requirements:
