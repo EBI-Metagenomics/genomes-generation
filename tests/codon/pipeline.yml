@@ -17,3 +17,6 @@ spades_scaffolds:
 input_eukcc_db:
   class: Directory
   path: /hps/nobackup/rdf/metagenomics/service-team/ref-dbs/eukccdb/eukcc2_db_ver_1.1
+checkM_db:
+  class: Directory
+  path: /hps/nobackup/rdf/metagenomics/service-team/ref-dbs/checkm
