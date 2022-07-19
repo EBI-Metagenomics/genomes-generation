@@ -47,20 +47,11 @@ fi
 
 filename_scaffolds=$(basename -- "$SCAFFOLDS")
 name_scaffolds=${filename_scaffolds%_*}
-#echo $name_scaffolds
-#cp ${SCAFFOLDS} ${filename_scaffolds}
 
-#filename_reads1=$(basename -- "$FASTQ_R1")
-#filename_reads2=$(basename -- "$FASTQ_R2")
-#cp ${FASTQ_R1} ${filename_reads1}
-#cp ${FASTQ_R2} ${filename_reads2}
-
-echo "mapping reads to contigs"
-#minimap2 -ax sr -t $THREADS_SAM ${SCAFFOLDS} ${FASTQ_R1} ${FASTQ_R2} > ${name_scaffolds}_minimap2.fasta
-#samtools view -q 20 -Sb - ${name_scaffolds}_minimap2.fasta | samtools sort -@ $THREADS_SAM -O bam - -o ${name_scaffolds}.bam
+echo "mapping reads to contigs ${name_scaffolds}"
 minimap2 -ax sr -t $THREADS_SAM $SCAFFOLDS $FASTQ_R1 $FASTQ_R2 |
 samtools view -q 20 -Sb - | \
-samtools sort -@ $THREADS_SAM -O bam - -o ${name}.bam
+samtools sort -@ $THREADS_SAM -O bam - -o ${name_scaffolds}.bam
 echo "index reads"
 samtools index ${name_scaffolds}.bam
 

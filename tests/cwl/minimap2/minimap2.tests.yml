@@ -8,11 +8,10 @@
     bamfile:
       basename: ERR.fasta.bam
       class: File
-      checksum: sha1$f059db2c9729e54a5f697c366c07c5cfa07e4ce6
-      size: 92
+      checksum: sha1$4d00e9d6c864f68799327058a379a163ec9383e6
+      size: 373
       secondaryFiles:
         - basename: ERR.fasta.bam.bai
           class: File
-          checksum: sha1$29ce0f48bb61f12ddc6f1bd7ae3e689327356da832
-          size: 16
-      format: http://edamontology.org/format_2572
+          checksum: sha1$29d8fa47d74d2b4ce71d49e62386e1c08d418398
+          size: 64
