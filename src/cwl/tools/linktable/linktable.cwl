@@ -14,10 +14,10 @@ hints:
   DockerRequirement:
     dockerPull: quay.io/microbiome-informatics/eukrecover.python3_scripts:v1
 
-baseCommand: [ binlinks.py ]
+baseCommand: [ "binlinks.py", "-d"]
 
 arguments:
-  - valueFrom: $(inputs.bam.basename).links.csv
+  - valueFrom: $(inputs.bam.nameroot).links.csv
     prefix: "--out"
 
 inputs:

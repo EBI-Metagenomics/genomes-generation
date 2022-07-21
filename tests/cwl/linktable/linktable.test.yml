@@ -1,6 +1,6 @@
 bam:
   class: File
-  path: ../resources/ERR.fasta.gz.bam
+  path: ../resources/ERR.fasta.bam
 bins:
   class: Directory
   path: ../resources/concoct_bins
