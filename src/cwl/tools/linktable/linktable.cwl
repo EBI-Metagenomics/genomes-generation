@@ -49,10 +49,9 @@ inputs:
 
 outputs:
   link_table:
-    type: File?
-    format: edam:format_3752
+    type: File
     outputBinding:
-      glob: "*.links.csv"
+      glob: $(inputs.bam.nameroot).links.csv
 
 
 $namespaces:

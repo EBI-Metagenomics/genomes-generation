@@ -60,7 +60,6 @@ inputs:
   links:
     type: File
     label: csv of linking reads
-    format: edam:format_3752
     inputBinding:
       position: 5
       prefix: --links
