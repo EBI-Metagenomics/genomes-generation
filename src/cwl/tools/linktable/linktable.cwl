@@ -49,7 +49,7 @@ inputs:
 
 outputs:
   link_table:
-    type: File
+    type: File?
     outputBinding:
       glob: $(inputs.bam.nameroot).links.csv
 

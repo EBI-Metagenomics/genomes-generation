@@ -58,7 +58,7 @@ inputs:
       prefix: --min_links
     default: 100
   links:
-    type: File
+    type: File?
     label: csv of linking reads
     inputBinding:
       position: 5

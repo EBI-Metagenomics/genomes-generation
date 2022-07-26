@@ -1,0 +1,6 @@
+bam:
+  class: File
+  path: /hps/nobackup/rdf/metagenomics/service-team/users/kates/outdir/test-euk/contigs.fasta.bam
+bins:
+  class: Directory
+  path: /hps/nobackup/rdf/metagenomics/service-team/users/kates/outdir/test-euk/metabat2_bins
