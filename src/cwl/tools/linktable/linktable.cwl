@@ -14,7 +14,7 @@ hints:
   DockerRequirement:
     dockerPull: quay.io/microbiome-informatics/eukrecover.python3_scripts:v1
 
-baseCommand: [ "binlinks.py", "-d"]
+baseCommand: [ "binlinks.py"]
 
 arguments:
   - valueFrom: $(inputs.bam.nameroot).links.csv
