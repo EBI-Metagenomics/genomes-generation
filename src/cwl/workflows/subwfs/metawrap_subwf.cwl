@@ -21,9 +21,7 @@ inputs:
 
 
 outputs:
-  fasta:
-    type: File
-    outputSource: change_dots_to_underscores/output_file
+
   bins_concoct:
     type: Directory?
     outputSource: metawrap/concoct_bins
@@ -51,21 +49,10 @@ steps:
     out:
       - uncompressed_file
 
-  change_dots_to_underscores:
-    run: ../../utils/sed.cwl
-    in:
-      input_file: spades_scaffolds
-      command: { default: 's/\./_/' }
-      output_name:
-        source: spades_scaffolds
-        valueFrom: $(self.nameroot)_renamed.fasta
-    out:
-      - output_file
-
   metawrap:
     run: ../../tools/metawrap/metawrap.cwl
     in:
-      contigs: change_dots_to_underscores/output_file
+      contigs: spades_scaffolds
       reads:
         - uncompress_fq1/uncompressed_file
         - uncompress_fq2/uncompressed_file

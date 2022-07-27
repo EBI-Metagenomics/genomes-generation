@@ -19,7 +19,7 @@ inputs:
 
 outputs:
   linktable_file:
-    type: File?
+    type: File
     outputSource: linktable_step/link_table
 
   eukcc_out:

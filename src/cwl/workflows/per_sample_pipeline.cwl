@@ -65,12 +65,23 @@ steps:
     out:
       - uncompressed_file
 
+  change_dots_to_underscores:
+    run: ../utils/sed.cwl
+    in:
+      input_file: unzip_scaffolds/uncompressed_file
+      command: { default: 's/\./_/' }
+      output_name:
+        source: spades_scaffolds
+        valueFrom: $(self.nameroot)_renamed.fasta
+    out:
+      - output_file
+
   minimap_align:
     run: ../tools/minimap2/minimap2.cwl
     in:
       reads1: raw_reads1
       reads2: raw_reads2
-      scaffolds: unzip_scaffolds/uncompressed_file
+      scaffolds: change_dots_to_underscores/output_file
     out:
       - bamfile
 
@@ -79,7 +90,7 @@ steps:
     in:
       raw_reads1: raw_reads1
       raw_reads2: raw_reads2
-      spades_scaffolds: unzip_scaffolds/uncompressed_file
+      spades_scaffolds: change_dots_to_underscores/output_file
       checkM_db: checkM_db
     out:
       - bins_concoct

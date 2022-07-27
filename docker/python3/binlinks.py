@@ -44,7 +44,7 @@ def contig_map(bindir, suffix=".fa"):
         with open(path, "r") as handle:
             for record in SeqIO.parse(handle, "fasta"):
                 m[record.name] = len(record.seq)
-    logging.debug("Step <contig_map> records: " + str(len(m)))
+    logging.info("Step <contig_map> records: " + str(len(m)))
     return m
 
 
@@ -60,7 +60,7 @@ def bin_map(bindir, suffix=".fa"):
             for record in SeqIO.parse(handle, "fasta"):
                 contigs[record.name] = binname
                 contigs_per_bin[binname] += 1
-    logging.debug("Step <bin_map> contigs: " + str(len(contigs)) + ', contigs_per_bin: ' + str(len(contigs_per_bin)))
+    logging.info("Step <bin_map> contigs: " + str(len(contigs)) + ', contigs_per_bin: ' + str(len(contigs_per_bin)))
     return contigs, contigs_per_bin
 
 
@@ -176,7 +176,7 @@ def main():
                 link_table[mate.reference_name][read.reference_name] += 1
         else:
             logging.debug("No keep_read ")
-    logging.debug("Length of link_table " + str(len(link_table)))
+    logging.info("Length of link_table " + str(len(link_table)))
 
     # generate bin table
     for contig_1, dic in link_table.items():
