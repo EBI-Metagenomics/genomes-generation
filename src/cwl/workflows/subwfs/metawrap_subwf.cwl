@@ -24,10 +24,10 @@ outputs:
 
   bins_concoct:
     type: Directory?
-    outputSource: metawrap/concoct_bins
+    outputSource: create_dir_concoct/out
   bins_metabat2:
     type: Directory?
-    outputSource: metawrap/metabat2_bins
+    outputSource: create_dir_metabat2/out
 
   binrefine_bins:
     type: Directory
@@ -49,6 +49,7 @@ steps:
     out:
       - uncompressed_file
 
+# return without unbinned.fa
   metawrap:
     run: ../../tools/metawrap/metawrap.cwl
     in:
@@ -60,17 +61,29 @@ steps:
       - concoct_bins
       - metabat2_bins
 
+  create_dir_concoct:
+    run: ../../utils/return_directory.cwl
+    in:
+      list: metawrap/concoct_bins
+      dir_name: {default: "concoct_bins"}
+    out: [ out ]
+
+  create_dir_metabat2:
+    run: ../../utils/return_directory.cwl
+    in:
+      list: metawrap/metabat2_bins
+      dir_name: {default: "metabat2_bins"}
+    out: [ out ]
+
   binrefine:
     run: ../../tools/metawrap/binrefine.cwl
     in:
-      concoct_bin_dir: metawrap/concoct_bins
-      metabat_bin_dir: metawrap/metabat2_bins
+      concoct_bin_dir: create_dir_concoct/out
+      metabat_bin_dir: create_dir_metabat2/out
       refdata: checkM_db
     out:
       - bins
 
-
-# remove unbinned ??
 
 $namespaces:
  edam: http://edamontology.org/

@@ -18,7 +18,7 @@ hints:
 baseCommand: [ 'eukcc' ]
 
 arguments:
-  - valueFrom: debug_$(inputs.bins.basename)
+  - valueFrom: "folder"
     prefix: "--debug"
   - valueFrom: ".fa"
     prefix: "--suffix"

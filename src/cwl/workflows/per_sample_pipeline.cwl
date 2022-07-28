@@ -23,6 +23,9 @@ inputs:
 
 outputs:
 
+  fasta_out:
+    type: File
+    outputSource: change_dots_to_underscores/output_file
   bam_out:
     type: File
     outputSource: minimap_align/bamfile

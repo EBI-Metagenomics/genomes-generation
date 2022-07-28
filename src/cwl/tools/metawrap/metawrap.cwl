@@ -50,17 +50,17 @@ inputs:
 
 outputs:
   concoct_bins:
-    type: Directory?
+    type: File[]
     outputBinding:
-      glob: $(inputs.outdir)/concoct_bins
+      glob: $(inputs.outdir)/concoct_bins/bin*.fa
   metabat2_bins:
-    type: Directory?
+    type: File[]
     outputBinding:
-      glob: $(inputs.outdir)/metabat2_bins
+      glob: $(inputs.outdir)/metabat2_bins/bin*.fa
   maxbin2_bins:
-    type: Directory?
+    type: File[]?
     outputBinding:
-      glob: $(inputs.outdir)/maxbin2_bins
+      glob: $(inputs.outdir)/maxbin2_bins/bin*.fa
 
 
 $namespaces:
