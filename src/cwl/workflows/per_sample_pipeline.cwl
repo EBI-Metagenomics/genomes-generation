@@ -55,11 +55,16 @@ outputs:
     type: File?
     outputSource: process_metabat2/linktable_file
 
+  dereplicated:
+    type: Directory
+    outputSource: drep/dereplicated_genomes
+  quality_drep:
+    type: File
+    outputSource: drep/quality_file
 
 steps:
 
 # TODO: cmseq -> coverage
-# TODO: remove unbinned files?
 
   unzip_scaffolds:
     run: ../utils/gunzip.cwl
@@ -123,6 +128,17 @@ steps:
       - linktable_file
       - eukcc_out
       - eukcc_csv
+
+  drep:
+    run: subwfs/drep_subwf.cwl
+    in:
+      concoct_csv: process_concoct/eukcc_csv
+      metabat2_csv: process_metabat2/eukcc_csv
+      concoct_bins: binning/bins_concoct
+      metabat2_bins: binning/bins_metabat2
+    out:
+      - dereplicated_genomes
+      - quality_file
 
 $namespaces:
  edam: http://edamontology.org/

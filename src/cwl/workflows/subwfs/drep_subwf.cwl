@@ -19,6 +19,9 @@ outputs:
   dereplicated_genomes:
     type: Directory
     outputSource: dRep/drep_genomes
+  quality_file:
+    type: File
+    outputSource: choose_genomes/quality
 
 steps:
 
