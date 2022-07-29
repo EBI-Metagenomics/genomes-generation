@@ -52,11 +52,11 @@ outputs:
   concoct_bins:
     type: File[]
     outputBinding:
-      glob: $(inputs.outdir)/concoct_bins/bin*.fa
+      glob: $(inputs.outdir)/concoct_bins/bin.[0-9]*.fa
   metabat2_bins:
     type: File[]
     outputBinding:
-      glob: $(inputs.outdir)/metabat2_bins/bin*.fa
+      glob: $(inputs.outdir)/metabat2_bins/bin.[0-9]*.fa
   maxbin2_bins:
     type: File[]?
     outputBinding:

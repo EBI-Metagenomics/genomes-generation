@@ -4,23 +4,23 @@ $namespaces:
 
 raw_reads1:
   class: File
-  path: /hps/nobackup/rdf/metagenomics/service-team/projects/holofood/salmon_eukaryotes/results/reads/qc/ERP125469/ERR4918394/ERR4918394_1.fastq.gz
+  path: /hps/nobackup/rdf/metagenomics/service-team/projects/holofood/salmon_eukaryotes/results/reads/qc/ERP125469/ERR4918736/ERR4918736_1.fastq.gz
  #/hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_1.fastq.gz
  #/hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/reads/qc/public/ERR4179389/ERR4179389_1.fastq.gz
 raw_reads2:
   class: File
-  path: /hps/nobackup/rdf/metagenomics/service-team/projects/holofood/salmon_eukaryotes/results/reads/qc/ERP125469/ERR4918394/ERR4918394_2.fastq.gz
+  path: /hps/nobackup/rdf/metagenomics/service-team/projects/holofood/salmon_eukaryotes/results/reads/qc/ERP125469/ERR4918736/ERR4918736_2.fastq.gz
  #/hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/reads/fastp/ERP010700_ERR912198_ERZ857996.clean_2.fastq.gz
  #/hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/reads/qc/public/ERR4179389/ERR4179389_2.fastq.gz
 spades_scaffolds:
   class: File
-  path: /hps/nobackup/rdf/metagenomics/service-team/users/kates/outdir/contigs.fasta.gz
+  path: /hps/nobackup/rdf/metagenomics/service-team/projects/holofood/salmon_eukaryotes/results/assembly/spades/ERP125469/ERR4918736/spades_output/ERR4918736.fasta.gz
  #/hps/research/finn/saary/projects/2020_euk_survey/analysis/OUTPUT/ERP010700_ERR912198_ERZ857996/assembly/ERP010700_ERR912198_ERZ857996_clean.fasta.gz
  #/hps/nobackup/rdf/metagenomics/research-team/saary/pipeline/nfs_location/lichen/results/assembly/spades/public/ERR4179389/spades_output/contigs.fasta
 
 input_eukcc_db:
   class: Directory
-  path: /hps/nobackup/rdf/metagenomics/service-team/ref-dbs/eukccdb/eukcc2_db_ver_1.1
+  path: /hps/research/finn/saary/database/eukcc2/eukcc2_db_ver_1.2
 checkM_db:
   class: Directory
   path: /hps/nobackup/rdf/metagenomics/service-team/ref-dbs/checkm
