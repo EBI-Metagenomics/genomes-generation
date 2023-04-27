@@ -12,9 +12,8 @@ checkpoint binrefine:
     resources:
         mem_mb = lambda wildcards, attempt: ((attempt-1) * 10000) + 40000,
         mem_GB = lambda wildcards, attempt: ((attempt-1) * 10) + 40
-    singularity:
+    #singularity:
         #"docker://nanozoo/metawrap"
-        "/hps/research/finn/saary/database/singularity/metawrap_v1.3--a7eb9af.sif"
     shell:
         """
         #rm -r {params.out}

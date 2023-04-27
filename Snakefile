@@ -5,8 +5,6 @@ import shutil
 configfile: "config/config.yaml"
 config['data'] = os.path.abspath(config['data'])
 
-include: "rules/qc.smk"
-include: "rules/spades.smk"
 include: "rules/binning.smk"
 include: "rules/eukcc.smk"
 include: "rules/busco.smk"

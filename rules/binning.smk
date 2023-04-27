@@ -8,7 +8,7 @@ rule binning:
         fq2 = temp("{data}/reads/qc/{project}/{sample}/{sample}_2.fastq"),
         concoct = directory("{data}/binning/{project}/{sample}/concoct_bins"),
         metabat2 = directory("{data}/binning/{project}/{sample}/metabat2_bins"),
-        #maxbin2 = directory("{data}/binning/{project}/{sample}/maxbin2_bins"),
+        maxbin2 = directory("{data}/binning/{project}/{sample}/maxbin2_bins"),
         unbinned = directory("{data}/binning/{project}/{sample}/unbinned"),
     params:
         out = "{data}/binning/{project}/{sample}/"
@@ -16,9 +16,8 @@ rule binning:
     resources:
         mem_mb = lambda wildcards, attempt: ((attempt-1) * 20000) + 20000,
         mem_GB = lambda wildcards, attempt: ((attempt-1) * 20) + 20
-    singularity:
+    #singularity:
         #"docker://nanozoo/metawrap"
-        "/hps/research/finn/saary/database/singularity/hexmek-container-metawrap.img"
     shell:
         """
         gunzip -c {input.fq1} > {output.fq1}
@@ -30,16 +29,15 @@ rule binning:
             -l {config[mincontiglength]} \
             -m {resources.mem_GB} \
             -a {input.scaffolds} \
-            --concoct --metabat2  {output.fq1} {output.fq2}
-            #--concoct --metabat2 --maxbin2 {output.fq1} {output.fq2}
+            --concoct --metabat2 --maxbin2 {output.fq1} {output.fq2}
 
         # rename bins with name
         cd {params.out}concoct_bins
         for f in *.fa ; do mv -- "$f" "{wildcards.project}_{wildcards.sample}_concoct_$f" || true ; done
         cd {params.out}metabat2_bins
         for f in *.fa ; do mv -- "$f" "{wildcards.project}_{wildcards.sample}_metabat2_$f" || true ; done
-        #cd {params.out}maxbin2_bins
-        #for f in *.fa ; do mv -- "$f" "{wildcards.project}_{wildcards.sample}_maxbin2_$f" || true ; done
+        cd {params.out}maxbin2_bins
+        for f in *.fa ; do mv -- "$f" "{wildcards.project}_{wildcards.sample}_maxbin2_$f" || true ; done
 
         # remove unbinned bins
         cd {params.out}
