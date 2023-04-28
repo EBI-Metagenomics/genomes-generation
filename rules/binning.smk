@@ -1,8 +1,8 @@
 rule binning:
     input:
-        fq1 = "{data}/reads/qc/{project}/{sample}/{sample}_1.fastq.gz",
-        fq2 = "{data}/reads/qc/{project}/{sample}/{sample}_2.fastq.gz",
-        scaffolds = "{data}/assembly/spades/{project}/{sample}/spades_output/scaffolds.fasta"
+        fq1 = "{data}/reads/{project}/{sample}_1.fastq.gz",
+        fq2 = "{data}/reads/{project}/{sample}_2.fastq.gz",
+        scaffolds = "{data}/assembly/{project}/{assembly}"
     output:
         fq1 = temp("{data}/reads/qc/{project}/{sample}/{sample}_1.fastq"),
         fq2 = temp("{data}/reads/qc/{project}/{sample}/{sample}_2.fastq"),

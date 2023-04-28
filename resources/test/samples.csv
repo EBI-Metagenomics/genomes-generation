@@ -1,2 +1,2 @@
-project,run,fastq_1,fastq_2
-test,minicommunity,community_1.fastq.gz,community_2.fastq.gz
+project,run,fastq_1,fastq_2,assembly
+test,minicommunity,community_1.fastq.gz,community_2.fastq.gz,contigs.fasta

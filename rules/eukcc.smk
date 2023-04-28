@@ -1,8 +1,8 @@
 rule align:
     input:
-        scaffolds = "{data}/assembly/spades/{project}/{sample}/spades_output/scaffolds.fasta",
-        fq1 = "{data}/reads/qc/{project}/{sample}/{sample}_1.fastq.gz",
-        fq2 = "{data}/reads/qc/{project}/{sample}/{sample}_2.fastq.gz",
+        scaffolds = "{data}/assembly/{project}/{assembly}",
+        fq1 = "{data}/reads/{project}/{sample}_1.fastq.gz",
+        fq2 = "{data}/reads/{project}/{sample}_2.fastq.gz",
     output:
         bam = "{data}/bam/{project}/{sample}/reads.bam",
         bai = "{data}/bam/{project}/{sample}/reads.bam.bai",

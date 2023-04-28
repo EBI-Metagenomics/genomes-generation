@@ -1,7 +1,6 @@
 import csv
 import shutil
 
-
 configfile: "config/config.yaml"
 config['data'] = os.path.abspath(config['data'])
 
@@ -19,15 +18,15 @@ with open(config['sample_table']) as fin:
     for row in csv.DictReader(fin, delimiter=config['delimiter']):
         rows.append(row)
 
-clean_reads = expand(expand("{data}/reads/qc/{{project}}/{{sample}}/{{sample}}_1.fastq.gz",
+clean_reads = expand(expand("{data}/reads/{{project}}/{{sample}}_1.fastq.gz",
     data = config['data']), zip,
     project = [x["project"] for x in rows],
     sample = [x["run"] for x in rows])
 
-assembly_files = expand(expand("{data}/assembly/spades/{{project}}/{{sample}}/spades_output/scaffolds.fasta",
+assembly_files = expand(expand("{data}/assembly/{{project}}/{{assembly}}",
     data = config['data']), zip,
     project = [x["project"] for x in rows],
-    sample = [x["run"] for x in rows])
+    assembly = [x["assembly"] for x in rows])
 
 bin_files = expand(expand("{data}/binning/{{project}}/{{sample}}/concoct_bins",
     data = config['data']), zip,

@@ -1,8 +1,8 @@
 rule cmseq_cov:
   input:
       fasta = "{data}/stats/{project}/{sample}/bins/{bin}.fa",
-      fq1 = "{data}/reads/qc/{project}/{sample}/{sample}_1.fastq.gz",
-      fq2 = "{data}/reads/qc/{project}/{sample}/{sample}_2.fastq.gz",
+      fq1 = "{data}/reads/{project}/{sample}_1.fastq.gz",
+      fq2 = "{data}/reads/{project}/{sample}_2.fastq.gz",
   output:
       cov = "{data}/stats/{project}/{sample}/coverage/cov_{bin}.csv",
       bam = temp("{data}/stats/{project}/{sample}/bins/{bin}.bam"),
