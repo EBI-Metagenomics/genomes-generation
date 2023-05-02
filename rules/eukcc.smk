@@ -1,8 +1,15 @@
+def get_reads(wc):
+    """
+    function to get read pairs from sample.csv that
+    the user provided
+    """
+    for row in rows:
+        if row['project'] ==wc.project and row['run'] == wc.sample:
+            return {"fq1": row["fastq_1"], "fq2": row["fastq_2"], "scaffolds": row["assembly"]}
+
 rule align:
     input:
-        scaffolds = "{data}/assembly/{project}/{assembly}",
-        fq1 = "{data}/reads/{project}/{sample}_1.fastq.gz",
-        fq2 = "{data}/reads/{project}/{sample}_2.fastq.gz",
+        unpack(get_reads)
     output:
         bam = "{data}/bam/{project}/{sample}/reads.bam",
         bai = "{data}/bam/{project}/{sample}/reads.bam.bai",

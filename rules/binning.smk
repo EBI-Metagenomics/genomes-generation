@@ -1,8 +1,15 @@
+def get_reads(wc):
+    """
+    function to get read pairs from sample.csv that
+    the user provided
+    """
+    for row in rows:
+        if row['project'] ==wc.project and row['run'] == wc.sample:
+            return({"fq1": row['fastq_1'], "fq2": row["fastq_2"], "scaffolds": row["assembly"]})
+
 rule binning:
     input:
-        fq1 = "{data}/reads/{project}/{sample}_1.fastq.gz",
-        fq2 = "{data}/reads/{project}/{sample}_2.fastq.gz",
-        scaffolds = "{data}/assembly/{project}/{assembly}"
+        unpack(get_reads)
     output:
         fq1 = temp("{data}/reads/qc/{project}/{sample}/{sample}_1.fastq"),
         fq2 = temp("{data}/reads/qc/{project}/{sample}/{sample}_2.fastq"),
