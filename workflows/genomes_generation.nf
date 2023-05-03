@@ -6,15 +6,12 @@
 sample_name = channel.value(params.sample_name)
 mode = channel.value(params.mode)
 contigs = channel.fromPath(params.contigs, checkIfExists: true)
-sr = Channel.fromPath('NO_FILE')
-pf = Channel.fromPath('NO_FILE')
-pr = Channel.fromPath('NO_FILE')
-if (params.mode == 'single') {
-    sr = channel.fromPath(params.single_end, checkIfExists: true)
+
+if ( params.mode == "paired" ) {
+    chosen_reads = channel.fromFilePairs(["${params.paired_end_forward}", "${params.paired_end_reverse}"], checkIfExists: true).map { it[1] }
 }
-else if (params.mode == 'paired') {
-    pf = channel.fromPath(params.paired_end_forward, checkIfExists: true)
-    pr = channel.fromPath(params.paired_end_reverse, checkIfExists: true)
+else if ( params.mode == "single" ) {
+    chosen_reads = channel.fromPath("${params.single_end}", checkIfExists: true)
 }
 
 /*
@@ -30,9 +27,7 @@ ref_genome_name = channel.value(params.ref_genome_name)
      Steps
     ~~~~~~~~~~~~~~~~~~
 */
-include { CHANGE_DOT_TO_UNDERSCORE } from '../modules/prepare_input'
-include { TRIM_GALORE } from '../modules/prepare_input'
-include { MAP_HOST_GENOME } from '../modules/prepare_input'
+include { PREPARE_INPUT } from '../subworkflows/prepare_input_files'
 
 include { BINNING } from '../modules/metawrap'
 
@@ -43,14 +38,7 @@ include { BINNING } from '../modules/metawrap'
 */
 workflow GGP {
 
-    // CHANGE_DOT_TO_UNDERSCORE(contigs)
-
-    //TRIM_GALORE(mode, sample_name, sr, pf, pr)
-
-    MAP_HOST_GENOME(mode, sample_name, ref_genome, ref_genome_name, sr, pf, pr)
-        //TRIM_GALORE.out.single_trimmed,
-        //TRIM_GALORE.out.paired_forward_trimmed,
-        //TRIM_GALORE.out.paired_reverse_trimmed)
+    PREPARE_INPUT(mode, sample_name, contigs, chosen_reads, ref_genome, ref_genome_name)
 
     //BINNING(mode,
     //    contigs,
