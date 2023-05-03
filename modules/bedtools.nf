@@ -2,6 +2,12 @@ process BEDTOOLS_BAMTOFASTQ {
 
     container 'quay.io/biocontainers/bedtools:2.23.0--h5b5514e_6'
 
+    publishDir(
+        path: "${params.outdir}/cleaning_reads/",
+        mode: 'copy',
+        failOnError: true
+    )
+
     input:
     val mode
     val name

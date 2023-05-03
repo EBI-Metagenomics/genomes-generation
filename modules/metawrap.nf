@@ -1,19 +1,18 @@
-process BINNING {
+process METAWRAP_BINNING {
 
     container 'quay.io/microbiome-informatics/metawrap:latest'
 
     publishDir(
-        path: "${params.outdir}/",
+        path: "${params.outdir}/binning/",
         mode: 'copy',
         failOnError: true
     )
 
     input:
     val mode
+    val name
     path contigs
-    val fastq_single
-    path fastq_pf
-    path fastq_pr
+    path input_reads
 
     output:
     path "binning/metabat2_bins", emit: binning_metabat2
@@ -23,16 +22,23 @@ process BINNING {
     script:
     def args = "";
     def reads = "";
+    def file = "";
     if ( mode == "single" ) {
         args = "--single-end"
-        reads = "${fastq_single}"
+        reads = "${input_reads}"
+        file = "${input_reads}"
     }
     if ( mode == "paired" ) {
-        reads = "${fastq_pf} ${fastq_pr}"
+        reads = "${input_reads[0]} ${input_reads[1]}"
+        file = "${input_reads[0]}"
     }
     """
+    if (file ${file} | grep -q compressed ) ; then
+        echo "gunzip"
+        gunzip ${reads}
+    fi
     echo "Running binning"
-    metawrap binning ${args} -t 8 -m 10 -l 2500 --metabat2 --concoct --maxbin2 -a ${contigs} -o binning ${reads}
+    metawrap binning ${args} -t 8 -m 10 -l 2500 --metabat2 --concoct --maxbin2 -a ${contigs} -o binning ${name}*.f*q
     """
 }
 
@@ -42,13 +48,12 @@ process BIN_REFINEMENT {
     container 'quay.io/microbiome-informatics/metawrap:latest'
 
     publishDir(
-        path: "${params.outdir}/",
+        path: "${params.outdir}/binning/",
         mode: 'copy',
         failOnError: true
     )
 
     input:
-    val mode_analysis
     path binning_metabat2
     path binning_concoct
     path binning_maxbin2
@@ -57,12 +62,25 @@ process BIN_REFINEMENT {
     path "binning", emit: bin_ref
 
     script:
-    def args = '-A ${binning_metabat2} -B ${binning_concoct}';
-    if (mode_analysis == 'prok') {
-        args += '-C ${binning_maxbin2}'
+    def args = "";
+    print("${binning_metabat2}")
+    if (file("${binning_metabat2}").list() == []) {
+        args += " -A ${binning_metabat2}"
+    }
+
+    if (file("${binning_concoct}").list() == []) {
+        args += " -B ${binning_concoct}"
+    }
+
+    if (file("${binning_maxbin2}").list() ) {
+        args += " -C ${binning_maxbin2}"
     }
     """
     echo "Running bin_refinement"
-    metawrap bin_refinement -t 4 -o bin_refinement ${args} -c 50 -x 5
+
+    metawrap bin_refinement -t ${task.cpus} -o bin_refinement \
+    "${args}" \
+    -c 50 -x 5 -m ${task.memory}
     """
 }
+
