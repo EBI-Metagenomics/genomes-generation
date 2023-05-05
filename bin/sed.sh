@@ -6,4 +6,6 @@ do
     esac
 done
 
+echo "Change contig headers"
 sed 's/\./_/' ${INPUT} > out
+echo "Done"

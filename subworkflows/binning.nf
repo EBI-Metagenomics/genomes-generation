@@ -1,18 +1,22 @@
-include { METAWRAP_BINNING } from '../modules/metawrap'
-include { BIN_REFINEMENT } from '../modules/metawrap'
-
+/*
+    ~~~~~~~~~~~~~~~~~~
+     Collect bins
+    ~~~~~~~~~~~~~~~~~~
+*/
 process COLLECT_BINS {
+    container 'quay.io/microbiome-informatics/metawrap:latest'
+
     input:
-        val name
-        path bin_ref_folder
-    output: "Metawrap_bins", emit metawrap_bins
+    val name
+    path bin_ref_folder
+
+    output:
+    path "Metawrap_bins", emit: metawrap_bins
+
     script:
     """
     mkdir Metawrap_bins
-    for y in ${bin_ref_folder}
-    do
-        cp ${bin_ref_folder}/$y Metawrap_bins/${name}_$y
-    done
+
     """
 }
 
@@ -21,6 +25,10 @@ process COLLECT_BINS {
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
+include { GUNZIP } from '../modules/gunzip'
+include { METAWRAP_BINNING } from '../modules/metawrap'
+include { BIN_REFINEMENT } from '../modules/metawrap'
+
 workflow BINNING {
     take:
         mode
@@ -29,13 +37,18 @@ workflow BINNING {
         reads
     main:
 
-    METAWRAP_BINNING(mode, name, contigs, reads)
+    reads_list = reads.collect()
+    GUNZIP(name, reads_list)
+
+    METAWRAP_BINNING(mode, name, contigs, GUNZIP.out.uncompressed)
 
     BIN_REFINEMENT(
         METAWRAP_BINNING.out.binning_metabat2,
         METAWRAP_BINNING.out.binning_concoct,
         METAWRAP_BINNING.out.binning_maxbin2)
 
+    //COLLECT_BINS(name, BIN_REFINEMENT.out.bin_ref)
+
     emit:
-        binning_result = BIN_REFINEMENT.bin_ref
+        binning_result = BIN_REFINEMENT.out.bin_ref
 }

@@ -9,11 +9,11 @@ process CHANGE_DOT_TO_UNDERSCORE {
     path contigs
 
     output:
-    path "out", emit: contigs
+    path "out", emit: return_contigs
 
     script:
     """
-    bash sed.sh ${contigs}
+    bash sed.sh -i ${contigs}
     """
 }
 
@@ -30,7 +30,7 @@ process TRIM_GALORE {
     path reads
 
     output:
-    path 'cleaning_reads/*.fq', emit: reads_trimmed
+    path 'cleaning_reads/*.fq.gz', emit: reads_trimmed
 
     script:
     if (mode == 'paired') {

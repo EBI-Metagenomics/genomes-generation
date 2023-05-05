@@ -43,6 +43,4 @@ workflow GGP {
 
     BINNING(mode, sample_name, PREPARE_INPUT.out.contigs_fixed, PREPARE_INPUT.out.reads_cleaned)
 
-    //CLEAN_BINS
-
 }

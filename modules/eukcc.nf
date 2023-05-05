@@ -6,14 +6,28 @@ process EUKCC {
     container 'quay.io/microbiome-informatics/eukcc:latest'
 
     input:
-    path contigs
+    val name
+    path links
+    path eukcc_db
+    path bindir
 
     output:
-    path "out", emit: contigs
+    path "output", emit: eukcc_results
 
     script:
     """
-    bash sed.sh ${contigs}
+    eukcc \
+        --improve_percent 10 \
+        --n_combine 1 \
+        --threads ${task.cpus} \
+        --improve_ratio  5 \
+        --links ${links} \
+        --min_links 100 \
+        --suffix .fa \
+        --db ${eukcc_db} \
+        --out output \
+        --prefix "${name}_merged." \
+        ${bindir}
     """
 }
 
@@ -22,13 +36,15 @@ process LINKTABLE {
     container 'quay.io/microbiome-informatics/eukcc:latest'
 
     input:
-    path contigs
+    val name
+    path bindir
+    path bam
 
     output:
     path "out", emit: contigs
 
     script:
     """
-    bash sed.sh ${contigs}
+    python3 binlinks.py  --ANI 99 --within 1500 --out ${name}.links.csv ${bindir} ${bam}
     """
 }

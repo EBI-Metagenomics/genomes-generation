@@ -1,12 +1,14 @@
-include { CHANGE_DOT_TO_UNDERSCORE } from '../modules/prepare_input'
-include { TRIM_GALORE } from '../modules/prepare_input'
-include { MAP_HOST_GENOME } from '../modules/prepare_input'
-include { BEDTOOLS_BAMTOFASTQ } from '../modules/bedtools'
 /*
     ~~~~~~~~~~~~~~~~~~
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
+include { GUNZIP } from '../modules/gunzip'
+include { CHANGE_DOT_TO_UNDERSCORE } from '../modules/prepare_input'
+include { TRIM_GALORE } from '../modules/prepare_input'
+include { MAP_HOST_GENOME } from '../modules/prepare_input'
+include { BEDTOOLS_BAMTOFASTQ } from '../modules/bedtools'
+
 workflow PREPARE_INPUT {
     take:
         mode
@@ -17,7 +19,8 @@ workflow PREPARE_INPUT {
         ref_genome_name
     main:
     // fix contig names
-    // CHANGE_DOT_TO_UNDERSCORE(contigs)
+    GUNZIP(name, contigs)
+    CHANGE_DOT_TO_UNDERSCORE(GUNZIP.out.uncompressed)
 
     // cleaning reads
     reads_list = reads.collect()
@@ -29,5 +32,6 @@ workflow PREPARE_INPUT {
     BEDTOOLS_BAMTOFASTQ(mode, name, MAP_HOST_GENOME.out.bam_sorted)
 
     emit:
-        reads = BEDTOOLS_BAMTOFASTQ.out.reads_cleaned
+        contigs_fixed = CHANGE_DOT_TO_UNDERSCORE.out.return_contigs
+        reads_cleaned = BEDTOOLS_BAMTOFASTQ.out.reads_cleaned
 }

@@ -8,7 +8,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.fromPath("${baseDir}/tests/resources/binning/metabat2_bins/*")
+                input[0] = channel.fromPath("${baseDir}/tests/resources/binning/metabat2_bins")
                 input[1] = channel.fromPath("${baseDir}/tests/resources/binning/concoct_bins")
                 input[2] = channel.fromPath("${baseDir}/tests/resources/binning/maxbin2_bins")
                 """
