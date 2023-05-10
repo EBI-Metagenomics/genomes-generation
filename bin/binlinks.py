@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import pysam
 from Bio import SeqIO
 from collections import defaultdict

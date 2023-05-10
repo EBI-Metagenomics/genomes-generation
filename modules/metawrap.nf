@@ -49,7 +49,7 @@ process BIN_REFINEMENT {
     path binning_maxbin2
 
     output:
-    path "bin_refinement", emit: bin_ref
+    path "bin_refinement/metawrap_*bins/", emit: bin_ref
 
     script:
     """

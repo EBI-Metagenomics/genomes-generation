@@ -1,3 +1,24 @@
+include { CHECKM } from '../modules/checkm'
+include { PARSE_CHECKM } from '../modules/parse_checkm'
+/*
+    ~~~~~~~~~~~~~~~~~~~~~~
+     Run checkm subworkflow
+    ~~~~~~~~~~~~~~~~~~~~~~
+*/
+workflow CHECKM_SUBWF {
+    take:
+        name
+        bins
+
+    main:
+
+    emit:
+
+}
+
+
+
+
 checkm
 parse_checkm
 

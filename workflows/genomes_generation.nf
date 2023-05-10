@@ -31,7 +31,8 @@ ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_
 */
 include { PREPARE_INPUT } from '../subworkflows/prepare_input_files'
 include { BINNING } from '../subworkflows/binning'
-
+include { CLEAN_BINS } from '../subworkflows/clean_bins'
+include { FILTER_BINS } from '../subworkflows/gunc_filtering'
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
@@ -44,5 +45,9 @@ workflow GGP {
     BINNING(mode, sample_name, PREPARE_INPUT.out.contigs_fixed, PREPARE_INPUT.out.reads_cleaned)
 
     //CLEAN_BINS
+    //FILTER_BINS
+    //CHECKM_SUBWF
+    //EUKCC_SUBWF
+
 
 }

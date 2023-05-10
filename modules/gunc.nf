@@ -4,7 +4,7 @@ process GUNC {
     container 'quay.io/microbiome-informatics/genomes-pipeline.gunc:v4'
 
     input:
-    tuple val(cluster_name), path(fasta)
+    path fasta
     file renamed_genomes_csv
     file gunc_db
 
