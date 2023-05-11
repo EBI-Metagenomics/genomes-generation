@@ -18,6 +18,7 @@ process METAWRAP_BINNING {
     path "binning/metabat2_bins", emit: binning_metabat2
     path "binning/concoct_bins", emit: binning_concoct
     path "binning/maxbin2_bins", emit: binning_maxbin2
+    path "binning/work_files/metabat_depth.txt", emit: metabat_depth_for_coverage
 
     script:
     def args = "";
@@ -49,7 +50,7 @@ process BIN_REFINEMENT {
     path binning_maxbin2
 
     output:
-    path "bin_refinement/metawrap_*bins/", emit: bin_ref
+    path "bin_refinement/metawrap_*bins/*", emit: bin_ref_bins
 
     script:
     """

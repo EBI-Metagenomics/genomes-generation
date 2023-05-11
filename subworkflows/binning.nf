@@ -50,5 +50,6 @@ workflow BINNING {
     //COLLECT_BINS(name, BIN_REFINEMENT.out.bin_ref)
 
     emit:
-        binning_result = BIN_REFINEMENT.out.bin_ref
+        binning_result = BIN_REFINEMENT.out.bin_ref_bins
+        metabat_depth_for_coverage = METAWRAP_BINNING.out.metabat_depth_for_coverage
 }

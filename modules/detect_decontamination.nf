@@ -13,6 +13,6 @@ process DETECT_DECONTAMINATION {
 
     script:
     """
-    python3 detect_contamination.py -s ${summary} -n ${names} -i ${sample_name}
+    detect_decontamination.py -s ${summary} -n ${names} -i ${sample_name}
     """
 }

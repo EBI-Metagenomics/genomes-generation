@@ -11,6 +11,6 @@ process PARSE_CHECKM {
 
     script:
     """
-    python3 parse_checkm.py ${bins_qa} ${bins_taxonomy} > checkm_results.tab
+    parse_checkm.py ${bins_qa} ${bins_taxonomy} > checkm_results.tab
     """
 }
