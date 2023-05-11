@@ -44,6 +44,6 @@ include { EUKCC_SUBWF } from '../subworkflows/eukcc_subwf'
 */
 workflow GGP {
 
-    EUKCC_SUBWF(sample_name, bins, bam, bam_index, ref_eukcc)
+    BINNING(mode, sample_name, contigs, chosen_reads)
 
 }

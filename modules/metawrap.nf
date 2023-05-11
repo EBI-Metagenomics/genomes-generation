@@ -35,7 +35,7 @@ process METAWRAP_BINNING {
 
 process BIN_REFINEMENT {
 
-    container 'quay.io/microbiome-informatics/metawrap:latest'
+    //container 'quay.io/microbiome-informatics/metawrap:latest'
 
     publishDir(
         path: "${params.outdir}/binning/",
