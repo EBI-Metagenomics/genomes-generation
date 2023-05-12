@@ -29,6 +29,7 @@ ref_cat_diamond = channel.fromPath("${params.CAT_ref_db}/${params.cat_diamond_db
 ref_catdb = channel.fromPath("${params.CAT_ref_db}/${params.cat_db_name}", checkIfExists: true)
 ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_db}", checkIfExists: true)
 ref_eukcc = channel.fromPath("${params.eukcc_ref_db}", checkIfExists: true)
+ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps
