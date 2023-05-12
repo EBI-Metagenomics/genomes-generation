@@ -24,6 +24,9 @@ ref_genome_name = channel.value(params.ref_genome_name)
 ref_cat_diamond = channel.fromPath("${params.CAT_ref_db}/${params.cat_diamond_db_name}", checkIfExists: true)
 ref_catdb = channel.fromPath("${params.CAT_ref_db}/${params.cat_db_name}", checkIfExists: true)
 ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_db}", checkIfExists: true)
+ref_eukcc = channel.fromPath("${params.eukcc_ref_db}", checkIfExists: true)
+ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
+ref_checkm = channel.fromPath("${params.checkm_ref_db}", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps
@@ -31,8 +34,8 @@ ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_
 */
 include { PREPARE_INPUT } from '../subworkflows/prepare_input_files'
 include { BINNING } from '../subworkflows/binning'
-include { CLEAN_BINS } from '../subworkflows/clean_bins'
-include { FILTER_BINS } from '../subworkflows/gunc_filtering'
+include { EUK_SUBWF } from '../subworkflows/euk_part'
+include { PROK_SUBWF } from '../subworkflows/prok_part'
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
@@ -44,9 +47,8 @@ workflow GGP {
 
     BINNING(mode, sample_name, PREPARE_INPUT.out.contigs_fixed, PREPARE_INPUT.out.reads_cleaned)
 
-    //CLEAN_BINS
-    //FILTER_BINS
-    //CHECKM_SUBWF
-    //EUKCC_SUBWF
+    PROK_SUBWF(sample_name,
+        ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm)
 
+    EUK_SUBWF(sample_name)
 }

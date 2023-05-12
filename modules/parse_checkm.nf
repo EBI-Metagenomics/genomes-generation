@@ -1,6 +1,11 @@
 process PARSE_CHECKM {
 
     container 'quay.io/biocontainers/biopython:1.75'
+    publishDir(
+        path: "${params.outdir}/checkm/",
+        mode: 'copy',
+        failOnError: true
+    )
 
     input:
     path bins_taxonomy

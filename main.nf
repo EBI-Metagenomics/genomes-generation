@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { GGP } from './workflows/genomes_generation_test'
+include { GGP } from './workflows/test2'
 
 workflow {
     GGP ()

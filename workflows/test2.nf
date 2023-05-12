@@ -30,6 +30,7 @@ ref_catdb = channel.fromPath("${params.CAT_ref_db}/${params.cat_db_name}", check
 ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_db}", checkIfExists: true)
 ref_eukcc = channel.fromPath("${params.eukcc_ref_db}", checkIfExists: true)
 ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
+ref_checkm = channel.fromPath("${params.checkm_ref_db}", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps
@@ -37,7 +38,7 @@ ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
 */
 include { PREPARE_INPUT } from '../subworkflows/prepare_input_files'
 include { BINNING } from '../subworkflows/binning'
-include { EUKCC_SUBWF } from '../subworkflows/eukcc_subwf'
+include { CHECKM_SUBWF } from '../subworkflows/checkm_subwf'
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
@@ -45,6 +46,6 @@ include { EUKCC_SUBWF } from '../subworkflows/eukcc_subwf'
 */
 workflow GGP {
 
-    BINNING(mode, sample_name, contigs, chosen_reads)
-
+    //BINNING(mode, sample_name, contigs, chosen_reads)
+    CHECKM_SUBWF(sample_name, bins, ref_checkm)
 }

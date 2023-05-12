@@ -34,8 +34,7 @@ ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
      Steps
     ~~~~~~~~~~~~~~~~~~
 */
-include { PREPARE_INPUT } from '../subworkflows/prepare_input_files'
-include { BINNING } from '../subworkflows/binning'
+
 include { CLEAN_AND_FILTER_BINS } from '../subworkflows/clean_and_filter_bins'
 /*
     ~~~~~~~~~~~~~~~~~~

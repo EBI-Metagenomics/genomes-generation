@@ -3,44 +3,8 @@
 */
 process DETECT_RRNA {
 
-    tag "${cluster_name}"
-
     publishDir(
-        path: "${params.outdir}",
-        saveAs: {
-            filename -> {
-                if ( !filename.endsWith(".fasta") ) {
-                    return null
-                }
-                def output_file = file(filename);
-                def genome_id = fasta.baseName;
-                def is_rep = genome_id == cluster_name;
-                if ( is_rep && output_file.name.contains("_rRNAs") ) {
-                    def cluster_rep_prefix = cluster_name.substring(0, cluster_name.length() - 2);
-                    return "species_catalogue/${cluster_rep_prefix}/${genome_id}/genome/${genome_id}_rRNAs.fasta";
-                }
-                return null;
-            }
-        },
-        mode: 'copy',
-        failOnError: true
-    )
-
-    publishDir(
-        path: "${params.outdir}",
-        saveAs: {
-            filename -> {
-                if ( !filename.endsWith(".out") ) {
-                    return null;
-                }
-                def output_file = file(filename);
-                def genome_id = fasta.baseName;
-                if ( output_file.name.contains("_rRNAs") || output_file.name.contains("_tRNA_20aa") ) {
-                    return "additional_data/rRNA_outs/${genome_id}/${output_file.name}";
-                }
-                return null;
-            }
-        },
+        path: "${params.outdir}/RNA",
         mode: 'copy',
         failOnError: true
     )
@@ -48,7 +12,7 @@ process DETECT_RRNA {
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'
 
     input:
-    tuple val(cluster_name), path(fasta)
+    path fasta
     path cm_models
 
     output:
