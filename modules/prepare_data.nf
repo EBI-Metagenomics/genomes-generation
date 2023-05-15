@@ -3,8 +3,6 @@
 */
 process CHANGE_DOT_TO_UNDERSCORE {
 
-    container 'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0'
-
     input:
     path contigs
 
@@ -14,6 +12,23 @@ process CHANGE_DOT_TO_UNDERSCORE {
     script:
     """
     bash sed.sh -i ${contigs}
+    """
+}
+
+/*
+ * clean reads, change . to _ from contigs
+*/
+process CHANGE_UNDERSCORE_TO_DOT {
+
+    input:
+    path contigs
+
+    output:
+    path "${contigs.baseName}", emit: return_contigs
+
+    script:
+    """
+    sed -i 's/\\_/\\./' ${contigs}
     """
 }
 

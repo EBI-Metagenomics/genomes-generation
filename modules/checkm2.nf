@@ -11,7 +11,7 @@ process CHECKM2 {
     path checkm_db
 
     output:
-    path "all.stats.clean", emit: checkm_output
+    path "all.stats.clean", emit: checkm_table
 
     script:
     """

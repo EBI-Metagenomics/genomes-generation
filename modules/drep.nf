@@ -16,7 +16,7 @@ process DREP {
     val nc
 
     output:
-    path "drep_output/dereplicated_genomes", emit: dereplicated_genomes
+    path "drep_output/dereplicated_genomes/*", emit: dereplicated_genomes
 
     script:
     """
@@ -30,11 +30,5 @@ process DREP {
     -con 5 \
     --genomeInfo ${checkm_csv} \
     drep_output
-
-    """
-
-    stub:
-    """
-    mkdir -p drep_output/dereplicated_genomes
     """
 }

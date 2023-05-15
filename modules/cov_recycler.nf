@@ -9,8 +9,7 @@ process COVERAGE_RECYCLER {
     container 'quay.io/biocontainers/biopython:1.75'
 
     input:
-    val name
-    path dereplicated_genomes
+    path genomes, stageAs: "genomes_dir/*"
     path metabat_depth
 
     output:
@@ -18,6 +17,6 @@ process COVERAGE_RECYCLER {
 
     script:
     """
-    cov_recycler.py -g ${dereplicated_genomes} -m ${metabat_depth}
+    cov_recycler.py -g genomes_dir -m ${metabat_depth}
     """
 }

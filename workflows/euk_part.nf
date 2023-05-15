@@ -3,16 +3,20 @@
      Eukaryotes subworkflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { EUKCC_SUBWF } from '../subworkflows/eukcc_subwf'
+include { EUKCC } from '../modules/eukcc'
+include { LINKTABLE } from '../modules/eukcc'
 
 workflow EUK_SUBWF {
     take:
         mode
-        sample_name
+        name
         bins
+        bam
+        bam_index
 
     main:
-        EUKCC_SUBWF()
+        LINKTABLE(name, bins, bam, bam_index)
+        EUKCC(name, LINKTABLE.out.links_table, eukcc_db, bins)
 
     emit:
 

@@ -31,7 +31,7 @@ process GTDBTK {
     path 'gtdbtk_results/classify/gtdbtk.ar53.summary.tsv', optional: true, emit: gtdbtk_summary_arc53
     path 'gtdbtk_results/align/gtdbtk.bac120.user_msa.fasta.gz', optional: true, emit: gtdbtk_user_msa_bac120
     path 'gtdbtk_results/align/gtdbtk.ar53.user_msa.fasta.gz', optional: true, emit: gtdbtk_user_msa_ar53
-    path 'gtdbtk_results.tar.gz', emit: gtdbtk_output_tarball
+    path 'gtdbtk_results', emit: gtdbtk_output_tarball
 
 
     script:
@@ -42,10 +42,8 @@ process GTDBTK {
     --cpus ${task.cpus} \
     --pplacer_cpus ${task.cpus} \
     --genome_dir genomes_dir \
-    --extension fna \
+    --extension fa \
     --out_dir gtdbtk_results
-
-    tar -czf gtdbtk_results.tar.gz gtdbtk_results
     """
 
     stub:

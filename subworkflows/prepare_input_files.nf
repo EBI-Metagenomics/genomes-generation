@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~~~~
 */
 include { GUNZIP } from '../modules/gunzip'
-include { CHANGE_DOT_TO_UNDERSCORE } from '../modules/prepare_input'
+include { CHANGE_DOT_TO_UNDERSCORE } from '../modules/prepare_data'
 include { TRIM_GALORE } from '../modules/prepare_input'
 include { MAP_HOST_GENOME } from '../modules/prepare_input'
 include { BEDTOOLS_BAMTOFASTQ } from '../modules/bedtools'

@@ -27,6 +27,8 @@ ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_
 ref_eukcc = channel.fromPath("${params.eukcc_ref_db}", checkIfExists: true)
 ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
 ref_checkm = channel.fromPath("${params.checkm_ref_db}", checkIfExists: true)
+ref_rfam_rrna_models = channel.fromPath("${params.rfam_rrna_models}", checkIfExists: true)
+ref_gtdbtk = channel.fromPath("${params.gtdbtk}", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps
@@ -48,7 +50,7 @@ workflow GGP {
     BINNING(mode, sample_name, PREPARE_INPUT.out.contigs_fixed, PREPARE_INPUT.out.reads_cleaned)
 
     PROK_SUBWF(sample_name,
-        ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm)
+        ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
 
     EUK_SUBWF(sample_name)
 }
