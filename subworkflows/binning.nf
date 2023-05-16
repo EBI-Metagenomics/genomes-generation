@@ -1,27 +1,5 @@
 /*
     ~~~~~~~~~~~~~~~~~~
-     Collect bins
-    ~~~~~~~~~~~~~~~~~~
-*/
-process COLLECT_BINS {
-    container 'quay.io/microbiome-informatics/metawrap:latest'
-
-    input:
-    val name
-    path bin_ref_folder
-
-    output:
-    path "Metawrap_bins", emit: metawrap_bins
-
-    script:
-    """
-    mkdir Metawrap_bins
-
-    """
-}
-
-/*
-    ~~~~~~~~~~~~~~~~~~
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
@@ -31,25 +9,22 @@ include { BIN_REFINEMENT } from '../modules/metawrap'
 
 workflow BINNING {
     take:
-        mode
-        name
-        contigs
-        reads
+        contigs  // tuple(name, contigs)
+        reads    // tuple(name, contigs)
     main:
 
-    reads_list = reads.collect()
-    GUNZIP(name, reads_list)
+    GUNZIP(reads.map{item -> item[1]})
 
-    METAWRAP_BINNING(mode, name, contigs, GUNZIP.out.uncompressed)
+    METAWRAP_BINNING(contigs, GUNZIP.out.uncompressed)
 
     BIN_REFINEMENT(
         METAWRAP_BINNING.out.binning_metabat2,
         METAWRAP_BINNING.out.binning_concoct,
         METAWRAP_BINNING.out.binning_maxbin2)
 
-    //COLLECT_BINS(name, BIN_REFINEMENT.out.bin_ref)
-
     emit:
-        binning_result = BIN_REFINEMENT.out.bin_ref_bins
-        metabat_depth_for_coverage = METAWRAP_BINNING.out.metabat_depth_for_coverage
+        concoct_bins = tuple(name, METAWRAP_BINNING.out.binning_concoct)
+        metabat2_bins = tuple(name, METAWRAP_BINNING.out.binning_metabat2)
+        binning_result = tuple(name, BIN_REFINEMENT.out.bin_ref_bins)
+        metabat_depth_for_coverage = tuple(name, METAWRAP_BINNING.out.metabat_depth_for_coverage)
 }

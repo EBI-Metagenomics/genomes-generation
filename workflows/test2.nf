@@ -24,16 +24,16 @@ else if ( params.mode == "single" ) {
      DBs
     ~~~~~~~~~~~~~~~~~~
 */
-ref_genome = channel.fromPath(params.ref_genome, checkIfExists: true)
-ref_genome_name = channel.value(params.ref_genome_name)
-ref_cat_diamond = channel.fromPath("${params.CAT_ref_db}/${params.cat_diamond_db_name}", checkIfExists: true)
-ref_catdb = channel.fromPath("${params.CAT_ref_db}/${params.cat_db_name}", checkIfExists: true)
-ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_db}", checkIfExists: true)
-ref_eukcc = channel.fromPath("${params.eukcc_ref_db}", checkIfExists: true)
-ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
-ref_checkm = channel.fromPath("${params.checkm_ref_db}", checkIfExists: true)
-ref_rfam_rrna_models = channel.fromPath("${params.rfam_rrna_models}", checkIfExists: true)
-ref_gtdbtk = channel.fromPath("${params.gtdbtk}", checkIfExists: true)
+ref_genome = file(params.ref_genome, checkIfExists: true)
+ref_genome_name = file(params.ref_genome_name)
+ref_cat_diamond = file("${params.CAT_ref_db}/${params.cat_diamond_db_name}", checkIfExists: true)
+ref_catdb = file("${params.CAT_ref_db}/${params.cat_db_name}", checkIfExists: true)
+ref_cat_taxonomy = file("${params.CAT_ref_db}/${params.cat_taxonomy_db}", checkIfExists: true)
+ref_eukcc = file("${params.eukcc_ref_db}", checkIfExists: true)
+ref_gunc = file("${params.gunc_ref_db}", checkIfExists: true)
+ref_checkm = file("${params.checkm_ref_db}", checkIfExists: true)
+ref_rfam_rrna_models = file("${params.rfam_rrna_models}", checkIfExists: true)
+ref_gtdbtk = file("${params.gtdbtk}", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps

@@ -9,9 +9,7 @@ process METAWRAP_BINNING {
     )
 
     input:
-    val mode
-    val name
-    path contigs
+    tuple val(name), path(contigs)
     path input_reads
 
     output:
@@ -21,11 +19,12 @@ process METAWRAP_BINNING {
     path "binning/work_files/metabat_depth.txt", emit: metabat_depth_for_coverage
 
     script:
+    reads = input_reads.collect()
     def args = "";
-    if ( mode == "single" ) {
+    if ( input_reads.size() == 1 ) {
         args = "--single-end ${input_reads}"
     }
-    if ( mode == "paired" ) {
+    if ( input_reads.size() == 2 ) {
         args = "${input_reads[0]} ${input_reads[1]}"
     }
     """

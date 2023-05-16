@@ -5,11 +5,10 @@
 */
 process GUNZIP {
     input:
-    val name
-    path compressed_file
+    path(compressed_file)
 
     output:
-    path "out/*", emit: uncompressed
+    path("out/*"), emit: uncompressed
 
     script:
     """
