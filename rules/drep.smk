@@ -108,7 +108,7 @@ checkpoint dRep_MAGs:
         else
           dRep dereplicate -p {threads} \
               . -g genomes.txt \
-              -pa 0.80 -sa 0.95 -nc 0.30 \
+              -pa 0.80 -sa 0.95 -nc 0.40 \
               -cm larger \
               --genomeInfo {input.quality}\
               -comp 49 -con 21
