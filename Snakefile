@@ -1,12 +1,11 @@
 import csv
 import shutil
+import os
 
 
-configfile: "config/config.yaml"
+configfile: "config/example.config.yaml"
 config['data'] = os.path.abspath(config['data'])
 
-include: "rules/qc.smk"
-include: "rules/spades.smk"
 include: "rules/binning.smk"
 include: "rules/eukcc.smk"
 include: "rules/busco.smk"
@@ -21,15 +20,11 @@ with open(config['sample_table']) as fin:
     for row in csv.DictReader(fin, delimiter=config['delimiter']):
         rows.append(row)
 
-clean_reads = expand(expand("{data}/reads/qc/{{project}}/{{sample}}/{{sample}}_1.fastq.gz",
-    data = config['data']), zip,
-    project = [x["project"] for x in rows],
-    sample = [x["run"] for x in rows])
+clean_reads = expand(expand("{fastq}",
+    fastq = [x["fastq_1"] for x in rows]))
 
-assembly_files = expand(expand("{data}/assembly/spades/{{project}}/{{sample}}/spades_output/scaffolds.fasta",
-    data = config['data']), zip,
-    project = [x["project"] for x in rows],
-    sample = [x["run"] for x in rows])
+assembly_files = expand(expand("{assembly}",
+    assembly = [x["assembly"] for x in rows]))
 
 bin_files = expand(expand("{data}/binning/{{project}}/{{sample}}/concoct_bins",
     data = config['data']), zip,
@@ -41,14 +36,14 @@ proka_bins = expand(expand("{data}/binrefine/{{project}}/{{sample}}/metawrap/met
     project = [x["project"] for x in rows],
     sample = [x["run"] for x in rows])
 
-coverage_files =  expand(expand(
+coverage_files = expand(expand(
     "{data}/stats/{{project}}/{{sample}}/coverage.csv",
     data = config['data']), zip,
     project = [x["project"] for x in rows],
     sample = [x["run"] for x in rows])
 
 final_summary = expand("{data}/MAGs/qc.csv",
-              data = config['data'])
+    data = config['data'])
 
 rule all:
     input:
@@ -209,3 +204,5 @@ rule QC_table:
             --qc_dir {wildcards.data}/qc \
             --output {output.csv}
         """
+
+
