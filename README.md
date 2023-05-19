@@ -3,6 +3,10 @@ Pipeline to recover eukaryotic MAGs using CONCOCT, metaBAT2 and EukCC's merging 
 
 Needs paired end shotgun metagenomic reads.
 
+## Environment
+
+Eukrecover requires an environment with snakemake and metaWRAP.
+
 ## Quickstart
 
 Define your samples in the file `samples.csv`.
