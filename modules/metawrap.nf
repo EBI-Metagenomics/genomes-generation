@@ -13,10 +13,10 @@ process METAWRAP_BINNING {
     path input_reads
 
     output:
-    path "binning/metabat2_bins", emit: binning_metabat2
-    path "binning/concoct_bins", emit: binning_concoct
-    path "binning/maxbin2_bins", emit: binning_maxbin2
-    path "binning/work_files/metabat_depth.txt", emit: metabat_depth_for_coverage
+    tuple val(name), path("binning/metabat2_bins"), emit: binning_metabat2
+    tuple val(name), path("binning/concoct_bins"), emit: binning_concoct
+    tuple val(name), path("binning/maxbin2_bins"), emit: binning_maxbin2
+    tuple val(name), path("binning/work_files/metabat_depth.txt"), emit: metabat_depth_for_coverage
 
     script:
     reads = input_reads.collect()
@@ -44,12 +44,12 @@ process BIN_REFINEMENT {
     )
 
     input:
-    path binning_metabat2
-    path binning_concoct
-    path binning_maxbin2
+    tuple val(name), path(binning_metabat2)
+    tuple val(name), path(binning_concoct)
+    tuple val(name), path(binning_maxbin2)
 
     output:
-    path "bin_refinement/metawrap_*bins/*", emit: bin_ref_bins
+    tuple val(name), path("bin_refinement/metawrap_*bins/*"), emit: bin_ref_bins
 
     script:
     """

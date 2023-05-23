@@ -20,8 +20,8 @@ workflow PREPARE_INPUT {
 
     // --- trimming reads
     FASTP(input_data.map{item -> tuple(item[0], item[2])})                              // tuple(accession, [reads]])
-    DECONTAMINATION(FASTP.out.output_reads, ref_genome, ref_genome_name)
 
+    DECONTAMINATION(FASTP.out.output_reads, ref_genome.first(), ref_genome_name)
     emit:
         contigs_fixed = CHANGE_DOT_TO_UNDERSCORE.out.return_contigs
         reads_cleaned = DECONTAMINATION.out.decontaminated_reads
