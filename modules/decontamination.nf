@@ -39,6 +39,9 @@ process DECONTAMINATION {
         samtools sort -@ ${task.cpus} -n output_decontamination/${name}_unmapped.bam \
         -o output_decontamination/${name}_unmapped_sorted.bam
 
+        echo "samtools index sorted bam"
+        samtools index output_decontamination/${name}_unmapped_sorted.bam
+
         echo "samtools"
         samtools fastq output_decontamination/${name}_unmapped_sorted.bam > output_decontamination/${name}_clean.fastq
 
@@ -64,6 +67,9 @@ process DECONTAMINATION {
 
         echo "samtools sort"
         samtools sort -@ ${task.cpus} -n output_decontamination/${name}_both_unmapped.bam -o output_decontamination/${name}_both_unmapped_sorted.bam
+
+        echo "samtools index sorted bam"
+        samtools index output_decontamination/${name}_both_unmapped_sorted.bam
 
         echo "samtools fastq"
         samtools fastq -1 output_decontamination/${name}_clean_1.fastq \

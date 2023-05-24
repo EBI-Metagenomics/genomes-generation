@@ -11,9 +11,9 @@ include { LINKTABLE as LINKTABLE_METABAT } from '../modules/eukcc'
 
 workflow EUK_SUBWF {
     take:
-        bins_concoct
-        bins_metabat
-        bam
+        bins_concoct    // tuple: name, folder
+        bins_metabat    // tuple: name, folder
+        bam             // tuple: name, [bam, bam.bai]
         eukcc_db
     main:
         // concoct

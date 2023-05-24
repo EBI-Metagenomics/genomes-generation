@@ -93,9 +93,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Evaluate completeness and contamination of a MAG."
     )
-    parser.add_argument("bindir", type=str, help="Run script on these bins")
-    parser.add_argument(
-        "bam",
+    parser.add_argument("--bindir", dest="bindir", type=str, help="Run script on these bins")
+    parser.add_argument("--bam",
+        dest="bam",
         type=str,
         help="Bam with allr eads aligned against all contigs making up the bins",
     )
@@ -180,6 +180,7 @@ def main():
     out_data = []
     logging.debug("Constructing output dict")
     if args.contigs:
+        logging.debug("contig mode")
         for contig_1, linked in link_table.items():
             for contig_2, links in linked.items():
                 out_data.append(
@@ -194,6 +195,8 @@ def main():
                     }
                 )
     else:
+        logging.debug("bins mode")
+        logging.debug(f"Bin table has {len(bin_table)} records")
         for bin_1, dic in bin_table.items():
             for bin_2, links in dic.items():
                 out_data.append({"bin_1": bin_1, "bin_2": bin_2, "links": links})

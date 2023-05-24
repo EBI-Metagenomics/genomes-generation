@@ -1,3 +1,26 @@
+process LINKTABLE {
+
+    publishDir(
+        path: "${params.outdir}/eukcc/",
+        mode: 'copy',
+        failOnError: true
+    )
+
+    container 'quay.io/microbiome-informatics/eukrecover.python3base:v1'
+
+    input:
+    tuple val(name), path(bindir)
+    tuple val(name), path(bam)
+
+    output:
+    tuple val(name), path("*.links.csv"), emit: links_table
+
+    script:
+    """
+    binlinks.py  --ANI 99 --within 1500 --out ${name}.links.csv --bindir ${bindir} --bam ${bam[0]}
+    """
+}
+
 /*
  * EukCC
 */
@@ -35,28 +58,5 @@ process EUKCC {
         --out ${binner}_${name}_merged_bins \
         --prefix "${binner}_${name}_merged." \
         ${bindir}
-    """
-}
-
-process LINKTABLE {
-
-    publishDir(
-        path: "${params.outdir}/eukcc/",
-        mode: 'copy',
-        failOnError: true
-    )
-
-    container 'quay.io/microbiome-informatics/eukrecover.python3base:v1'
-
-    input:
-    tuple val(name), path(bindir)
-    tuple val(name), path(bam)
-
-    output:
-    tuple val(name), path("*.links.csv"), emit: links_table
-
-    script:
-    """
-    binlinks.py  --ANI 99 --within 1500 --out ${name}.links.csv ${bindir} ${bam}
     """
 }
