@@ -23,7 +23,7 @@ workflow BINNING {
         METAWRAP_BINNING.out.binning_maxbin2)
 
     emit:
-        concoct_bins = METAWRAP_BINNING.out.binning_concoct
+        concoct_bins = METAWRAP_BINNING.out.binning_concoct  // (name, folder)
         metabat2_bins = METAWRAP_BINNING.out.binning_metabat2
         binning_result = BIN_REFINEMENT.out.bin_ref_bins
         metabat_depth_for_coverage = METAWRAP_BINNING.out.metabat_depth_for_coverage

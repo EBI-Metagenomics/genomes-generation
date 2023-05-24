@@ -14,6 +14,7 @@ raw_reads = channel.fromPath("${params.raw_reads}/*", checkIfExists: true)
 */
 ref_genome = channel.fromPath(params.ref_genome, checkIfExists: true)
 ref_genome_name = channel.value(params.ref_genome_name)
+ref_eukcc = file("${params.eukcc_ref_db}", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps
@@ -39,12 +40,10 @@ workflow GGP {
             def cluster = fastq.toString().tokenize("/")[-1].tokenize(".")[0].tokenize('_')[0]
             return tuple(cluster, fastq)
         }
-    // [ run_accession, assembly_file ]
-    tuple_assemblies = assemblies.map(groupAssemblies)
-    // [ run_accession, [raw_reads] ]
-    tuple_reads = raw_reads.map(groupReads).groupTuple()
-    // [ run_accession, assembly_file, [raw_reads] ]
-    data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: 0)
+
+    tuple_assemblies = assemblies.map(groupAssemblies)      // [ run_accession, assembly_file ]
+    tuple_reads = raw_reads.map(groupReads).groupTuple()    // [ run_accession, [raw_reads] ]
+    data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: 0)  // [ run_accession, assembly_file, [raw_reads] ]
     data_by_run_accession.view()
 
     PREPARE_INPUT(data_by_run_accession, ref_genome, ref_genome_name)
@@ -53,5 +52,6 @@ workflow GGP {
 
     //PROK_SUBWF(sample_name,ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
 
-    //EUK_SUBWF(sample_name)
+    PREPARE_INPUT.out.bams.view()
+    EUK_SUBWF(BINNING.out.concoct_bins, BINNING.out.metabat2_bins, PREPARE_INPUT.out.bams, ref_eukcc.first())
 }

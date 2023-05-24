@@ -12,13 +12,14 @@ process EUKCC {
     container 'quay.io/microbiome-informatics/eukcc:latest'
 
     input:
-    val name
-    path links
+    val binner
+    tuple val(name), path(links)
     path eukcc_db
-    path bindir
+    tuple val(name), path(bindir)
 
     output:
-    path "output", emit: eukcc_results
+    tuple val(name), path("*_merged_bins"), emit: eukcc_results
+    tuple val(name), path(eukcc.csv), emit: eukcc_csv
 
     script:
     """
@@ -31,8 +32,8 @@ process EUKCC {
         --min_links 100 \
         --suffix .fa \
         --db ${eukcc_db} \
-        --out output \
-        --prefix "${name}_merged." \
+        --out ${binner}_${name}_merged_bins \
+        --prefix "${binner}_${name}_merged." \
         ${bindir}
     """
 }
@@ -48,13 +49,11 @@ process LINKTABLE {
     container 'quay.io/microbiome-informatics/eukrecover.python3base:v1'
 
     input:
-    val name
-    path bindir
-    path bam
-    path bam_index
+    tuple val(name), path(bindir)
+    tuple val(name), path(bam)
 
     output:
-    path "*.links.csv", emit: links_table
+    tuple val(name), path("*.links.csv"), emit: links_table
 
     script:
     """
