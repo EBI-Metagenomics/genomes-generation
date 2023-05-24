@@ -7,12 +7,11 @@ process SELECT_SEQS {
     )
 
     input:
-    val sample_name
-    path bins
-    path cont_contigs
+    tuple val(sample_name), path(bins)
+    tuple val(sample_name), path(cont_contigs)
 
     output:
-    path "*_clean.fa", emit: clean_bins
+    tuple val(sample_name), path("*_clean.fa"), emit: clean_bins
 
     script:
     """

@@ -3,13 +3,12 @@ process DETECT_DECONTAMINATION {
     container 'quay.io/biocontainers/biopython:1.75'
 
     input:
-    val sample_name
-    path summary
-    path names
+    tuple val(sample_name), path(summary)
+    tuple val(sample_name), path(names)
 
     output:
-    path "*.cont-contigs.txt", emit: cont_contigs
-    path "*.cont-stats.tsv", emit: cont_stats
+    tuple val(sample_name), path("*.cont-contigs.txt"), emit: cont_contigs
+    tuple val(sample_name), path("*.cont-stats.tsv"), emit: cont_stats
 
     script:
     """

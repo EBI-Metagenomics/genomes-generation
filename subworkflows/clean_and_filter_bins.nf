@@ -11,18 +11,18 @@ include { GUNC } from '../modules/gunc'
 */
 workflow CLEAN_AND_FILTER_BINS {
     take:
-        name
         bins
         cat_db
         cat_diamond_db
         cat_taxonomy_db
         gunc_db
     main:
-        MAG_CLEANUP_CAT(name, cat_db.first(), cat_taxonomy_db.first(), cat_diamond_db.first(), bins)
-        DETECT_DECONTAMINATION(name, MAG_CLEANUP_CAT.out.cat_summary, MAG_CLEANUP_CAT.out.cat_names)
-        SELECT_SEQS(name, bins, DETECT_DECONTAMINATION.out.cont_contigs)
+        MAG_CLEANUP_CAT(bins, cat_db.first(), cat_taxonomy_db.first(), cat_diamond_db.first())
+        DETECT_DECONTAMINATION(MAG_CLEANUP_CAT.out.cat_summary, MAG_CLEANUP_CAT.out.cat_names)
+        SELECT_SEQS(bins, DETECT_DECONTAMINATION.out.cont_contigs)
         GUNC(SELECT_SEQS.out.clean_bins, gunc_db.first())
     emit:
+        // todo return name
         filtered_bins = GUNC.out.tuple_gunc_result.filter({
                 it[1].name.contains('_complete.txt')
             }).map({ cluster_fasta, cluster_gunc ->

@@ -8,7 +8,7 @@ process GUNC {
     )
 
     input:
-    path fasta
+    tuple val(name), path(fasta)
     file gunc_db
 
     output:

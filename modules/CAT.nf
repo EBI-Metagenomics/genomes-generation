@@ -9,15 +9,14 @@ process MAG_CLEANUP_CAT {
     )
 
     input:
-    val sample_name
+    tuple val(sample_name), path(bin_fa)
     path cat_db
     path taxonomy_db
     path diamond_db
-    path bin_fa
 
     output:
-    path '*.summary.txt', emit: cat_summary
-    path '*.contig2classification.official_names.txt', emit: cat_names
+    tuple val(sample_name), path('*.summary.txt'), emit: cat_summary
+    tuple val(sample_name), path('*.contig2classification.official_names.txt'), emit: cat_names
 
     script:
     """

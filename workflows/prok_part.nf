@@ -9,7 +9,6 @@ include { DREP } from '../modules/drep'
 
 workflow PROK_SUBWF {
     take:
-        sample_name
         bins
         metabat_depth
         ref_catdb
@@ -20,19 +19,20 @@ workflow PROK_SUBWF {
         ref_gtdbtk
         ref_rfam_rrna_models
     main:
-        CLEAN_AND_FILTER_BINS(sample_name, bins, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc)
+        CLEAN_AND_FILTER_BINS(bins, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc)
 
-        CHECKM2(CLEAN_AND_FILTER_BINS.out.filtered_bins, ref_checkm)
+        //CHECKM2(CLEAN_AND_FILTER_BINS.out.filtered_bins, ref_checkm)
 
-        nc_drep = channel.value(0.60)
-        DREP(CLEAN_AND_FILTER_BINS.out.filtered_bins, CHECKM2.out.checkm_table, nc_drep)
+        //nc_drep = channel.value(0.60)
+        //DREP(CLEAN_AND_FILTER_BINS.out.filtered_bins, CHECKM2.out.checkm_table, nc_drep)
 
-        DETECT_RRNA(DREP.out.dereplicated_genomes, ref_rfam_rrna_models)
+        //DETECT_RRNA(DREP.out.dereplicated_genomes, ref_rfam_rrna_models)
 
-        COVERAGE_RECYCLER(DREP.out.dereplicated_genomes, metabat_depth)
+        //COVERAGE_RECYCLER(DREP.out.dereplicated_genomes, metabat_depth)
 
-        CHANGE_UNDERSCORE_TO_DOT(DREP.out.dereplicated_genomes)
-        GTDBTK(CHANGE_UNDERSCORE_TO_DOT.out.return_contigs, ref_gtdbtk)
+        //CHANGE_UNDERSCORE_TO_DOT(DREP.out.dereplicated_genomes)
+        //GTDBTK(CHANGE_UNDERSCORE_TO_DOT.out.return_contigs, ref_gtdbtk)
     emit:
+        out = CLEAN_AND_FILTER_BINS.out.gunc_report
         genomes = CHANGE_UNDERSCORE_TO_DOT.out.return_contigs
 }

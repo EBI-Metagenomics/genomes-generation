@@ -22,7 +22,7 @@ ref_eukcc = file("${params.eukcc_ref_db}", checkIfExists: true)
 */
 include { PREPARE_INPUT } from '../subworkflows/prepare_input_files'
 include { BINNING } from '../subworkflows/binning'
-//include { EUK_SUBWF } from './euk_part'
+include { EUK_SUBWF } from './euk_part'
 //include { PROK_SUBWF } from './prok_part'
 
 /*
