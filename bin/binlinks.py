@@ -181,6 +181,7 @@ def main():
     logging.debug("Constructing output dict")
     if args.contigs:
         logging.debug("contig mode")
+        logging.debug(f"Link table has {len(link_table)} records")
         for contig_1, linked in link_table.items():
             for contig_2, links in linked.items():
                 out_data.append(

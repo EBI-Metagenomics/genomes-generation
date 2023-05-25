@@ -6,7 +6,7 @@
 study_name = channel.value(params.study_name)
 assemblies = channel.fromPath("${params.assemblies}/*", checkIfExists: true)
 raw_reads = channel.fromPath("${params.raw_reads}/*", checkIfExists: true)
-
+rename_file = channel.fromPath(params.rename_file)
 /*
     ~~~~~~~~~~~~~~~~~~
      DBs
@@ -46,7 +46,7 @@ workflow GGP {
     data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: 0)  // [ run_accession, assembly_file, [raw_reads] ]
     data_by_run_accession.view()
 
-    PREPARE_INPUT(data_by_run_accession, ref_genome, ref_genome_name)  // bam output in format: [sample_name, [bam, bam.bai]]
+    PREPARE_INPUT(data_by_run_accession, ref_genome, ref_genome_name, rename_file)  // bam output in format: [sample_name, [bam, bam.bai]]
 
     BINNING(PREPARE_INPUT.out.contigs_fixed, PREPARE_INPUT.out.reads_cleaned)
 

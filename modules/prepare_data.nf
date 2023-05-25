@@ -39,3 +39,46 @@ process CHANGE_UNDERSCORE_TO_DOT {
     sed -i 's/\\_/\\./' ${contigs}
     """
 }
+
+/*
+ * change run accession to assembly accession
+*/
+process CHANGE_ERR_TO_ERZ {
+
+    input:
+    tuple val(run_accession), path(files)
+    path rename_file
+
+    output:
+    tuple val(run_accession), path("*changed*.fastq.gz"), emit: return_files
+
+    script:
+    input_ch = files.collect()
+    print(input_ch)
+    if (input_ch.size() == 1 ) {
+        print('single')
+        """
+        echo ${run_accession}
+        grep "${run_accession}" ${rename_file} > help_file
+        export from_accession=\$(cat help_file | cut -f1)
+        export to_accession=\$(cat help_file | cut -f2)
+        echo "\${from_accession} --> \${to_accession}"
+
+        zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed.fastq.gz
+        """
+    }
+    else if (input_ch.size() == 2 ) {
+        """
+        echo ${run_accession}
+        grep "${run_accession}" ${rename_file} > help_file
+        export from_accession=\$(cat help_file | cut -f1)
+        export to_accession=\$(cat help_file | cut -f2)
+        echo "\${from_accession} --> \${to_accession}"
+
+        zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed_1.fastq.gz
+        zcat "${input_ch[1]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed_2.fastq.gz
+        """
+    }
+    else {
+        print('incorrect input') }
+}
