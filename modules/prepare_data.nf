@@ -54,7 +54,6 @@ process CHANGE_ERR_TO_ERZ {
 
     script:
     input_ch = files.collect()
-    print(input_ch)
     if (input_ch.size() == 1 ) {
         print('single')
         """

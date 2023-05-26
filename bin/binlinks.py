@@ -8,6 +8,8 @@ import argparse
 import logging
 import csv
 
+BIN_DEFAULT_SEPARATOR = '.'
+BAM_DEFAULT_SEPARATOR = '.'
 
 def is_in(read, contig_map, within=1000):
     if read.reference_name not in contig_map.keys():
@@ -36,7 +38,7 @@ def keep_read(read, contig_map, within=1000, min_ANI=98, min_cov=0):
         return False
 
 
-def contig_map(bindir, suffix=".fa"):
+def contig_map(bindir, bin_sep, suffix=".fa"):
     m = {}
     for f in os.listdir(bindir):
         if f.endswith(suffix) is False:
@@ -44,11 +46,14 @@ def contig_map(bindir, suffix=".fa"):
         path = os.path.join(bindir, f)
         with open(path, "r") as handle:
             for record in SeqIO.parse(handle, "fasta"):
-                m[record.name] = len(record.seq)
+                if bin_sep != BIN_DEFAULT_SEPARATOR:
+                    m[record.name.replace(bin_sep, BIN_DEFAULT_SEPARATOR)] = len(record.seq)
+                else:
+                    m[record.name] = len(record.seq)
     return m
 
 
-def bin_map(bindir, suffix=".fa"):
+def bin_map(bindir, bin_sep, suffix=".fa"):
     contigs = defaultdict(str)
     contigs_per_bin = defaultdict(int)
     for f in os.listdir(bindir):
@@ -60,7 +65,15 @@ def bin_map(bindir, suffix=".fa"):
             for record in SeqIO.parse(handle, "fasta"):
                 contigs[record.name] = binname
                 contigs_per_bin[binname] += 1
-    return contigs, contigs_per_bin
+
+    logging.debug('Change separator in bin dictionary')
+    return_contigs = defaultdict(str)
+    if bin_sep != BIN_DEFAULT_SEPARATOR:
+        for i in contigs:
+            return_contigs[i.replace(bin_sep, BIN_DEFAULT_SEPARATOR)] = contigs[i]
+        return return_contigs, contigs_per_bin
+    else:
+        return contigs, contigs_per_bin
 
 
 def read_pair_generator(bam):
@@ -98,6 +111,18 @@ def main():
         dest="bam",
         type=str,
         help="Bam with allr eads aligned against all contigs making up the bins",
+    )
+    parser.add_argument("--bam-separator",
+        dest="bam_sep",
+        type=str,
+        help="Separator in BAM names, ex ERZ.1 (sep = .) or ERZ_1 (sep = _)",
+        default=BAM_DEFAULT_SEPARATOR,
+    )
+    parser.add_argument("--bin-separator",
+        dest="bin_sep",
+        type=str,
+        help="Separator in BINS.fa names, ex ERZ.1 (sep = .) or ERZ_1 (sep = _)",
+        default=BIN_DEFAULT_SEPARATOR,
     )
     parser.add_argument(
         "--out",
@@ -156,8 +181,8 @@ def main():
     bindir = args.bindir
     samfile = pysam.AlignmentFile(args.bam, "rb")
 
-    cm = contig_map(bindir)
-    bm, contigs_per_bin = bin_map(bindir)
+    cm = contig_map(bindir, args.bin_sep)
+    bm, contigs_per_bin = bin_map(bindir, args.bin_sep)
 
     link_table = defaultdict(lambda: defaultdict(int))
     bin_table = defaultdict(lambda: defaultdict(int))
