@@ -1,4 +1,43 @@
 /*
+    ~~~~~~~~~~~~~~~~~~
+     uncompress
+    ~~~~~~~~~~~~~~~~~~
+*/
+process GUNZIP {
+    input:
+    path(compressed_file)
+
+    output:
+    path("out/*"), emit: uncompressed
+
+    script:
+    """
+    mkdir out
+    cp ${compressed_file} out
+    cd out
+    gunzip *
+    """
+}
+
+/*
+    ~~~~~~~~~~~~~~~~~~
+     compress
+    ~~~~~~~~~~~~~~~~~~
+*/
+process GZIP {
+    input:
+    path(file_to_compress)
+
+    output:
+    path("*.gz"), emit: compressed
+
+    script:
+    """
+    gzip ${file_to_compress}
+    """
+}
+
+/*
  * clean reads, change . to _ from contigs
 */
 process CHANGE_DOT_TO_UNDERSCORE {

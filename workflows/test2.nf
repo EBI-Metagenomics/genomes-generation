@@ -44,7 +44,7 @@ include { DREP } from '../modules/drep'
 include { DETECT_RRNA } from '../modules/detect_rrna'
 include { RENAME } from '../modules/rename'
 include { COVERAGE_RECYCLER } from '../modules/cov_recycler'
-include { CHANGE_UNDERSCORE_TO_DOT } from '../modules/prepare_data'
+include { CHANGE_UNDERSCORE_TO_DOT } from '../modules/utils'
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow

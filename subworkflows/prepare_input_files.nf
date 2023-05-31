@@ -3,11 +3,11 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { GUNZIP } from '../modules/gunzip'
-include { CHANGE_DOT_TO_UNDERSCORE } from '../modules/prepare_data'
+include { GUNZIP } from '../modules/utils'
+include { CHANGE_DOT_TO_UNDERSCORE } from '../modules/utils'
 include { FASTP } from '../modules/fastp'
-include { DECONTAMINATION } from '../modules/decontamination'
-include { CHANGE_ERR_TO_ERZ } from '../modules/prepare_data'
+include { DECONTAMINATION } from '../subworkflows/decontamination'
+include { CHANGE_ERR_TO_ERZ } from '../modules/utils'
 
 workflow PREPARE_INPUT {
     take:
@@ -21,7 +21,7 @@ workflow PREPARE_INPUT {
     CHANGE_DOT_TO_UNDERSCORE(input_data.map{item -> tuple(item[0], item[1])})           // tuple(accession, assembly)
 
     // change ERR in reads to ERZ
-    CHANGE_ERR_TO_ERZ(input_data.map{item -> tuple(item[0], item[2])}, rename_file)              // tuple(accession, [reads]])
+    CHANGE_ERR_TO_ERZ(input_data.map{item -> tuple(item[0], item[2])}, rename_file.first())              // tuple(accession, [reads]])
 
     // --- trimming reads
     FASTP(CHANGE_ERR_TO_ERZ.out.return_files)
@@ -30,5 +30,4 @@ workflow PREPARE_INPUT {
     emit:
         contigs_fixed = CHANGE_DOT_TO_UNDERSCORE.out.return_contigs
         reads_cleaned = DECONTAMINATION.out.decontaminated_reads
-        bams = DECONTAMINATION.out.bams
 }

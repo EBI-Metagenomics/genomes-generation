@@ -3,7 +3,7 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { GUNZIP } from '../modules/gunzip'
+include { GUNZIP } from '../modules/utils'
 include { METAWRAP_BINNING } from '../modules/metawrap'
 include { BIN_REFINEMENT } from '../modules/metawrap'
 
