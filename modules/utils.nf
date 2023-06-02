@@ -54,12 +54,45 @@ process CHANGE_DOT_TO_UNDERSCORE {
     tuple val(accession), path(contigs)
 
     output:
-    tuple val(accession), path("${contigs}"), emit: return_contigs
+    tuple val(accession), path("${contigs}"), emit: underscore_contigs
 
     script:
     """
     sed -i 's/\\./\\_/' ${contigs}
     """
+}
+
+process CHANGE_DOT_TO_UNDERSCORE_READS {
+
+    container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
+
+    publishDir(
+        path: "${params.outdir}/prepare_data",
+        mode: 'copy',
+        failOnError: true
+    )
+
+    input:
+    tuple val(accession), path(reads)
+
+    output:
+    tuple val(accession), path("*underscore*.fastq.gz"), emit: underscore_reads
+
+    script:
+    input_ch = reads.collect()
+    if (input_ch.size() == 1 ) {
+        """
+        zcat "${input_ch[0]}" | sed '/^@/ s/\\./\\_/' | gzip > ${accession}_underscore.fastq.gz
+        """
+    }
+    else if (input_ch.size() == 2 ) {
+        """
+        zcat "${input_ch[0]}" | sed '/^@/ s/\\./\\_/' | gzip > ${accession}_underscore_1.fastq.gz
+        zcat "${input_ch[1]}" | sed '/^@/ s/\\./\\_/' | gzip > ${accession}_underscore_2.fastq.gz
+        """
+    }
+    else {
+        print('incorrect input') }
 }
 
 /*
@@ -94,7 +127,6 @@ process CHANGE_ERR_TO_ERZ {
     script:
     input_ch = files.collect()
     if (input_ch.size() == 1 ) {
-        print('single')
         """
         echo ${run_accession}
         grep "${run_accession}" ${rename_file} > help_file
