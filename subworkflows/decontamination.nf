@@ -22,7 +22,7 @@ workflow DECONTAMINATION {
     //else {
     //    print('incorrect reads') }
 
-    ALIGNMENT(reads, ref_genome, ref_genome_name)
+    ALIGNMENT(reads, ref_genome, ref_genome_name, channel.value("-f 12 -F 256 -uS"))
 
     BAM_TO_FASTQ(ALIGNMENT.out.bams, mode)
 

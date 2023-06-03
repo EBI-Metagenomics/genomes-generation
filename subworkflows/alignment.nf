@@ -23,7 +23,7 @@ workflow ALIGN {
             return bname
         }
     assembly = sample_data.map(getFastaBasename)
-    ALIGNMENT(sample_reads, ref_db, assembly)
+    ALIGNMENT(sample_reads, ref_db, assembly, channel.value("-q 20 -Sb"))
 
     emit:
         annotated_bams = ALIGNMENT.out.bams
