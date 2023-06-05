@@ -14,7 +14,7 @@ rename_file = channel.fromPath(params.rename_file)
 */
 ref_genome = channel.fromPath(params.ref_genome, checkIfExists: true)
 ref_genome_name = channel.value(params.ref_genome_name)
-ref_eukcc = file("${params.eukcc_ref_db}", checkIfExists: true)
+ref_eukcc = channel.fromPath(params.eukcc_ref_db, checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps

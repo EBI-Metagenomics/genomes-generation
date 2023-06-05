@@ -82,13 +82,13 @@ process CHANGE_DOT_TO_UNDERSCORE_READS {
     input_ch = reads.collect()
     if (input_ch.size() == 1 ) {
         """
-        zcat "${input_ch[0]}" | sed '/^@/ s/\\./\\_/' | gzip > ${accession}_underscore.fastq.gz
+        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${accession}_underscore.fastq.gz
         """
     }
     else if (input_ch.size() == 2 ) {
         """
-        zcat "${input_ch[0]}" | sed '/^@/ s/\\./\\_/' | gzip > ${accession}_underscore_1.fastq.gz
-        zcat "${input_ch[1]}" | sed '/^@/ s/\\./\\_/' | gzip > ${accession}_underscore_2.fastq.gz
+        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${accession}_underscore_1.fastq.gz
+        zcat "${input_ch[1]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${accession}_underscore_2.fastq.gz
         """
     }
     else {

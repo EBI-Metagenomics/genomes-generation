@@ -3,8 +3,7 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { INDEX_REF_GENOME } from '../modules/align_bwa'
-include { ALIGNMENT } from '../modules/align_bwa'
+include { ALIGNMENT_WITH_INDEXING } from '../modules/align_bwa'
 
 workflow ALIGN {
     take:
@@ -12,19 +11,18 @@ workflow ALIGN {
         reads    // tuple(name, contigs)
 
     main:
-    INDEX_REF_GENOME(contigs)
 
-    ref_folders = INDEX_REF_GENOME.out.index_folder
-    sample_data = reads.combine(ref_folders, by: 0).combine(contigs, by: 0)  // because it can swap ref_db and reads
+    sample_data = reads.combine(contigs, by: 0)  // because it can swap contigs and reads
     sample_reads = sample_data.map(item -> tuple(item[0], item[1]))
     ref_db = sample_data.map(item -> item[2])
     getFastaBasename = { fasta_file ->
-            def bname = fasta_file[3].toString().tokenize("/")[-1]
+            def bname = fasta_file[2].toString().tokenize("/")[-1]
             return bname
         }
     assembly = sample_data.map(getFastaBasename)
-    ALIGNMENT(sample_reads, ref_db, assembly, channel.value("-q 20 -Sb"))
+    samtools_args = channel.value("-q 20 -Sb")
+    ALIGNMENT_WITH_INDEXING(sample_reads, ref_db, assembly, samtools_args)
 
     emit:
-        annotated_bams = ALIGNMENT.out.bams
+        annotated_bams = ALIGNMENT_WITH_INDEXING.out.bams
 }

@@ -17,7 +17,13 @@ process LINKTABLE {
 
     script:
     """
-    binlinks.py  --ANI 99 --within 1500 --out ${name}.links.csv --bindir ${bindir} --bam ${bam[0]}
+    BINS=\$(ls ${bindir} | grep -v "unbinned" | wc -l)
+    if [ \$BINS -eq 0 ]; then
+        echo "creating empty links file"
+        touch ${name}.links.csv
+    else
+        binlinks.py  --ANI 99 --within 1500 --out ${name}.links.csv --bindir ${bindir} --bam ${bam[0]}
+    fi
     """
 }
 
