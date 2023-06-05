@@ -8,8 +8,8 @@ import argparse
 import logging
 import csv
 
-BIN_DEFAULT_SEPARATOR = '.'
-BAM_DEFAULT_SEPARATOR = '.'
+BIN_DEFAULT_SEPARATOR = '_'
+BAM_DEFAULT_SEPARATOR = '_'
 
 def is_in(read, contig_map, within=1000):
     if read.reference_name not in contig_map.keys():
@@ -31,7 +31,6 @@ def keep_read(read, contig_map, within=1000, min_ANI=98, min_cov=0):
         * 100
     )
     cov = read.query_alignment_length / float(read.query_length) * 100
-
     if ani >= min_ANI and cov >= min_cov and is_in(read, contig_map, within) is True:
         return True
     else:
@@ -39,8 +38,11 @@ def keep_read(read, contig_map, within=1000, min_ANI=98, min_cov=0):
 
 
 def contig_map(bindir, bin_sep, suffix=".fa"):
+    logging.debug("Map contigs")
     m = {}
-    for f in os.listdir(bindir):
+    bins = [item for item in os.listdir(bindir) if 'unbinned' not in item]
+    for f in bins:
+        logging.debug(f"Processing {f}")
         if f.endswith(suffix) is False:
             continue
         path = os.path.join(bindir, f)
@@ -50,13 +52,16 @@ def contig_map(bindir, bin_sep, suffix=".fa"):
                     m[record.name.replace(bin_sep, BIN_DEFAULT_SEPARATOR)] = len(record.seq)
                 else:
                     m[record.name] = len(record.seq)
+    logging.debug(f"Map contigs {len(m)}")
     return m
 
 
 def bin_map(bindir, bin_sep, suffix=".fa"):
+    logging.debug("Bin map")
     contigs = defaultdict(str)
     contigs_per_bin = defaultdict(int)
-    for f in os.listdir(bindir):
+    bins = [item for item in os.listdir(bindir) if 'unbinned' not in item]
+    for f in bins:
         if f.endswith(suffix) is False:
             continue
         path = os.path.join(bindir, f)
@@ -65,8 +70,8 @@ def bin_map(bindir, bin_sep, suffix=".fa"):
             for record in SeqIO.parse(handle, "fasta"):
                 contigs[record.name] = binname
                 contigs_per_bin[binname] += 1
-
-    logging.debug('Change separator in bin dictionary')
+    logging.debug(f"Bin map contigs:{len(contigs)}, contigs_per_bin:{len(contigs_per_bin)}")
+    logging.debug(f'Change separator in bin dictionary if {bin_sep} != {BIN_DEFAULT_SEPARATOR}')
     return_contigs = defaultdict(str)
     if bin_sep != BIN_DEFAULT_SEPARATOR:
         for i in contigs:
@@ -178,11 +183,10 @@ def main():
         level=logLevel,
     )
 
-    bindir = args.bindir
     samfile = pysam.AlignmentFile(args.bam, "rb")
 
-    cm = contig_map(bindir, args.bin_sep)
-    bm, contigs_per_bin = bin_map(bindir, args.bin_sep)
+    cm = contig_map(args.bindir, args.bin_sep)
+    bm, contigs_per_bin = bin_map(args.bindir, args.bin_sep)
 
     link_table = defaultdict(lambda: defaultdict(int))
     bin_table = defaultdict(lambda: defaultdict(int))
@@ -197,6 +201,7 @@ def main():
             link_table[read.reference_name][mate.reference_name] += 1
             if read.reference_name != mate.reference_name:
                 link_table[mate.reference_name][read.reference_name] += 1
+    logging.debug(f"Link table has {len(link_table)} records")
 
     # generate bin table
     for contig_1, dic in link_table.items():

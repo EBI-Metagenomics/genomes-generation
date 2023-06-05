@@ -22,7 +22,7 @@ workflow PREPARE_INPUT {
     CHANGE_DOT_TO_UNDERSCORE_CONTIGS(input_data.map{item -> tuple(item[0], item[1])})           // tuple(accession, assembly)
 
     // change ERR in reads to ERZ
-    CHANGE_ERR_TO_ERZ_READS(input_data.map{item -> tuple(item[0], item[2])}, rename_file.first())              // tuple(accession, [reads]])
+    CHANGE_ERR_TO_ERZ_READS(input_data.map{item -> tuple(item[0], item[2])}, rename_file.first())    // tuple(accession, [reads]])
     CHANGE_DOT_TO_UNDERSCORE_READS(CHANGE_ERR_TO_ERZ_READS.out.return_files)
 
     // --- trimming reads

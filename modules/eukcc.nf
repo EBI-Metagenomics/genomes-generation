@@ -48,7 +48,7 @@ process EUKCC {
 
     output:
     tuple val(name), path("*_merged_bins"), emit: eukcc_results
-    tuple val(name), path("eukcc.csv"), emit: eukcc_csv
+    tuple val(name), path("*_merged_bins/eukcc.csv"), emit: eukcc_csv
 
     script:
     """

@@ -9,13 +9,12 @@ include { BIN_REFINEMENT } from '../modules/metawrap'
 
 workflow BINNING {
     take:
-        contigs  // tuple(name, contigs)
-        reads    // tuple(name, contigs)
+        input_data  // tuple(name, reads, contigs)
     main:
 
-    GUNZIP(reads.map{item -> item[1]})
+    GUNZIP(input_data.map{item -> item[1]})  // reads
 
-    METAWRAP_BINNING(contigs, GUNZIP.out.uncompressed)
+    METAWRAP_BINNING(input_data.map{item -> tuple(item[0], item[2])}, GUNZIP.out.uncompressed)  // tuple(name, contigs), reads
 
     BIN_REFINEMENT(
         METAWRAP_BINNING.out.binning_metabat2,
