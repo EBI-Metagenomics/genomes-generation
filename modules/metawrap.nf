@@ -11,25 +11,24 @@ process METAWRAP_BINNING {
     input:
     tuple val(name), path(contigs)
     path input_reads
+    val binner
 
     output:
-    tuple val(name), path("binning/metabat2_bins"), emit: binning_metabat2
-    tuple val(name), path("binning/concoct_bins"), emit: binning_concoct
-    tuple val(name), path("binning/maxbin2_bins"), emit: binning_maxbin2
-    tuple val(name), path("binning/work_files/metabat_depth.txt"), emit: metabat_depth_for_coverage
+    tuple val(name), path("binning/*_bins"), emit: binning
+    tuple val(name), path("binning/work_files/metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
 
     script:
     reads = input_reads.collect()
-    def args = "";
+    def args = " --${binner} ";
     if ( input_reads.size() == 1 ) {
-        args = "--single-end ${input_reads}"
+        args += "--single-end ${input_reads}"
     }
     if ( input_reads.size() == 2 ) {
-        args = "${input_reads[0]} ${input_reads[1]}"
+        args += "${input_reads[0]} ${input_reads[1]}"
     }
     """
     echo "Running binning"
-    metawrap binning -t 8 -m 10 -l 2500 --metabat2 --concoct --maxbin2 -a ${contigs} -o binning ${args}
+    metawrap binning -t 8 -m 10 -l 2500 -a ${contigs} -o binning ${args}
     """
 }
 
