@@ -1,4 +1,5 @@
 process CHECKM2 {
+    tag "${name}"
 
     publishDir(
         path: "${params.outdir}/checkm2",
@@ -7,11 +8,11 @@ process CHECKM2 {
     )
 
     input:
-    path bins
+    tuple val(name), path(bins)
     path checkm_db
 
     output:
-    path "all.stats.clean", emit: checkm_table
+    tuple val(name), path("all.stats.clean"), emit: checkm_table
 
     script:
     """
@@ -20,6 +21,6 @@ process CHECKM2 {
 
     echo "checkm table"
     echo "genome,completeness,contamination" > all.stats.clean
-    tail -n +2 checkm_output/quality_report.tsv | cut -f1-3 | tr '\t' ',' | sed 's/\\,/\\.fa\\,/' >> all.stats.clean
+    tail -n +2 checkm_output/quality_report.tsv | cut -f1-3 | tr '\\t' ',' | sed 's/\\,/\\.fa\\,/' >> all.stats.clean
     """
 }

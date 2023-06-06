@@ -2,7 +2,7 @@
  * Host decontamination
 */
 process BAM_TO_FASTQ {
-
+    tag "${name}"
     publishDir "${params.outdir}/qc", mode: 'copy'
 
     label 'bam_to_fastq'
@@ -21,14 +21,15 @@ process BAM_TO_FASTQ {
     if ( mode == "single" ) {
         """
         echo "samtools"
-        samtools fastq ${bams[0]} > ${name}_clean.fastq
+        samtools fastq -@ ${task.cpus} ${bams[0]} > ${name}_clean.fastq
 
         gzip ${name}_clean.fastq
         """
     } else if ( mode == "paired" ) {
         """
         echo "samtools fastq"
-        samtools fastq -1 ${name}_clean_1.fastq \
+        samtools fastq -@ ${task.cpus} \
+        -1 ${name}_clean_1.fastq \
         -2 ${name}_clean_2.fastq \
         -0 /dev/null \
         -s /dev/null \

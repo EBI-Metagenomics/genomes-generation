@@ -3,6 +3,7 @@
 */
 process RENAME {
 
+    tag "rename ${fasta}"
     publishDir(
         path: "${params.outdir}/drep",
         mode: 'copy',

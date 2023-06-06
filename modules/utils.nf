@@ -42,6 +42,7 @@ process GZIP {
 */
 process CHANGE_DOT_TO_UNDERSCORE {
 
+    tag "${name}"
     container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
 
     publishDir(
@@ -51,10 +52,10 @@ process CHANGE_DOT_TO_UNDERSCORE {
     )
 
     input:
-    tuple val(accession), path(contigs)
+    tuple val(name), path(contigs)
 
     output:
-    tuple val(accession), path("${contigs}"), emit: underscore_contigs
+    tuple val(name), path("${contigs}"), emit: underscore_contigs
 
     script:
     """
@@ -63,7 +64,7 @@ process CHANGE_DOT_TO_UNDERSCORE {
 }
 
 process CHANGE_DOT_TO_UNDERSCORE_READS {
-
+    tag "${name}"
     container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
 
     publishDir(
@@ -73,22 +74,22 @@ process CHANGE_DOT_TO_UNDERSCORE_READS {
     )
 
     input:
-    tuple val(accession), path(reads)
+    tuple val(name), path(reads)
 
     output:
-    tuple val(accession), path("*underscore*.fastq.gz"), emit: underscore_reads
+    tuple val(name), path("*underscore*.fastq.gz"), emit: underscore_reads
 
     script:
     input_ch = reads.collect()
     if (input_ch.size() == 1 ) {
         """
-        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${accession}_underscore.fastq.gz
+        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${name}_underscore.fastq.gz
         """
     }
     else if (input_ch.size() == 2 ) {
         """
-        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${accession}_underscore_1.fastq.gz
-        zcat "${input_ch[1]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${accession}_underscore_2.fastq.gz
+        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${name}_underscore_1.fastq.gz
+        zcat "${input_ch[1]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${name}_underscore_2.fastq.gz
         """
     }
     else {
@@ -100,11 +101,13 @@ process CHANGE_DOT_TO_UNDERSCORE_READS {
 */
 process CHANGE_UNDERSCORE_TO_DOT {
 
+    tag "${name} ${contigs}"
+
     input:
-    path contigs
+    tuple val(name), path(contigs)
 
     output:
-    path "${contigs.baseName}", emit: return_contigs
+    tuple val(name), path("${contigs.baseName}"), emit: return_contigs
 
     script:
     """
@@ -116,20 +119,21 @@ process CHANGE_UNDERSCORE_TO_DOT {
  * change run accession to assembly accession
 */
 process CHANGE_ERR_TO_ERZ {
+    tag "${name}"
 
     input:
-    tuple val(run_accession), path(files)
+    tuple val(name), path(files)
     path rename_file
 
     output:
-    tuple val(run_accession), path("*changed*.fastq.gz"), emit: return_files
+    tuple val(name), path("*changed*.fastq.gz"), emit: return_files
 
     script:
     input_ch = files.collect()
     if (input_ch.size() == 1 ) {
         """
-        echo ${run_accession}
-        grep "${run_accession}" ${rename_file} > help_file
+        echo ${name}
+        grep "${name}" ${rename_file} > help_file
         export from_accession=\$(cat help_file | cut -f1)
         export to_accession=\$(cat help_file | cut -f2)
         echo "\${from_accession} --> \${to_accession}"
@@ -139,14 +143,14 @@ process CHANGE_ERR_TO_ERZ {
     }
     else if (input_ch.size() == 2 ) {
         """
-        echo ${run_accession}
-        grep "${run_accession}" ${rename_file} > help_file
+        echo ${name}
+        grep "${name}" ${rename_file} > help_file
         export from_accession=\$(cat help_file | cut -f1)
         export to_accession=\$(cat help_file | cut -f2)
         echo "\${from_accession} --> \${to_accession}"
 
-        zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed_1.fastq.gz
-        zcat "${input_ch[1]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed_2.fastq.gz
+        zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${name}_changed_1.fastq.gz
+        zcat "${input_ch[1]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${name}_changed_2.fastq.gz
         """
     }
     else {

@@ -2,7 +2,7 @@
  * Host decontamination
 */
 process ALIGNMENT {
-
+    tag "${name}"
     label 'alignment'
 
     container 'quay.io/microbiome-informatics/bwamem2:2.2.1'

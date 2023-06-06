@@ -1,5 +1,5 @@
 process LINKTABLE {
-
+    tag "${name} ${binner}"
     publishDir(
         path: "${params.outdir}/eukcc/",
         mode: 'copy',
@@ -9,20 +9,20 @@ process LINKTABLE {
     container 'quay.io/microbiome-informatics/eukrecover.python3base:v1'
 
     input:
-    tuple val(name), path(bindir)
-    tuple val(name), path(bam)
+    tuple val(name), path(bam), path(bindir)
+    val(binner)
 
     output:
-    tuple val(name), path("*.links.csv"), emit: links_table
+    tuple val(name), path("*.links.csv"), path(bindir), emit: links_table
 
     script:
     """
     BINS=\$(ls ${bindir} | grep -v "unbinned" | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "creating empty links file"
-        touch ${name}.links.csv
+        touch ${name}.${binner}.links.csv
     else
-        binlinks.py  --ANI 99 --within 1500 --out ${name}.links.csv --bindir ${bindir} --bam ${bam[0]}
+        binlinks.py  --ANI 99 --within 1500 --out ${name}.${binner}.links.csv --bindir ${bindir} --bam ${bam[0]}
     fi
     """
 }
@@ -31,6 +31,7 @@ process LINKTABLE {
  * EukCC
 */
 process EUKCC {
+    tag "${name} ${binner}"
 
     publishDir(
         path: "${params.outdir}/eukcc/",
@@ -42,13 +43,12 @@ process EUKCC {
 
     input:
     val binner
-    tuple val(name), path(links)
+    tuple val(name), path(links), path(bindir)
     path eukcc_db
-    tuple val(name), path(bindir)
 
     output:
     tuple val(name), path("*_merged_bins"), emit: eukcc_results
-    tuple val(name), path("*_merged_bins/eukcc.csv"), emit: eukcc_csv
+    tuple val(name), path("${name}_${binner}.eukcc.csv"), emit: eukcc_csv
 
     script:
     """
@@ -64,5 +64,7 @@ process EUKCC {
         --out ${binner}_${name}_merged_bins \
         --prefix "${binner}_${name}_merged." \
         ${bindir}
+
+    cp *_merged_bins/eukcc.csv ${name}_${binner}.eukcc.csv
     """
 }

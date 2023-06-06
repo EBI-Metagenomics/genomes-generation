@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -9,6 +11,7 @@ import os
 import subprocess
 import glob
 
+COVERAGE_FOLDER_NAME = 'coverage'
 
 def process_genomes(genomes):
     ### Generating the contigs2bins.txt file
@@ -30,7 +33,7 @@ def process_genomes(genomes):
         for bin_file in bin_list:
             bin_prefix = bin_file.replace('.fa', '')
             bin_contigs[bin_prefix] = []
-            for record in SeqIO.parse(derep_genomes + '/' + bin_file, "fasta"):
+            for record in SeqIO.parse(genomes + '/' + bin_file, "fasta"):
                 bin_contigs[bin_prefix].append(str(record.id))
                 contigs2bins_out.write(bin_prefix + '\t' + str(record.id) + '\n')
     return bin_list, bin_contigs
@@ -48,9 +51,10 @@ def process_metabat_depth(metabat_depth):
         with open(cov_path, 'r') as curr_cov:
             for line in curr_cov.readlines():
                 if not line.startswith('contigName'):
-                    contigName,contigLen,totalAvgDepth,bam,bamvar=line.strip().split('\t')
-                    values = (contigLen,totalAvgDepth,bam,bamvar)
-                    contig_cov[contigName]=values
+                    contigName,contigLen, totalAvgDepth, bam, bamvar=line.strip().split('\t')
+                    values = (contigLen, totalAvgDepth, bam, bamvar)
+                    contig_cov[contigName] = values
+    print(contig_cov)
     return contig_cov
 
 
@@ -63,11 +67,11 @@ if __name__ == "__main__":
         "-g", "--genomes", dest="genomes", help="/full/path/to/dereplicated_genomes", required=True
     )
     parser.add_argument(
-        "-m", "--metabat-depth", dest="metabat_depth", help="metabat_depth.txt", required=True
+        "-m", "--metabat-depth", dest="metabat_depth", help="metabat_depth.txt", required=True, nargs='+'
     )
     args = parser.parse_args()
-    if not os.path.exists('coverage'):
-        os.mkdir('coverage')
+    if not os.path.exists(COVERAGE_FOLDER_NAME):
+        os.mkdir(COVERAGE_FOLDER_NAME)
 
     bin_list, bin_contigs = process_genomes(args.genomes)
     contig_cov = process_metabat_depth(args.metabat_depth)
@@ -78,10 +82,11 @@ if __name__ == "__main__":
     for final_bin in bin_list:
         assembled_pairs = 0
         assembly_length = 0
-        primary_dir = final_bin+'_coverage'
-        cov_ave_out = os.path.join('coverage', primary_dir, final_bin+'_MAGcoverage.txt')
-        cov_table = os.path.join('coverage', primary_dir, 'coverage.tab')
-        os.makedirs(primary_dir, exist_ok=True)
+        primary_dir = os.path.join(COVERAGE_FOLDER_NAME, final_bin+'_coverage')
+        if not os.path.exists(primary_dir):
+            os.mkdir(primary_dir)
+        cov_ave_out = os.path.join(primary_dir, final_bin+'_MAGcoverage.txt')
+        cov_table = os.path.join(primary_dir, 'coverage.tab')
 
         with open(cov_table, "w") as large_out, open(cov_ave_out, "w") as short_out:
             large_out.write(cov_tab_header+'\n')

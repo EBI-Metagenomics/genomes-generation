@@ -1,9 +1,10 @@
 process METAWRAP_BINNING {
 
+    tag "${name}"
     container 'quay.io/microbiome-informatics/metawrap:latest'
 
     publishDir(
-        path: "${params.outdir}/binning/",
+        path: "${params.outdir}/${name}/binning/",
         mode: 'copy',
         failOnError: true
     )
@@ -14,7 +15,7 @@ process METAWRAP_BINNING {
     val binner
 
     output:
-    tuple val(name), path("binning/*_bins"), emit: binning
+    tuple val(name), path("output_${binner}"), emit: binning
     tuple val(name), path("binning/work_files/metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
 
     script:
@@ -28,13 +29,27 @@ process METAWRAP_BINNING {
     }
     """
     echo "Running binning"
-    metawrap binning -t 8 -m 10 -l 2500 -a ${contigs} -o binning ${args}
+    metawrap binning -t ${task.cpus} -m ${task.memory} -l 2500 -a ${contigs} -o binning ${args}
+
+    mkdir -p output_${binner}
+    cd binning/*_bins
+    for f in \$(ls . | grep ".fa") ;
+    do
+        mv "\$f" "../../output_${binner}/${name}_${binner}_\$f" ;
+    done
+    """
+
+    stub:
+    """
+    mkdir -p output_${binner} binning/work_files
+    touch binning/work_files/metabat_depth.txt
     """
 }
 
 process BIN_REFINEMENT {
 
     //container 'quay.io/microbiome-informatics/metawrap:latest'
+    tag "${name}"
 
     publishDir(
         path: "${params.outdir}/binning/",
@@ -43,9 +58,7 @@ process BIN_REFINEMENT {
     )
 
     input:
-    tuple val(name), path(binning_metabat2)
-    tuple val(name), path(binning_concoct)
-    tuple val(name), path(binning_maxbin2)
+    tuple val(name), path(binning_metabat2), path(binning_concoct), path(binning_maxbin2)
 
     output:
     tuple val(name), path("bin_refinement/metawrap_*bins/*"), emit: bin_ref_bins
@@ -57,6 +70,12 @@ process BIN_REFINEMENT {
     metawrap bin_refinement -t ${task.cpus} -o bin_refinement \
     -A ${binning_metabat2} -B ${binning_concoct} -C ${binning_maxbin2} \
     -c 50 -x 5 -m ${task.memory}
+    """
+
+    stub:
+    """
+    mkdir -p bin_refinement/metawrap_50_5_bins
+    touch bin_refinement/metawrap_50_5_bins/${name}.bin.0.fa bin_refinement/metawrap_50_5_bins/${name}.bin.1.fa
     """
 }
 
