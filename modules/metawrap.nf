@@ -16,7 +16,7 @@ process METAWRAP_BINNING {
 
     output:
     tuple val(name), path("output_${binner}"), emit: binning
-    tuple val(name), path("binning/work_files/metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
+    tuple val(name), path("binning/work_files/${name}_metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
 
     script:
     reads = input_reads.collect()
@@ -31,18 +31,22 @@ process METAWRAP_BINNING {
     echo "Running binning"
     metawrap binning -t ${task.cpus} -m 30 -l 2500 -a ${contigs} -o binning ${args}
 
+    echo "rename bins"
     mkdir -p output_${binner}
     cd binning/*_bins
     for f in \$(ls . | grep ".fa") ;
     do
         mv "\$f" "../../output_${binner}/${name}_${binner}_\$f" ;
     done
+
+    echo "rename metabat_depth.txt"
+    mv binning/work_files/metabat_depth.txt binning/work_files/${name}_metabat_depth.txt
     """
 
     stub:
     """
     mkdir -p output_${binner} binning/work_files
-    touch binning/work_files/metabat_depth.txt
+    touch binning/work_files/${name}_metabat_depth.txt
     """
 }
 

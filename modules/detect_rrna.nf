@@ -33,7 +33,7 @@ process DETECT_RRNA {
     BASENAME=\$(basename "\${FASTA}")
     FILENAME="\${BASENAME%.*}"
 
-    mkdir "\${RESULTS_FOLDER}"
+    mkdir -p "\${RESULTS_FOLDER}"
 
     echo "[ Detecting rRNAs ] "
 

@@ -11,7 +11,8 @@ process COVERAGE_RECYCLER {
     container 'quay.io/biocontainers/biopython:1.75'
 
     input:
-    tuple val(name), path(genomes, stageAs: "genomes_dir/*"), path(metabat_depth)
+    tuple val(name), path(genomes, stageAs: "genomes_dir/*")
+    path(metabat_depth)
 
     output:
     tuple val(name), path("coverage"), emit: coverage_dir

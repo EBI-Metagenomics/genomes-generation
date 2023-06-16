@@ -1,4 +1,5 @@
 process CHECKM2 {
+
     tag "${name}"
 
     publishDir(
@@ -8,11 +9,12 @@ process CHECKM2 {
     )
 
     input:
-    tuple val(name), path(bins)
+    val(name)
+    path(bins)
     path checkm_db
 
     output:
-    tuple val(name), path("all.stats.clean"), emit: checkm_table
+    tuple val(name), path(bins), path("all.stats.clean"), emit: checkm2_results
 
     script:
     """

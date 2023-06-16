@@ -27,7 +27,7 @@ workflow CLEAN_AND_FILTER_BINS {
         filtered_bins = GUNC.out.tuple_gunc_result.filter({
                 it[2].name.contains('_complete.txt')
             }).map({ name, cluster_fasta, cluster_gunc ->
-                return tuple(name, cluster_fasta)
+                return cluster_fasta
             })
         filtered_bins.view()
     emit:
