@@ -68,3 +68,31 @@ process EUKCC {
     cp *_merged_bins/eukcc.csv ${name}_${binner}.eukcc.csv
     """
 }
+
+process EUKCC_MAG {
+    tag "${name} ${fa}"
+
+    publishDir(
+        path: "${params.outdir}/eukcc_mags/",
+        mode: 'copy',
+        failOnError: true
+    )
+
+    container 'quay.io/microbiome-informatics/eukcc:latest'
+
+    input:
+    tuple val(name), path(fa)
+    path eukcc_db
+
+    output:
+    tuple val(name), path("*.eukcc.csv"), emit: eukcc_mags_results
+
+    script:
+    """
+    eukcc --debug single \
+            --threads ${task.cpus} \
+            --db ${eukcc_db} \
+            --out output \
+            ${fa}
+    """
+}

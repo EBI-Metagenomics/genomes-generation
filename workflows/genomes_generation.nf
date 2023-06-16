@@ -66,4 +66,10 @@ workflow GGP {
         ref_gtdbtk.first(),
         ref_rfam_rrna_models.first()
     )
+    // aggregate outputs
+    // coverage
+    // drep MAGs
+    // eukcc MAGs
+    // busco MAGs
+    // QC MAGs
 }

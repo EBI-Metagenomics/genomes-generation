@@ -4,11 +4,14 @@
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { ALIGN } from '../subworkflows/subwf_alignment'
+include { ALIGN as ALIGN_BINS} from '../subworkflows/subwf_alignment'
 include { EUKCC as EUKCC_CONCOCT } from '../modules/eukcc'
 include { EUKCC as EUKCC_METABAT } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_CONCOCT } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_METABAT } from '../modules/eukcc'
 include { DREP } from '../modules/drep'
+include { BREADTH_DEPTH } from '../modules/breadth_depth'
+
 
 process CONCATENATE_QUALITY_FILES {
     tag "${name}"
@@ -51,7 +54,7 @@ process FILTER_QS50 {
     script:
     """
     # prepare drep quality file
-    cat ${quality_file} |\
+    cat ${quality_file} | grep -v "completeness" |\
         awk '{{if(\$2 - 5*\$3 >=50){{print \$0}}}}' |\
         sort -k 2,3 -n | cut -f1 > filtered_genomes.txt
     BINS=\$(cat filtered_genomes.txt | wc -l)
@@ -69,7 +72,8 @@ process FILTER_QS50 {
         for i in \$(ls ${metabat_bins_merged} | grep -w -f filtered_genomes.txt); do
             cp ${metabat_bins_merged}/\${i} output_genomes; done
 
-        grep -w -f filtered_genomes.txt ${quality_file} | tr '\\t' ',' > quality_file.csv
+        echo "genome,completeness,contamination" > quality_file.csv
+        grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
     fi
     """
 }
@@ -80,12 +84,12 @@ workflow EUK_SUBWF {
         eukcc_db
     main:
 
-        contigs = input_data.map(item -> tuple(item[0], item[1]))
+        align_input = input_data.map(item -> tuple(item[0], item[1], item[2]))
         reads = input_data.map(item -> tuple(item[0], item[2]))
         bins_concoct = input_data.map(item -> tuple(item[0], item[3]))
         bins_metabat = input_data.map(item -> tuple(item[0], item[4]))
 
-        ALIGN(contigs, reads)
+        ALIGN(align_input)
 
         // concoct
         binner1 = channel.value("concoct")
@@ -114,14 +118,13 @@ workflow EUK_SUBWF {
 
         // input: tuple (name, genomes/*, quality_file)
         euk_drep_args = channel.value('-pa 0.80 -sa 0.99 -nc 0.40 -cm larger -comp 49 -con 21')
-        DREP(FILTER_QS50.out.qs50_filtered_genomes, euk_drep_args)
+        DREP(FILTER_QS50.out.qs50_filtered_genomes, euk_drep_args, channel.value('euk'))
 
-        // aggregate outputs
-        // coverage
-        // drep MAGs
-        // eukcc MAGs
-        // busco MAGs
-        // QC MAGs
+        bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0).transpose(by:1)  // tuple(name, [bins], [reads])
+        ALIGN_BINS(bins_alignment)
+
+        BREADTH_DEPTH(ALIGN_BINS.out.annotated_bams)
     emit:
-        euk_quality = quality
+        euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map(item -> tuple(item[0], item[2]))
+        drep_output = DREP.out.dereplicated_genomes
 }

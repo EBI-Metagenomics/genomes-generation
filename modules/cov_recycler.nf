@@ -1,5 +1,7 @@
 process COVERAGE_RECYCLER {
 
+    tag "${name}"
+
     publishDir(
         path: "${params.outdir}/coverage/",
         mode: 'copy',

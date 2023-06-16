@@ -29,7 +29,7 @@ process METAWRAP_BINNING {
     }
     """
     echo "Running binning"
-    metawrap binning -t ${task.cpus} -m ${task.memory} -l 2500 -a ${contigs} -o binning ${args}
+    metawrap binning -t ${task.cpus} -m 30 -l 2500 -a ${contigs} -o binning ${args}
 
     mkdir -p output_${binner}
     cd binning/*_bins

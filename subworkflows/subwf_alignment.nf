@@ -7,19 +7,17 @@ include { ALIGNMENT_WITH_INDEXING } from '../modules/align_bwa'
 
 workflow ALIGN {
     take:
-        contigs  // tuple(name, contigs)
-        reads    // tuple(name, contigs)
+        input_data  // tuple (name, contig, [reads])
 
     main:
 
-    sample_data = reads.combine(contigs, by: 0)  // because it can swap contigs and reads
-    sample_reads = sample_data.map(item -> tuple(item[0], item[1]))
-    ref_db = sample_data.map(item -> item[2])
+    sample_reads = input_data.map(item -> tuple(item[0], item[2]))
+    ref_db = input_data.map(item -> item[1])
     getFastaBasename = { fasta_file ->
-            def bname = fasta_file[2].toString().tokenize("/")[-1]
+            def bname = fasta_file[1].toString().tokenize("/")[-1]
             return bname
         }
-    assembly = sample_data.map(getFastaBasename)
+    assembly = input_data.map(getFastaBasename)
     samtools_args = channel.value("-q 20 -Sb")
     ALIGNMENT_WITH_INDEXING(sample_reads, ref_db, assembly, samtools_args)
 

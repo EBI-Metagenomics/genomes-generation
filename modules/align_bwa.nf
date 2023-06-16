@@ -53,6 +53,8 @@ process ALIGNMENT {
 */
 process ALIGNMENT_WITH_INDEXING {
 
+    tag "${name} vs ${ref_genome_name}"
+
     label 'alignment'
 
     container 'quay.io/microbiome-informatics/bwamem2:2.2.1'
@@ -98,6 +100,6 @@ process ALIGNMENT_WITH_INDEXING {
     samtools sort -@ ${task.cpus} -O bam - -o output/${name}_sorted.bam
 
     echo "samtools index sorted bam"
-    samtools index output/${name}_sorted.bam
+    samtools index -@ ${task.cpus} output/${name}_sorted.bam
     """
 }

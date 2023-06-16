@@ -3,10 +3,10 @@
 */
 process DREP {
 
-    tag "${name} ${params}"
+    tag "${name} ${drep_params}"
 
     publishDir(
-        path: "${params.outdir}/drep",
+        path: "${params.outdir}/drep_${type}",
         mode: 'copy',
     )
 
@@ -14,10 +14,12 @@ process DREP {
 
     input:
     tuple val(name), path(genomes_list, stageAs: "genomes_dir/*"), path(quality_csv)
-    val params
+    val drep_params
+    val type
 
     output:
     tuple val(name), path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
+    tuple val(name), path("dereplicated_genomes.txt"), optional: true, emit: dereplicated_genomes_list
 
     script:
     """
@@ -31,15 +33,18 @@ process DREP {
         COUNT=\$(less filtered_genomes.txt | wc -l)
         if [ \$COUNT -eq 1 ]; then
             cp genomes_dir/*.fa drep_output/dereplicated_genomes/
+            ls drep_output/dereplicated_genomes > dereplicated_genomes.txt
         else
             echo "quality not passed -> no genomes"
         fi
     else
         dRep dereplicate -g genomes_dir/*.fa \
         -p ${task.cpus} \
-        ${params} \
+        ${drep_params} \
         --genomeInfo ${quality_csv} \
         drep_output
+
+        ls drep_output/dereplicated_genomes > dereplicated_genomes.txt
     fi
     """
 }

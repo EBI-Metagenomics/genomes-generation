@@ -1,21 +1,12 @@
 process GTDBTK {
 
+    tag "${name}"
+
     container 'quay.io/microbiome-informatics/gtdb-tk:2.1.0'
     containerOptions "--bind ${gtdbtk_refdata}:/opt/gtdbtk_refdata"
 
     publishDir(
-        path: "${params.outdir}/",
-        saveAs: {
-            filename -> {
-                def output_file = file(filename);
-                def name = output_file.getName();
-                def extension = output_file.getExtension();
-                if ( name  == "gtdbtk_results.tar.gz" ) {
-                    return "additional_data/${name}";
-                }
-                return null;
-            }
-        },
+        path: "${params.outdir}/Taxonomy",
         mode: 'copy',
         failOnError: true
     )
@@ -23,15 +14,11 @@ process GTDBTK {
     label 'process_bigmem'
 
     input:
-    path genomes_fna, stageAs: "genomes_dir/*"
+    tuple val(name), path(genomes_fna, stageAs: "genomes_dir/*")
     path gtdbtk_refdata
 
     output:
-    path 'gtdbtk_results/classify/gtdbtk.bac120.summary.tsv', optional: true, emit: gtdbtk_summary_bac120
-    path 'gtdbtk_results/classify/gtdbtk.ar53.summary.tsv', optional: true, emit: gtdbtk_summary_arc53
-    path 'gtdbtk_results/align/gtdbtk.bac120.user_msa.fasta.gz', optional: true, emit: gtdbtk_user_msa_bac120
-    path 'gtdbtk_results/align/gtdbtk.ar53.user_msa.fasta.gz', optional: true, emit: gtdbtk_user_msa_ar53
-    path 'gtdbtk_results', emit: gtdbtk_output_tarball
+    tuple val(name), path('gtdbtk_results'), emit: gtdbtk_output_tarball
 
 
     script:

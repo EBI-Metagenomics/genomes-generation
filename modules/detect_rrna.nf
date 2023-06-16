@@ -3,6 +3,8 @@
 */
 process DETECT_RRNA {
 
+    tag "${name} ${fasta}"
+
     publishDir(
         path: "${params.outdir}/RNA",
         mode: 'copy',
@@ -12,13 +14,13 @@ process DETECT_RRNA {
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'
 
     input:
-    path fasta
+    tuple val(name), path(fasta)
     path cm_models
 
     output:
-    path 'results_folder/*.out', type: 'file', emit: rrna_out_results
-    path 'results_folder/*.fasta', type: 'file', emit: rrna_fasta_results
-    path 'results_folder/*.tblout.deoverlapped', emit: rrna_tblout_deoverlapped
+    tuple val(name), path('results_folder/*.out'), emit: rrna_out_results
+    tuple val(name), path('results_folder/*.fasta'), emit: rrna_fasta_results
+    tuple val(name), path('results_folder/*.tblout.deoverlapped'), emit: rrna_tblout_deoverlapped
 
     script:
     """

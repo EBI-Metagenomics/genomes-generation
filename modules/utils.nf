@@ -25,8 +25,17 @@ process GUNZIP {
     ~~~~~~~~~~~~~~~~~~
 */
 process GZIP {
+
+    tag "${file_to_compress}"
+
+    publishDir(
+        path: "${params.outdir}/dereplicated_genomes",
+        mode: 'copy',
+        failOnError: true
+    )
+
     input:
-    path(file_to_compress)
+    file(file_to_compress)
 
     output:
     path("*.gz"), emit: compressed
@@ -107,7 +116,7 @@ process CHANGE_UNDERSCORE_TO_DOT {
     tuple val(name), path(contigs)
 
     output:
-    tuple val(name), path("${contigs.baseName}"), emit: return_contigs
+    tuple val(name), path("${contigs}"), emit: return_contigs
 
     script:
     """
