@@ -16,7 +16,7 @@ process METAWRAP_BINNING {
 
     output:
     tuple val(name), path("output_${binner}"), emit: binning
-    tuple val(name), path("binning/work_files/${name}_metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
+    tuple val(name), path("${name}_metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
 
     script:
     reads = input_reads.collect()
@@ -39,9 +39,10 @@ process METAWRAP_BINNING {
         mv "\$f" "../../output_${binner}/${name}_${binner}_\$f" ;
     done
 
+    cd ../..
     if [[ -f "binning/work_files/metabat_depth.txt" ]]; then
         echo "rename metabat_depth.txt"
-        mv binning/work_files/metabat_depth.txt binning/work_files/${name}_metabat_depth.txt
+        cp binning/work_files/metabat_depth.txt ${name}_metabat_depth.txt
     fi
     """
 

@@ -7,6 +7,7 @@ include { ALIGN } from '../subworkflows/subwf_alignment'
 include { ALIGN as ALIGN_BINS} from '../subworkflows/subwf_alignment'
 include { EUKCC as EUKCC_CONCOCT } from '../modules/eukcc'
 include { EUKCC as EUKCC_METABAT } from '../modules/eukcc'
+include { EUKCC_MAG } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_CONCOCT } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_METABAT } from '../modules/eukcc'
 include { DREP } from '../modules/drep'
@@ -127,13 +128,20 @@ workflow EUK_SUBWF {
         BREADTH_DEPTH(ALIGN_BINS.out.annotated_bams)
 
         // aggregate outputs
-        combine_drep = DREP.out.dereplicated_genomes.map(item -> tuple(channel.value("aggregated"), item[1])).groupTuple()
+        def combine_drep = DREP.out.dereplicated_genomes.map(item -> item[1]).collect()
         combine_drep.view()
-        euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
+        def drep_input = ("aggregated", combine_drep)
+        drep_input.view()
+        //if (DREP.out.dereplicated_genomes.map(item -> item[0]).collect().size() == 1) {
+        //    combine_drep = DREP.out.dereplicated_genomes }
+        //else {
+        //    combine_drep = DREP.out.dereplicated_genomes.map(item -> tuple(channel.value("aggregated"), item[1])).groupTuple() }
+
+        //euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
         //DREP_MAGS(combine_drep, euk_drep_args_mags, channel.value('euk_mags'))
 
-        // drep MAGs
         // eukcc MAGs
+        //EUKCC_MAG(??? , eukcc_db.first())
         // busco MAGs
         // QC MAGs
     emit:
