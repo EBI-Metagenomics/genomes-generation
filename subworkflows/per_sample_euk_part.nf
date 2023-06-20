@@ -10,6 +10,7 @@ include { EUKCC as EUKCC_METABAT } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_CONCOCT } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_METABAT } from '../modules/eukcc'
 include { DREP } from '../modules/drep'
+include { DREP as DREP_MAGS } from '../modules/drep'
 include { BREADTH_DEPTH } from '../modules/breadth_depth'
 
 
@@ -120,10 +121,21 @@ workflow EUK_SUBWF {
         euk_drep_args = channel.value('-pa 0.80 -sa 0.99 -nc 0.40 -cm larger -comp 49 -con 21')
         DREP(FILTER_QS50.out.qs50_filtered_genomes, euk_drep_args, channel.value('euk'))
 
+        // coverage
         bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0).transpose(by:1)  // tuple(name, [bins], [reads])
         ALIGN_BINS(bins_alignment)
-
         BREADTH_DEPTH(ALIGN_BINS.out.annotated_bams)
+
+        // aggregate outputs
+        combine_drep = DREP.out.dereplicated_genomes.map(item -> tuple(channel.value("aggregated"), item[1])).groupTuple()
+        combine_drep.view()
+        euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
+        //DREP_MAGS(combine_drep, euk_drep_args_mags, channel.value('euk_mags'))
+
+        // drep MAGs
+        // eukcc MAGs
+        // busco MAGs
+        // QC MAGs
     emit:
         euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map(item -> tuple(item[0], item[2]))
         drep_output = DREP.out.dereplicated_genomes

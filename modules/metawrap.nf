@@ -39,8 +39,10 @@ process METAWRAP_BINNING {
         mv "\$f" "../../output_${binner}/${name}_${binner}_\$f" ;
     done
 
-    echo "rename metabat_depth.txt"
-    mv binning/work_files/metabat_depth.txt binning/work_files/${name}_metabat_depth.txt
+    if [[ -f "binning/work_files/metabat_depth.txt" ]]; then
+        echo "rename metabat_depth.txt"
+        mv binning/work_files/metabat_depth.txt binning/work_files/${name}_metabat_depth.txt
+    fi
     """
 
     stub:

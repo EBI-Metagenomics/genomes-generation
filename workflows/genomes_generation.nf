@@ -27,7 +27,10 @@ ref_gtdbtk = channel.fromPath("${params.gtdbtk}", checkIfExists: true)
      Steps
     ~~~~~~~~~~~~~~~~~~
 */
-include { per_sample_GGP } from '../subworkflows/per_sample_GGP'
+include { PREPARE_INPUT } from '../subworkflows/subwf_prepare_input_files'
+include { BINNING } from '../subworkflows/subwf_binning'
+include { EUK_SUBWF } from '../subworkflows/per_sample_euk_part'
+include { PROK_SUBWF } from '../subworkflows/per_sample_prok_part'
 
 /*
     ~~~~~~~~~~~~~~~~~~
@@ -50,26 +53,18 @@ workflow GGP {
     data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: 0)  // [ run_accession, assembly_file, [raw_reads] ]
     data_by_run_accession.view()
 
-    // prepare input files
-    // input: data_by_run_accession: channel ([ run_accession, assembly_file, [raw_reads] ], ...)
-    per_sample_GGP(
-        data_by_run_accession,
-        ref_genome.first(),
-        ref_genome_name,
-        rename_file.first(),
-        ref_eukcc.first(),
-        ref_catdb.first(),
-        ref_cat_diamond.first(),
-        ref_cat_taxonomy.first(),
-        ref_gunc.first(),
-        ref_checkm.first(),
-        ref_gtdbtk.first(),
-        ref_rfam_rrna_models.first()
-    )
-    // aggregate outputs
-    // coverage
-    // drep MAGs
-    // eukcc MAGs
-    // busco MAGs
-    // QC MAGs
+    // ---- pre-processing
+    PREPARE_INPUT(data_by_run_accession, ref_genome, ref_genome_name, rename_file)      // output: [ run_accession, assembly_file, [raw_reads] ]
+
+    // ---- binning
+    BINNING(PREPARE_INPUT.out.return_tuple)
+
+    // ---- detect euk
+    // input: tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
+    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc.first())
+
+    // ---- detect prok
+    // input: tuple( run_accession, bin_refinement, depth_file )
+    PROK_SUBWF(BINNING.out.output_for_prok_part, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
+
 }
