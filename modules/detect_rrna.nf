@@ -6,7 +6,39 @@ process DETECT_RRNA {
     tag "${name} ${fasta}"
 
     publishDir(
-        path: "${params.outdir}/RNA/",
+        path: "${params.outdir}/RNA",
+        saveAs: {
+            filename -> {
+                if ( !filename.endsWith(".fasta") ) {
+                    return null
+                }
+                def output_file = file(filename);
+                def genome_id = fasta.baseName;
+                if ( output_file.name.contains("_rRNAs") ) {
+                    return "${genome_id}/${genome_id}_fasta-results/${output_file.name}";
+                }
+                return null;
+            }
+        },
+        mode: 'copy',
+        failOnError: true
+    )
+
+    publishDir(
+        path: "${params.outdir}/RNA",
+        saveAs: {
+            filename -> {
+                if ( !filename.endsWith(".out") ) {
+                    return null;
+                }
+                def output_file = file(filename);
+                def genome_id = fasta.baseName;
+                if ( output_file.name.contains("_rRNAs") || output_file.name.contains("_tRNA_20aa") ) {
+                    return "${genome_id}/${genome_id}_out-results/${output_file.name}";
+                }
+                return null;
+            }
+        },
         mode: 'copy',
         failOnError: true
     )
@@ -18,7 +50,7 @@ process DETECT_RRNA {
     path cm_models
 
     output:
-    tuple val(name), path('results_folder'), emit: rrna_out_results
+    tuple val(name), path('results_folder/*'), emit: rrna_out_results
 
     script:
     """
@@ -73,5 +105,20 @@ process DETECT_RRNA {
     parse_tRNA.py -i "\${RESULTS_FOLDER}/\${FILENAME}_stats.out" 1> "\${RESULTS_FOLDER}/\${FILENAME}_tRNA_20aa.out"
 
     echo "Completed"
+    """
+
+    stub:
+    """
+    mkdir results_folder
+    cd results_folder
+    touch ACC_bin.1_clean_RF00001.cm.out \
+        ACC_bin.1_clean_RF00177.cm.out \
+        ACC_bin.1_clean_RF02541.cm.out \
+        ACC_bin.1_clean_rRNAs.fasta \
+        ACC_bin.1_clean_rRNAs.out \
+        ACC_bin.1_clean_stats.out \
+        ACC_bin.1_clean.tblout.deoverlapped \
+        ACC_bin.1_clean_tRNA_20aa.out \
+        ACC_bin.1_clean_trna.out
     """
 }
