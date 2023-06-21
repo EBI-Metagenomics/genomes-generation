@@ -6,7 +6,7 @@ process DETECT_RRNA {
     tag "${name} ${fasta}"
 
     publishDir(
-        path: "${params.outdir}/RNA",
+        path: "${params.outdir}/RNA/",
         mode: 'copy',
         failOnError: true
     )

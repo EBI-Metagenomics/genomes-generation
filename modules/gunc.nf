@@ -13,7 +13,7 @@ process GUNC {
     file gunc_db
 
     output:
-    tuple val(name), path(fasta), path('*_gunc_*'), emit: tuple_gunc_result
+    tuple val(name), path("${fasta.baseName.replaceAll('_clean', '')}.${fasta.extension}"), path('*_gunc_*'), emit: tuple_gunc_result
     path('gunc_contaminated.txt'), emit: gunc_result
 
     script:
@@ -33,6 +33,8 @@ process GUNC {
     else
         touch ${fasta.baseName}_gunc_complete.txt
     fi
+
+    mv "$fasta" "${fasta.baseName.replaceAll('_clean', '')}.${fasta.extension}"
     """
 
     stub:
