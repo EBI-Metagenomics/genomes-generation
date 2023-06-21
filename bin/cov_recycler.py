@@ -13,7 +13,7 @@ import glob
 
 COVERAGE_FOLDER_NAME = 'coverage'
 
-def process_genomes(genomes):
+def process_genomes(genomes, name):
     ### Generating the contigs2bins.txt file
     ## Getting the list of bins
 
@@ -28,7 +28,7 @@ def process_genomes(genomes):
     if len(bin_list) == 0:
         sys.exit("No genomes were found, please ensure that your assemblies are not compressed")
 
-    with open(os.path.join('coverage', "contigs2bins.txt"), "w") as contigs2bins_out:
+    with open(os.path.join('coverage', name + "_contigs2bins.txt"), "w") as contigs2bins_out:
         bin_contigs = {}
         for bin_file in bin_list:
             bin_prefix = bin_file.replace('.fa', '')
@@ -67,13 +67,16 @@ if __name__ == "__main__":
         "-g", "--genomes", dest="genomes", help="/full/path/to/dereplicated_genomes", required=True
     )
     parser.add_argument(
+        "-n", "--name", dest="name", help="Run accession", required=True
+    )
+    parser.add_argument(
         "-m", "--metabat-depth", dest="metabat_depth", help="metabat_depth.txt", required=True, nargs='+'
     )
     args = parser.parse_args()
     if not os.path.exists(COVERAGE_FOLDER_NAME):
         os.mkdir(COVERAGE_FOLDER_NAME)
 
-    bin_list, bin_contigs = process_genomes(args.genomes)
+    bin_list, bin_contigs = process_genomes(args.genomes, args.name)
     contig_cov = process_metabat_depth(args.metabat_depth)
 
     ### Generating the output directories with their respective average coverage and coverage.tab files

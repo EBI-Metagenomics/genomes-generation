@@ -10,7 +10,6 @@ include { COVERAGE_RECYCLER } from '../modules/cov_recycler'
 include { DETECT_RRNA } from '../modules/detect_rrna'
 include { GTDBTK } from '../modules/gtdbtk'
 include { CHANGE_UNDERSCORE_TO_DOT } from '../modules/utils'
-include { GZIP } from '../modules/utils'
 
 
 process CHECKM_TABLE_FOR_DREP_GENOMES {
@@ -54,17 +53,18 @@ workflow PROK_SUBWF {
         prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
         DREP(CHECKM2.out.checkm2_results, prok_drep_args, channel.value('prok'))
 
-        metabat_depth = input_data.map(item -> item[2]).collect()
+        metabat_depth = input_data.map(item -> item[2]).collectFile(name:"aggregated_metabat_depth.txt", skip:1, keepHeader:true)
         metabat_depth.view()
-        COVERAGE_RECYCLER(DREP.out.dereplicated_genomes.transpose(), metabat_depth)
+        COVERAGE_RECYCLER(DREP.out.dereplicated_genomes, metabat_depth)
 
         CHANGE_UNDERSCORE_TO_DOT(DREP.out.dereplicated_genomes.transpose())
 
         DETECT_RRNA(DREP.out.dereplicated_genomes.transpose(), ref_rfam_rrna_models.first())
-        CHANGE_UNDERSCORE_TO_DOT.out.return_contigs.view()
-        //GTDBTK(CHANGE_UNDERSCORE_TO_DOT.out.return_contigs.groupTuple(), ref_gtdbtk.first())
+
+        GTDBTK(CHANGE_UNDERSCORE_TO_DOT.out.return_files.groupTuple(), ref_gtdbtk.first())
 
         CHECKM_TABLE_FOR_DREP_GENOMES(CHECKM2.out.checkm2_results.map(item -> item[2]), DREP.out.dereplicated_genomes_list.map(item -> item[1]))
 
-        //GZIP(DREP.out.dereplicated_genomes.map(item -> item[1]))
+    emit:
+        prok_mags = CHANGE_UNDERSCORE_TO_DOT.out.return_files.map(item -> item[1])
 }

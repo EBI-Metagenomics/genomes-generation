@@ -3,7 +3,7 @@
 */
 process BAM_TO_FASTQ {
     tag "${name}"
-    publishDir "${params.outdir}/qc", mode: 'copy'
+    publishDir "${params.outdir}/intermediate_steps/qc", mode: 'copy'
 
     label 'bam_to_fastq'
 

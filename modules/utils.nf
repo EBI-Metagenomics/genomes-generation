@@ -29,13 +29,14 @@ process GZIP {
     tag "${file_to_compress}"
 
     publishDir(
-        path: "${params.outdir}/dereplicated_genomes",
+        path: "${params.outdir}/${output_folder}",
         mode: 'copy',
         failOnError: true
     )
 
     input:
     file(file_to_compress)
+    val output_folder
 
     output:
     path("*.gz"), emit: compressed
@@ -55,7 +56,7 @@ process CHANGE_DOT_TO_UNDERSCORE {
     container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
 
     publishDir(
-        path: "${params.outdir}/prepare_data",
+        path: "${params.outdir}/intermediate_steps/prepare_data",
         mode: 'copy',
         failOnError: true
     )
@@ -77,7 +78,7 @@ process CHANGE_DOT_TO_UNDERSCORE_READS {
     container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
 
     publishDir(
-        path: "${params.outdir}/prepare_data",
+        path: "${params.outdir}/intermediate_steps/prepare_data",
         mode: 'copy',
         failOnError: true
     )
@@ -116,7 +117,7 @@ process CHANGE_UNDERSCORE_TO_DOT {
     tuple val(name), path(contigs)
 
     output:
-    tuple val(name), path("${contigs}"), emit: return_contigs
+    tuple val(name), path("${contigs}"), emit: return_files
 
     script:
     """

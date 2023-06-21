@@ -31,7 +31,7 @@ include { PREPARE_INPUT } from '../subworkflows/subwf_prepare_input_files'
 include { BINNING } from '../subworkflows/subwf_binning'
 include { EUK_SUBWF } from '../subworkflows/per_sample_euk_part'
 include { PROK_SUBWF } from '../subworkflows/per_sample_prok_part'
-
+include { GZIP } from '../modules/utils'
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
@@ -67,4 +67,5 @@ workflow GGP {
     // input: tuple( run_accession, bin_refinement, depth_file )
     PROK_SUBWF(BINNING.out.output_for_prok_part, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
 
+    GZIP(PROK_SUBWF.out.prok_mags, channel.value("dereplicated_genomes_prok"))
 }

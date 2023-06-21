@@ -41,7 +41,7 @@ process FILTER_QS50 {
     tag "${name}"
 
     publishDir(
-        path: "${params.outdir}/qs50",
+        path: "${params.outdir}/intermediate_steps/qs50",
         mode: "copy"
     )
 
@@ -130,8 +130,8 @@ workflow EUK_SUBWF {
         // aggregate outputs
         def combine_drep = DREP.out.dereplicated_genomes.map(item -> item[1]).collect()
         combine_drep.view()
-        def drep_input = ("aggregated", combine_drep)
-        drep_input.view()
+        //def drep_input = ("aggregated", combine_drep)
+        //drep_input.view()
         //if (DREP.out.dereplicated_genomes.map(item -> item[0]).collect().size() == 1) {
         //    combine_drep = DREP.out.dereplicated_genomes }
         //else {

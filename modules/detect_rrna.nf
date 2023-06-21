@@ -18,9 +18,7 @@ process DETECT_RRNA {
     path cm_models
 
     output:
-    tuple val(name), path('results_folder/*.out'), emit: rrna_out_results
-    tuple val(name), path('results_folder/*.fasta'), emit: rrna_fasta_results
-    tuple val(name), path('results_folder/*.tblout.deoverlapped'), emit: rrna_tblout_deoverlapped
+    tuple val(name), path('results_folder'), emit: rrna_out_results
 
     script:
     """

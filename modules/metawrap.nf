@@ -4,7 +4,7 @@ process METAWRAP_BINNING {
     container 'quay.io/microbiome-informatics/metawrap:latest'
 
     publishDir(
-        path: "${params.outdir}/${name}/binning/",
+        path: "${params.outdir}/intermediate_steps/binning/${name}",
         mode: 'copy',
         failOnError: true
     )
@@ -59,7 +59,7 @@ process BIN_REFINEMENT {
     tag "${name}"
 
     publishDir(
-        path: "${params.outdir}/binning/",
+        path: "${params.outdir}/intermediate_steps/binning/",
         mode: 'copy',
         failOnError: true
     )

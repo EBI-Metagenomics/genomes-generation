@@ -3,7 +3,7 @@ process CHECKM2 {
     tag "${name}"
 
     publishDir(
-        path: "${params.outdir}/checkm2",
+        path: "${params.outdir}/intermediate_steps/checkm2",
         mode: 'copy',
         failOnError: true
     )

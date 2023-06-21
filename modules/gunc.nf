@@ -3,7 +3,7 @@ process GUNC {
     tag "${name} ${fasta}"
     container 'quay.io/microbiome-informatics/genomes-pipeline.gunc:v4'
     publishDir(
-        path: "${params.outdir}/gunc/",
+        path: "${params.outdir}/intermediate_steps/gunc/",
         mode: 'copy',
         failOnError: true
     )

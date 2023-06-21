@@ -4,10 +4,6 @@
 process RENAME {
 
     tag "rename ${fasta}"
-    publishDir(
-        path: "${params.outdir}/drep",
-        mode: 'copy',
-    )
 
     container 'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0'
 

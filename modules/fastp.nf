@@ -5,9 +5,9 @@
 process FASTP {
     tag "${name}"
 
-    publishDir "${params.outdir}/qc/fastp", mode: 'copy', pattern: "*html"
-    publishDir "${params.outdir}/qc/fastp", mode: 'copy', pattern: "*json"
-    publishDir "${params.outdir}/qc", mode: 'copy', pattern: "*fastq*"
+    publishDir "${params.outdir}/intermediate_steps/qc/fastp", mode: 'copy', pattern: "*html"
+    publishDir "${params.outdir}/intermediate_steps/qc/fastp", mode: 'copy', pattern: "*json"
+    publishDir "${params.outdir}/intermediate_steps/qc", mode: 'copy', pattern: "*fastq*"
 
     container 'quay.io/biocontainers/fastp:0.23.1--h79da9fb_0'
     label 'fastp'

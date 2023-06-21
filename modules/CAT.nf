@@ -4,7 +4,7 @@ process CAT {
     container 'quay.io/microbiome-informatics/cat:5.2.3'
 
     publishDir(
-        path: "${params.outdir}/cleaning_bins/",
+        path: "${params.outdir}/intermediate_steps/cleaning_bins/",
         mode: 'copy',
         failOnError: true
     )

@@ -6,7 +6,7 @@ process DREP {
     tag "${name} ${drep_params}"
 
     publishDir(
-        path: "${params.outdir}/drep_${type}",
+        path: "${params.outdir}/intermediate_steps/drep_${type}",
         mode: 'copy',
     )
 
