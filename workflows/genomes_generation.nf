@@ -65,6 +65,6 @@ workflow GGP {
 
     // ---- detect prok
     // input: tuple( run_accession, bin_refinement, depth_file )
-    PROK_SUBWF(BINNING.out.output_for_prok_part, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
+    //PROK_SUBWF(BINNING.out.output_for_prok_part, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
 
 }

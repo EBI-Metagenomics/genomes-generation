@@ -81,18 +81,23 @@ process EUKCC_MAG {
     container 'quay.io/microbiome-informatics/eukcc:latest'
 
     input:
-    tuple val(name), path(fa)
+    tuple val(name), path(genomes_list, stageAs: "mags_dir/*")
     path eukcc_db
 
     output:
-    tuple val(name), path("*.eukcc.csv"), emit: eukcc_mags_results
+    tuple val(name), path("*eukcc.csv"), emit: eukcc_mags_results
 
     script:
     """
-    eukcc --debug single \
+    eukcc --debug folder \
             --threads ${task.cpus} \
             --db ${eukcc_db} \
             --out output \
-            ${fa}
+            mags_dir
+    """
+
+    stub:
+    """
+    touch mags.eukcc.csv
     """
 }

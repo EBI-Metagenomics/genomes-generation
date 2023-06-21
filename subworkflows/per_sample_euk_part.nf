@@ -93,17 +93,17 @@ workflow EUK_SUBWF {
 
         ALIGN(align_input)
 
-        // concoct
+        // -- concoct
         binner1 = channel.value("concoct")
         LINKTABLE_CONCOCT(ALIGN.out.annotated_bams.combine(bins_concoct, by: 0), binner1)       // output: tuple(name, links.csv, bin_dir)
         EUKCC_CONCOCT(binner1, LINKTABLE_CONCOCT.out.links_table, eukcc_db.first())
 
-        // metabat2
+        // -- metabat2
         binner2 = channel.value("metabat2")
         LINKTABLE_METABAT(ALIGN.out.annotated_bams.combine(bins_metabat, by: 0), binner2)
         EUKCC_METABAT(binner2, LINKTABLE_METABAT.out.links_table, eukcc_db.first())
 
-        // prepare quality file
+        // -- prepare quality file
         combine_quality = EUKCC_CONCOCT.out.eukcc_csv.combine(EUKCC_METABAT.out.eukcc_csv, by: 0)
         // "genome,completeness,contamination"
         functionCatCSV = { item ->
@@ -115,35 +115,46 @@ workflow EUK_SUBWF {
         CONCATENATE_QUALITY_FILES(combine_quality.map(functionCatCSV), channel.value("quality_eukcc.csv"))
         quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
+        // -- qs50
         collect_data = quality.combine(bins_concoct, by: 0).combine(bins_metabat, by: 0).combine(EUKCC_CONCOCT.out.eukcc_results, by: 0).combine(EUKCC_METABAT.out.eukcc_results, by: 0)
         FILTER_QS50(collect_data)
 
+        // -- drep
         // input: tuple (name, genomes/*, quality_file)
         euk_drep_args = channel.value('-pa 0.80 -sa 0.99 -nc 0.40 -cm larger -comp 49 -con 21')
         DREP(FILTER_QS50.out.qs50_filtered_genomes, euk_drep_args, channel.value('euk'))
 
-        // coverage
-        bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0).transpose(by:1)  // tuple(name, [bins], [reads])
-        ALIGN_BINS(bins_alignment)
-        BREADTH_DEPTH(ALIGN_BINS.out.annotated_bams)
+        // -- coverage
+        bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0)  // tuple(name, drep_genomes, [reads]),...
+        spreadBins = { record ->
+            if (record[1] instanceof List) {
+                return record}
+            else {
+                return tuple(record[0], [record[1]], record[2])}
+        }
+        bins_alignment_by_bins = bins_alignment.map(spreadBins).transpose(by:1)  // tuple(name, MAG1, [reads]); tuple(name, MAG2, [reads])
+        ALIGN_BINS(bins_alignment_by_bins)      // out: tuple(name, [bam, bai])
+        breadth_input = ALIGN_BINS.out.annotated_bams.combine(bins_alignment_by_bins, by:0).map(item -> tuple(item[0], item[1], item[2]))
+        // input: tuple(name, [bam, bai], MAG)
+        BREADTH_DEPTH(breadth_input)
 
-        // aggregate outputs
-        def combine_drep = DREP.out.dereplicated_genomes.map(item -> item[1]).collect()
+        // -- aggregate by samples
+        DREP.out.dereplicated_genomes.view()
+        combine_drep = DREP.out.dereplicated_genomes.map(item -> item[1]).flatten().collect()
         combine_drep.view()
-        def drep_input = ("aggregated", combine_drep)
+        drep_input = channel.of(tuple("aggregated", combine_drep))
         drep_input.view()
-        //if (DREP.out.dereplicated_genomes.map(item -> item[0]).collect().size() == 1) {
-        //    combine_drep = DREP.out.dereplicated_genomes }
-        //else {
-        //    combine_drep = DREP.out.dereplicated_genomes.map(item -> tuple(channel.value("aggregated"), item[1])).groupTuple() }
 
-        //euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
-        //DREP_MAGS(combine_drep, euk_drep_args_mags, channel.value('euk_mags'))
+        // -- drep MAGs
+        euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
+        DREP_MAGS(drep_input, euk_drep_args_mags, channel.value('euk_mags'))
 
-        // eukcc MAGs
-        //EUKCC_MAG(??? , eukcc_db.first())
-        // busco MAGs
-        // QC MAGs
+        // -- eukcc MAGs
+        //EUKCC_MAG(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
+
+        // -- busco MAGs - Varsha
+
+        // -- QC MAGs - Ales
     emit:
         euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map(item -> tuple(item[0], item[2]))
         drep_output = DREP.out.dereplicated_genomes
