@@ -8,7 +8,7 @@ process GTDBTK {
     publishDir(
         path: "${params.outdir}/Taxonomy",
         mode: 'copy',
-        failOnError: true
+        failOnError: true,
     )
 
     label 'process_bigmem'
@@ -18,7 +18,7 @@ process GTDBTK {
     path gtdbtk_refdata
 
     output:
-    tuple val(name), path('gtdbtk_results'), emit: gtdbtk_output_tarball
+    tuple val(name), path("gtdbtk_results/*"), emit: gtdbtk_output
 
 
     script:
