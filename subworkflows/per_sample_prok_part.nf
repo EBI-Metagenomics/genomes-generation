@@ -3,6 +3,7 @@
      Prokaryotes subworkflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
+include { BIN_REFINEMENT } from '../modules/metawrap'
 include { CLEAN_AND_FILTER_BINS } from '../subworkflows/subwf_clean_and_filter_bins'
 include { CHECKM2 } from '../modules/checkm2'
 include { DREP } from '../modules/drep'
@@ -35,7 +36,8 @@ process CHECKM_TABLE_FOR_DREP_GENOMES {
 
 workflow PROK_SUBWF {
     take:
-        input_data                // tuple(accession, [bins .fa, ...], file_depth_metabat2)
+        collected_binners
+        metabat_depth
         ref_catdb
         ref_cat_diamond
         ref_cat_taxonomy
@@ -44,23 +46,25 @@ workflow PROK_SUBWF {
         ref_gtdbtk
         ref_rfam_rrna_models
     main:
+
+        // -- bin refinement
+        BIN_REFINEMENT(collected_binners)
+
         // -- clean bins
-        bins = input_data.map(item -> tuple(item[0], item[1]))
-        CLEAN_AND_FILTER_BINS(bins, ref_catdb.first(), ref_cat_diamond.first(), ref_cat_taxonomy.first(), ref_gunc.first())
+        CLEAN_AND_FILTER_BINS(BIN_REFINEMENT.out.bin_ref_bins, ref_catdb.first(), ref_cat_diamond.first(), ref_cat_taxonomy.first(), ref_gunc.first())
 
         // -- aggregate bins by samples
-        bins = CLEAN_AND_FILTER_BINS.out.filtered_bins.collect()
+        all_bins = CLEAN_AND_FILTER_BINS.out.filtered_bins.collect()
 
         // -- checkm2 on ALL bins in all samples
-        CHECKM2(channel.value("aggregated"), bins, ref_checkm)
+        CHECKM2(channel.value("aggregated"), all_bins, ref_checkm)
 
         // -- drep
         prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
         DREP(CHECKM2.out.checkm2_results, prok_drep_args, channel.value('prok'))
 
         // -- coverage
-        metabat_depth = input_data.map(item -> item[2]).collectFile(name:"aggregated_metabat_depth.txt", skip:1, keepHeader:true)
-        COVERAGE_RECYCLER(DREP.out.dereplicated_genomes, metabat_depth)
+        COVERAGE_RECYCLER(DREP.out.dereplicated_genomes.transpose(), metabat_depth.first())
 
         CHANGE_UNDERSCORE_TO_DOT(DREP.out.dereplicated_genomes.transpose())
 

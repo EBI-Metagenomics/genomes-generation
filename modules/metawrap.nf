@@ -16,7 +16,7 @@ process METAWRAP_BINNING {
 
     output:
     tuple val(name), path("output_${binner}"), emit: binning
-    tuple val(name), path("${name}_metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
+    path("${name}_metabat_depth.txt"), emit: metabat_depth_for_coverage, optional: true
 
     script:
     reads = input_reads.collect()
