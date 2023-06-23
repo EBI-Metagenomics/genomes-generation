@@ -147,7 +147,7 @@ workflow EUK_SUBWF {
 
         // -- drep MAGs
         euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
-        DREP_MAGS(drep_input, euk_drep_args_mags, channel.value('euk_mags'))
+        //DREP_MAGS(drep_input, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
         //EUKCC_MAG(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
