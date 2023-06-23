@@ -1,6 +1,6 @@
 process BREADTH_DEPTH {
 
-    tag "${name}"
+    tag "${name} ${mag}"
     container 'quay.io/biocontainers/cmseq:1.0.4--pyhb7b1952_0'
 
     publishDir(
@@ -10,10 +10,10 @@ process BREADTH_DEPTH {
     )
 
     input:
-    tuple val(name), path(bam)
+    tuple val(name), path(bam), path(mag)
 
     output:
-    tuple val(name), path("${name}.coverage.csv"), emit: coverage
+    tuple val(name), path("${mag.baseName}.coverage.csv"), emit: coverage
 
     script:
     bam_files = bam.collect()
@@ -28,12 +28,12 @@ process BREADTH_DEPTH {
     breadth_depth.py \
           --combine \
           --mincov 1 \
-          ${bam_file} > "${name}.coverage.csv"
+          ${bam_file} > "${mag.baseName}.coverage.csv"
     """
 
     stub:
     """
     touch \
-        "${name}.coverage.csv"
+        "${mag.baseName}.coverage.csv"
     """
 }

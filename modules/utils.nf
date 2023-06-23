@@ -25,7 +25,7 @@ process GUNZIP {
     ~~~~~~~~~~~~~~~~~~
 */
 process GZIP {
-
+    stageInMode 'copy'
     tag "${file_to_compress}"
 
     publishDir(
