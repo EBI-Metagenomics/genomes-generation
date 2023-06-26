@@ -37,6 +37,27 @@ process CONCATENATE_QUALITY_FILES {
     """
 }
 
+process MODIFY_QUALITY_FILE {
+
+    publishDir(
+        path: "${params.outdir}/qs50",
+        mode: "copy"
+    )
+
+    input:
+    path(input_file)
+    val output_name
+
+    output:
+    tuple val(name), path("${output_name}"), emit: modified_result
+
+    script:
+    """
+    echo "genome\tcompleteness\tcontamination" > ${output_name}
+    cat ${input_file} | grep -v "completeness" | cut -f1-3 | tr '\t' ',' >> ${output_name}
+    """
+}
+
 process FILTER_QS50 {
     tag "${name}"
 
@@ -142,9 +163,10 @@ workflow EUK_SUBWF {
         // -- aggregate by samples
         combine_drep = DREP.out.dereplicated_genomes.map(item -> item[1]).flatten().collect()
         agg_quality = quality.map(item -> item[1]).flatten().collectFile(name:"aggregated_quality.txt", skip:1, keepHeader:true)
+        MODIFY_QUALITY_FILE(agg_quality, channel.value("euk_quality.csv"))
         // -- drep MAGs
         euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
-        DREP_MAGS(channel.value("aggregated"), combine_drep, agg_quality, euk_drep_args_mags, channel.value('euk_mags'))
+        DREP_MAGS(channel.value("aggregated"), combine_drep, MODIFY_QUALITY_FILE.out.modified_result, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
         //EUKCC_MAG(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
