@@ -22,6 +22,7 @@ ref_gunc = channel.fromPath("${params.gunc_ref_db}", checkIfExists: true)
 ref_checkm = channel.fromPath("${params.checkm_ref_db}", checkIfExists: true)
 ref_rfam_rrna_models = channel.fromPath("${params.rfam_rrna_models}", checkIfExists: true)
 ref_gtdbtk = channel.fromPath("${params.gtdbtk}", checkIfExists: true)
+ref_busco = channel.fromPath("${params.busco_ref_db}", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Steps
@@ -61,7 +62,7 @@ workflow GGP {
 
     // ---- detect euk
     // input: tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
-    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc.first())
+    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc.first(), ref_busco.first())
 
     // ---- detect prok
     // input: tuple( run_accession, bin_refinement, depth_file )

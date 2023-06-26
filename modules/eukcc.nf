@@ -70,7 +70,7 @@ process EUKCC {
 }
 
 process EUKCC_MAG {
-    tag "${name} ${fa}"
+    tag "${name}"
 
     publishDir(
         path: "${params.outdir}/eukcc_mags/",
@@ -85,7 +85,7 @@ process EUKCC_MAG {
     path eukcc_db
 
     output:
-    tuple val(name), path("*eukcc.csv"), emit: eukcc_mags_results
+    tuple val(name), path("output/*eukcc.csv"), emit: eukcc_mags_results
 
     script:
     """
@@ -94,6 +94,40 @@ process EUKCC_MAG {
             --db ${eukcc_db} \
             --out output \
             mags_dir
+    """
+
+    stub:
+    """
+    touch mags.eukcc.csv
+    """
+}
+
+process EUKCC_SINGLE {
+    tag "${name}"
+
+    publishDir(
+        path: "${params.outdir}/eukcc_mags/",
+        mode: 'copy',
+        failOnError: true
+    )
+
+    container 'quay.io/microbiome-informatics/eukcc:latest'
+
+    input:
+    path(genomes)
+    path eukcc_db
+
+    output:
+    tuple val(name), path("*eukcc.csv"), emit: eukcc_mags_results
+
+    script:
+    """
+    eukcc --debug folder \
+            --threads ${task.cpus} \
+            --db ${eukcc_db} \
+            --out output \
+            ${genome}
+    cp output/eukcc.csv ${genome.baseName}.eukcc.csv
     """
 
     stub:

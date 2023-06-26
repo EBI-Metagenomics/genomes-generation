@@ -5,9 +5,11 @@
 */
 include { ALIGN } from '../subworkflows/subwf_alignment'
 include { ALIGN as ALIGN_BINS} from '../subworkflows/subwf_alignment'
+include { BUSCO } from '../modules/busco'
 include { EUKCC as EUKCC_CONCOCT } from '../modules/eukcc'
 include { EUKCC as EUKCC_METABAT } from '../modules/eukcc'
 include { EUKCC_MAG } from '../modules/eukcc'
+include { EUKCC_SINGLE } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_CONCOCT } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_METABAT } from '../modules/eukcc'
 include { DREP } from '../modules/drep'
@@ -106,6 +108,7 @@ workflow EUK_SUBWF {
     take:
         input_data  // tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
         eukcc_db
+        busco_db
     main:
 
         align_input = input_data.map(item -> tuple(item[0], item[1], item[2]))
@@ -169,10 +172,10 @@ workflow EUK_SUBWF {
         DREP_MAGS(channel.value("aggregated"), combine_drep, MODIFY_QUALITY_FILE.out.modified_result, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
-        EUKCC_MAG(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
+        EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
 
         // -- busco MAGs - Varsha
-
+        BUSCO(DREP_MAGS.out.dereplicated_genomes, busco_db.first())
         // -- QC MAGs - Ales
     emit:
         euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map(item -> tuple(item[0], item[2]))

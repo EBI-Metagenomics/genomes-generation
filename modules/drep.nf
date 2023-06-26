@@ -68,7 +68,7 @@ process DREP_MAGS {
     val type
 
     output:
-    tuple val(name), path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
+    path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
     tuple val(name), path("dereplicated_genomes.txt"), optional: true, emit: dereplicated_genomes_list
 
     script:
