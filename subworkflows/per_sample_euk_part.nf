@@ -169,7 +169,7 @@ workflow EUK_SUBWF {
         DREP_MAGS(channel.value("aggregated"), combine_drep, MODIFY_QUALITY_FILE.out.modified_result, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
-        //EUKCC_MAG(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
+        EUKCC_MAG(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
 
         // -- busco MAGs - Varsha
 
