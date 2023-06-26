@@ -11,7 +11,7 @@ include { EUKCC_MAG } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_CONCOCT } from '../modules/eukcc'
 include { LINKTABLE as LINKTABLE_METABAT } from '../modules/eukcc'
 include { DREP } from '../modules/drep'
-include { DREP as DREP_MAGS } from '../modules/drep'
+include { DREP_MAGS } from '../modules/drep'
 include { BREADTH_DEPTH } from '../modules/breadth_depth'
 
 
@@ -80,6 +80,7 @@ process FILTER_QS50 {
     """
 }
 
+
 workflow EUK_SUBWF {
     take:
         input_data  // tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
@@ -139,15 +140,11 @@ workflow EUK_SUBWF {
         BREADTH_DEPTH(breadth_input)
 
         // -- aggregate by samples
-        DREP.out.dereplicated_genomes.view()
         combine_drep = DREP.out.dereplicated_genomes.map(item -> item[1]).flatten().collect()
-        combine_drep.view()
-        drep_input = channel.of(tuple("aggregated", combine_drep))
-        drep_input.view()
-
+        agg_quality = quality.map(item -> item[1]).flatten().collectFile(name:"aggregated_quality.txt", skip:1, keepHeader:true)
         // -- drep MAGs
         euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
-        //DREP_MAGS(drep_input, euk_drep_args_mags, channel.value('euk_mags'))
+        DREP_MAGS(channel.value("aggregated"), combine_drep, agg_quality, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
         //EUKCC_MAG(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
