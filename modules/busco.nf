@@ -1,4 +1,5 @@
 process BUSCO {
+    tag "${bin}"
 
     publishDir(
         path: "${params.outdir}/busco/",

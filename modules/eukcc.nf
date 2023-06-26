@@ -118,7 +118,7 @@ process EUKCC_SINGLE {
     path eukcc_db
 
     output:
-    tuple val(name), path("*eukcc.csv"), emit: eukcc_mags_results
+    path("*eukcc.csv"), emit: eukcc_mags_results
 
     script:
     """
