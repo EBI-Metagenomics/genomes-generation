@@ -103,7 +103,7 @@ process EUKCC_MAG {
 }
 
 process EUKCC_SINGLE {
-    tag "${name}"
+    tag "${genome}"
 
     publishDir(
         path: "${params.outdir}/eukcc_mags/",
@@ -114,7 +114,7 @@ process EUKCC_SINGLE {
     container 'quay.io/microbiome-informatics/eukcc:latest'
 
     input:
-    path(genomes)
+    path(genome)
     path eukcc_db
 
     output:
@@ -122,7 +122,7 @@ process EUKCC_SINGLE {
 
     script:
     """
-    eukcc --debug folder \
+    eukcc --debug single \
             --threads ${task.cpus} \
             --db ${eukcc_db} \
             --out output \
