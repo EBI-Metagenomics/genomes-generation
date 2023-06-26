@@ -172,10 +172,10 @@ workflow EUK_SUBWF {
         DREP_MAGS(channel.value("aggregated"), combine_drep, MODIFY_QUALITY_FILE.out.modified_result, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
-        EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes, eukcc_db.first())
+        EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes.flatten(), eukcc_db.first())
 
         // -- busco MAGs - Varsha
-        BUSCO(DREP_MAGS.out.dereplicated_genomes, busco_db.first())
+        BUSCO(DREP_MAGS.out.dereplicated_genomes.flatten(), busco_db.first())
         // -- QC MAGs - Ales
     emit:
         euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map(item -> tuple(item[0], item[2]))
