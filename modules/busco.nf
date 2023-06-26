@@ -24,7 +24,7 @@ process BUSCO {
               -o out \
               --auto-lineage-euk \
               --download_path ${busco_db} \
-              -c {task.cpus}
+              -c ${task.cpus}
 
     cp out/short_summary.specific*.out.txt "${bin.baseName}.short_summary.specific.txt"
     """
