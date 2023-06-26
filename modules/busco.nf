@@ -19,12 +19,12 @@ process BUSCO {
     """
     busco  --offline \
               -i ${bin} \
-              -m genome \
+              -m 'genome' \
               -o out \
               --auto-lineage-euk \
               --download_path ${busco_db} \
               -c {task.cpus}
 
-    cp out/short_summary.specific*.out.txt "${genome.baseName}.short_summary.specific.txt"
+    cp out/short_summary.specific*.out.txt "${bin.baseName}.short_summary.specific.txt"
     """
 }
