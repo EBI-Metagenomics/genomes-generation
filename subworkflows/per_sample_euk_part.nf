@@ -49,11 +49,11 @@ process MODIFY_QUALITY_FILE {
     val output_name
 
     output:
-    tuple val(name), path("${output_name}"), emit: modified_result
+    path("${output_name}"), emit: modified_result
 
     script:
     """
-    echo "genome\tcompleteness\tcontamination" > ${output_name}
+    echo "genome,completeness,contamination" > ${output_name}
     cat ${input_file} | grep -v "completeness" | cut -f1-3 | tr '\t' ',' >> ${output_name}
     """
 }
