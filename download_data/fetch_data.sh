@@ -17,6 +17,7 @@ function Unzip {
 
 function RunRenamingScript {
   echo 'Starting renaming script...'
+  . /hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh
   mitload assembly_pipeline
 
   python3 ./download_data/rename-erz.py \
