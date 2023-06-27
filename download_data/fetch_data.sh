@@ -4,14 +4,14 @@ function FetchAssembliesAndReads {
   echo 'Fetching reads and assemblies...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
-  bsub -I -q production "bash fetch-assemblies-tool.sh -v -p $SAMPLE -d Assemblies/"
-  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d Raw_reads/"
+  bsub -I -q production "bash fetch-assemblies-tool.sh -v -p $SAMPLE -d $CATALOGUE/Assemblies/"
+  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d $CATALOGUE/Raw_reads/"
 }
 
 
 function Unzip {
   echo 'Unzipping...'
-  gunzip -f Assemblies/${SAMPLE}/raw/*gz
+  gunzip -f $CATALOGUE/Assemblies/${SAMPLE}/raw/*gz
 }
 
 
@@ -20,9 +20,9 @@ function RunRenamingScript {
   mitload assembly_pipeline
 
   python3 rename-erz.py \
-  -d Assemblies/${SAMPLE}/raw/ -o Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
+  -d $CATALOGUE/Assemblies/${SAMPLE}/raw/ -o $CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
-  export CONVERT=Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
+  export CONVERT=$CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
   if [[ ! -f $CONVERT ]]; then
     echo 'ERZ to run accession conversion file was not generated successfully'
@@ -37,20 +37,27 @@ function Rename {
     then
       export OLD=$(echo $line | cut -d ',' -f1)
       export NEW=$(echo $line | cut -d ',' -f2)
-      mv Assemblies/${SAMPLE}/raw/${NEW}.fasta Assemblies/${SAMPLE}/raw/${OLD}.fasta
+      mv $CATALOGUE/Assemblies/${SAMPLE}/raw/${NEW}.fasta $CATALOGUE/Assemblies/${SAMPLE}/raw/${OLD}.fasta
     fi
   done < $CONVERT
 }
 
 
-while getopts 'a:r:' flag; do
+while getopts 'a:r:c:f:' flag; do
     case "${flag}" in
         a) export SAMPLE=$OPTARG ;;
         r) export READS_ACC=$OPTARG ;;
+        c) export CATALOGUE=$OPTARG ;;
+        f) SKIP_FETCH='true' ;;
     esac
 done
 
-FetchAssembliesAndReads
-Unzip
+mkdir -p $CATALOGUE
+GenerateDirectories
+if [[ $SKIP_FETCH = false ]]
+then
+  FetchAssembliesAndReads
+  Unzip
+fi
 RunRenamingScript
 Rename
