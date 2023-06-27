@@ -19,7 +19,7 @@ function RunRenamingScript {
   echo 'Starting renaming script...'
   mitload assembly_pipeline
 
-  python3 rename-erz.py \
+  python3 ./download_data/rename-erz.py \
   -d $CATALOGUE/Assemblies/${SAMPLE}/raw/ -o $CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
   export CONVERT=$CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
@@ -53,7 +53,6 @@ while getopts 'a:r:c:f:' flag; do
 done
 
 mkdir -p $CATALOGUE
-GenerateDirectories
 if [[ $SKIP_FETCH = false ]]
 then
   FetchAssembliesAndReads
