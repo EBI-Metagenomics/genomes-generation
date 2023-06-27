@@ -24,12 +24,14 @@ function RunRenamingScript {
   python3 ./download_data/rename-erz.py \
   -d $CATALOGUE/Assemblies/${SAMPLE}/raw/ -o $CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
+  cat $CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt | tr ',' '\t' > $CATALOGUE/rename.tsv
   export CONVERT=$CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
   if [[ ! -f $CONVERT ]]; then
     echo 'ERZ to run accession conversion file was not generated successfully'
     exit 1
   fi
+  rm -rf $CATALOGUE/Uploaded_Assembly_IDs
 }
 
 
