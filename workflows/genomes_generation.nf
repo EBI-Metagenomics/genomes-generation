@@ -62,7 +62,7 @@ workflow GGP {
 
     // ---- detect euk
     // input: tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
-    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc.first(), ref_busco.first())
+    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc, ref_busco, ref_catdb, ref_cat_taxonomy)
 
     // ---- detect prok
     // input: tuple( run_accession, bin_refinement, depth_file )

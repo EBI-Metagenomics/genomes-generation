@@ -15,7 +15,8 @@ include { LINKTABLE as LINKTABLE_METABAT } from '../modules/eukcc'
 include { DREP } from '../modules/drep'
 include { DREP_MAGS } from '../modules/drep'
 include { BREADTH_DEPTH } from '../modules/breadth_depth'
-
+include { QC_BUSCO_EUKCC } from '../modules/euk_final_qual'
+include { EUK_TAXONOMY } from '../modules/BAT'
 
 process CONCATENATE_QUALITY_FILES {
     tag "${name}"
@@ -109,8 +110,10 @@ workflow EUK_SUBWF {
         input_data  // tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
         eukcc_db
         busco_db
-    main:
+        cat_db
+        cat_taxonomy_db
 
+    main:
         align_input = input_data.map(item -> tuple(item[0], item[1], item[2]))
         reads = input_data.map(item -> tuple(item[0], item[2]))
         bins_concoct = input_data.map(item -> tuple(item[0], item[3]))
@@ -172,12 +175,20 @@ workflow EUK_SUBWF {
         DREP_MAGS(channel.value("aggregated"), combine_drep, MODIFY_QUALITY_FILE.out.modified_result, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
-        EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes.flatten(), eukcc_db.first())
+        EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes.flatten(), eukcc_db)
 
         // -- busco MAGs - Varsha
-        BUSCO(DREP_MAGS.out.dereplicated_genomes.flatten(), busco_db.first())
+        BUSCO(DREP_MAGS.out.dereplicated_genomes.flatten(), busco_db)
+
         // -- QC MAGs - Ales
+	QC_BUSCO_EUKCC(EUKCC_SINGLE.out.eukcc_mags_results.collect(), BUSCO.out.busco_summary.collect())
+
+	// -- BAT - Ales
+	EUK_TAXONOMY(DREP_MAGS.out.dereplicated_genomes.flatten(), cat_db, cat_taxonomy_db)
+
+
     emit:
         euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map(item -> tuple(item[0], item[2]))
         drep_output = DREP.out.dereplicated_genomes
+
 }
