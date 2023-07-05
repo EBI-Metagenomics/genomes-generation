@@ -44,12 +44,6 @@ class fa_class:
         return len(self.seq)
 
 
-def eukcc_score(path):
-    with open(path) as fin:
-        for row in csv.DictReader(fin, delimiter="\t"):
-            return row
-
-
 def busco_score(path):
     d = {
         "BUSCO_C": None,
@@ -90,6 +84,26 @@ def genome_stats(path):
 
     return {"N50": n50, "bp": genome_size, "contigs": total_fragments}
 
+def eukcc_parser( concoct, metabat ):
+    eukcc_data = {}
+    with open(concoct, 'r') as conco_in, open(metabat, 'r') as meta_in:
+        next(conco_in)
+        for line in conco_in:
+            bin_id,completeness,contamination,ncbi_lng = line.strip().split("\t")
+            eukcc_data[bin_id] = {
+                    'bin_id' : bin_id+'.fa',
+                    'completeness': completeness,
+                    'contamination': contamination}
+
+        next(meta_in)
+        for line in meta_in:
+            bin_id,completeness,contamination,ncbi_lng = line.strip().split("\t")
+            eukcc_data[bin_id] = {
+                    'bin_id' : bin_id+'.fa',
+                    'completeness': completeness,
+                    'contamination': contamination}
+
+    return eukcc_data
 
 
 if __name__ == "__main__":
@@ -100,12 +114,16 @@ if __name__ == "__main__":
         default="qc.csv", 
         type=str
     )
-    #parser.add_argument("--mags", help="path to mag folder", type=str)
-    #parser.add_argument("--qc_dir", help="path to qc folder", type=str)
     parser.add_argument(
-        "--eukcc_files", 
-        help="List of eukcc outputs", 
-        nargs="*",
+        "--eukcc_c", 
+        help="Eukcc results for concoct binner", 
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "--eukcc_m",
+        help="Eukcc results for metabat binner",
+        type=str,
         required=True
     )
     parser.add_argument(
@@ -162,23 +180,27 @@ if __name__ == "__main__":
     ]
 
     genomes_list = []
-    for file_in in args.eukcc_files:
-        prefix = file_in.replace('.eukcc.csv','') 
+    for file_in in args.busco_files:
+        prefix = file_in.replace('.short_summary.specific.txt','') 
         genomes_list.append(prefix)
+
+    eukcc_data = eukcc_parser( args.eukcc_c, args.eukcc_m )
 
     with open(args.output, "w") as outfile:
         cout = csv.DictWriter(outfile, fieldnames=fields, extrasaction="ignore")
         cout.writeheader()
 
         for mag in genomes_list:
-            # learn eukcc score
-            eukcc_p = mag+".eukcc.csv"
+            #eukcc_p = mag+".eukcc.csv"
             busco_p = mag+".short_summary.specific.txt"
             stat = genome_stats(busco_p)
-            eukcc = eukcc_score(eukcc_p)
+
+            eukcc = eukcc_data[mag+'.fa']
             stat = {**stat, **eukcc}
-            stat["fasta"] = mag
+
+            stat["fasta"] = mag+'.fa'
             busco = busco_score(busco_p)
             stat = {**stat, **busco}
             cout.writerow(stat)
+
 

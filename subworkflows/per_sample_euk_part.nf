@@ -17,6 +17,8 @@ include { DREP_MAGS } from '../modules/drep'
 include { BREADTH_DEPTH } from '../modules/breadth_depth'
 include { QC_BUSCO_EUKCC } from '../modules/euk_final_qual'
 include { EUK_TAXONOMY } from '../modules/BAT'
+include { EUK_TAXONOMY_WRITER } from '../modules/euk_taxo'
+
 
 process CONCATENATE_QUALITY_FILES {
     tag "${name}"
@@ -175,16 +177,17 @@ workflow EUK_SUBWF {
         DREP_MAGS(channel.value("aggregated"), combine_drep, MODIFY_QUALITY_FILE.out.modified_result, euk_drep_args_mags, channel.value('euk_mags'))
 
         // -- eukcc MAGs
-        EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes.flatten(), eukcc_db)
+        //EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes.flatten(), eukcc_db)
 
         // -- busco MAGs - Varsha
         BUSCO(DREP_MAGS.out.dereplicated_genomes.flatten(), busco_db)
 
         // -- QC MAGs - Ales
-	QC_BUSCO_EUKCC(EUKCC_SINGLE.out.eukcc_mags_results.collect(), BUSCO.out.busco_summary.collect())
+	QC_BUSCO_EUKCC(EUKCC_CONCOCT.out.eukcc_csv, EUKCC_METABAT.out.eukcc_csv, BUSCO.out.busco_summary.collect())
 
 	// -- BAT - Ales
 	EUK_TAXONOMY(DREP_MAGS.out.dereplicated_genomes.flatten(), cat_db, cat_taxonomy_db)
+	EUK_TAXONOMY_WRITER(EUK_TAXONOMY.out.bat_names.collect())
 
 
     emit:
@@ -192,3 +195,4 @@ workflow EUK_SUBWF {
         drep_output = DREP.out.dereplicated_genomes
 
 }
+
