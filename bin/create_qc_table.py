@@ -84,22 +84,14 @@ def genome_stats(path):
 
     return {"N50": n50, "bp": genome_size, "contigs": total_fragments}
 
-def eukcc_parser( concoct, metabat ):
+def eukcc_parser( eukcc_concat ):
     eukcc_data = {}
-    with open(concoct, 'r') as conco_in, open(metabat, 'r') as meta_in:
-        next(conco_in)
-        for line in conco_in:
-            bin_id,completeness,contamination,ncbi_lng = line.strip().split("\t")
-            eukcc_data[bin_id] = {
-                    'bin_id' : bin_id+'.fa',
-                    'completeness': completeness,
-                    'contamination': contamination}
-
-        next(meta_in)
-        for line in meta_in:
-            bin_id,completeness,contamination,ncbi_lng = line.strip().split("\t")
-            eukcc_data[bin_id] = {
-                    'bin_id' : bin_id+'.fa',
+    with open(eukcc_concat, 'r') as file_in:
+        next(file_in)
+        for line in file_in:
+            genome,completeness,contamination,lineage = line.strip().split("\t")
+            eukcc_data[genome] = {
+                    'bin_id' : genome,
                     'completeness': completeness,
                     'contamination': contamination}
 
@@ -115,14 +107,8 @@ if __name__ == "__main__":
         type=str
     )
     parser.add_argument(
-        "--eukcc_c", 
-        help="Eukcc results for concoct binner", 
-        type=str,
-        required=True
-    )
-    parser.add_argument(
-        "--eukcc_m",
-        help="Eukcc results for metabat binner",
+        "--eukcc_concat", 
+        help="Eukcc combined results for QC50 (euk_quality.csv)", 
         type=str,
         required=True
     )
@@ -184,14 +170,13 @@ if __name__ == "__main__":
         prefix = file_in.replace('.short_summary.specific.txt','') 
         genomes_list.append(prefix)
 
-    eukcc_data = eukcc_parser( args.eukcc_c, args.eukcc_m )
+    eukcc_data = eukcc_parser( args.eukcc_concat )
 
     with open(args.output, "w") as outfile:
         cout = csv.DictWriter(outfile, fieldnames=fields, extrasaction="ignore")
         cout.writeheader()
 
         for mag in genomes_list:
-            #eukcc_p = mag+".eukcc.csv"
             busco_p = mag+".short_summary.specific.txt"
             stat = genome_stats(busco_p)
 

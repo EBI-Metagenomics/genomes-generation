@@ -1,7 +1,5 @@
 process QC_BUSCO_EUKCC {
 
-    tag "${name} ${}"
-
     publishDir(
         path: "${params.outdir}/final_qc_euk",
         mode: 'copy',
@@ -11,8 +9,7 @@ process QC_BUSCO_EUKCC {
     container 'quay.io/biocontainers/biopython:1.75'
 
     input:
-        path eukcc_concoct
-	path eukcc_metabat
+        path eukcc_combined
         path busco_list
 
     output:
@@ -20,6 +17,6 @@ process QC_BUSCO_EUKCC {
 
     script:
     """
-    create_qc_table.py --eukcc_c ${eukcc_concoct} --eukcc_m ${eukcc_metabat} --busco_files ${busco_list}
+    create_qc_table.py --eukcc_concat ${eukcc_combined} --busco_files ${busco_list}
     """
 }

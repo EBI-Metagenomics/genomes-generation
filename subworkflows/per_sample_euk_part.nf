@@ -180,13 +180,13 @@ workflow EUK_SUBWF {
         //EUKCC_SINGLE(DREP_MAGS.out.dereplicated_genomes.flatten(), eukcc_db)
 
         // -- busco MAGs - Varsha
-        BUSCO(DREP_MAGS.out.dereplicated_genomes.flatten(), busco_db)
+        BUSCO(DREP_MAGS.out.dereplicated_genomes.flatten(), busco_db.first())
 
         // -- QC MAGs - Ales
-	QC_BUSCO_EUKCC(EUKCC_CONCOCT.out.eukcc_csv, EUKCC_METABAT.out.eukcc_csv, BUSCO.out.busco_summary.collect())
+	QC_BUSCO_EUKCC(CONCATENATE_QUALITY_FILES.out.concatenated_result.map{it[1]}, BUSCO.out.busco_summary.collect())
 
 	// -- BAT - Ales
-	EUK_TAXONOMY(DREP_MAGS.out.dereplicated_genomes.flatten(), cat_db, cat_taxonomy_db)
+	EUK_TAXONOMY(DREP_MAGS.out.dereplicated_genomes.flatten(), cat_db.first(), cat_taxonomy_db.first())
 	EUK_TAXONOMY_WRITER(EUK_TAXONOMY.out.bat_names.collect())
 
 
