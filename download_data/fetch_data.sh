@@ -19,6 +19,7 @@ function RunRenamingScript {
   echo 'Starting renaming script...'
   . /hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh
   mitload assembly_pipeline
+  sleep 1
   mkdir -p $CATALOGUE/Uploaded_Assembly_IDs
 
   python3 ./download_data/rename-erz.py \
