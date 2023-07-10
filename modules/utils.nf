@@ -43,7 +43,7 @@ process GZIP {
 
     script:
     """
-    gzip ${file_to_compress}
+    pigz ${file_to_compress}
     """
 }
 
@@ -93,13 +93,13 @@ process CHANGE_DOT_TO_UNDERSCORE_READS {
     input_ch = reads.collect()
     if (input_ch.size() == 1 ) {
         """
-        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${name}_underscore.fastq.gz
+        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | pigz > ${name}_underscore.fastq.gz
         """
     }
     else if (input_ch.size() == 2 ) {
         """
-        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${name}_underscore_1.fastq.gz
-        zcat "${input_ch[1]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | gzip > ${name}_underscore_2.fastq.gz
+        zcat "${input_ch[0]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | pigz > ${name}_underscore_1.fastq.gz
+        zcat "${input_ch[1]}" | awk '{if (NR%4==1){gsub(/\\./,"_")}; print}' | pigz > ${name}_underscore_2.fastq.gz
         """
     }
     else {
