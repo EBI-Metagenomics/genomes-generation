@@ -2,7 +2,7 @@ process BUSCO {
     tag "${bin}"
 
     publishDir(
-        path: "${params.outdir}/busco/",
+        path: "${params.outdir}/final_qc_euk/",
         mode: 'copy',
         failOnError: true
     )

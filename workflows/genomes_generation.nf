@@ -14,7 +14,7 @@ rename_file = channel.fromPath(params.rename_file)
 */
 ref_genome = channel.fromPath(params.ref_genome, checkIfExists: true)
 ref_genome_name = channel.value(params.ref_genome_name)
-ref_eukcc = channel.fromPath(params.eukcc_ref_db, checkIfExists: true)
+ref_eukcc = channel.fromPath("${params.eukcc_ref_db}", checkIfExists: true)
 ref_catdb = channel.fromPath("${params.CAT_ref_db}/${params.cat_db_name}", checkIfExists: true)
 ref_cat_diamond = channel.fromPath("${params.CAT_ref_db}/${params.cat_diamond_db_name}", checkIfExists: true)
 ref_cat_taxonomy = channel.fromPath("${params.CAT_ref_db}/${params.cat_taxonomy_db}", checkIfExists: true)
@@ -62,7 +62,7 @@ workflow GGP {
 
     // ---- detect euk
     // input: tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
-    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc.first(), ref_busco.first())
+    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc, ref_busco, ref_catdb, ref_cat_taxonomy)
 
     // ---- detect prok
     // input: tuple( run_accession, bin_refinement, depth_file )

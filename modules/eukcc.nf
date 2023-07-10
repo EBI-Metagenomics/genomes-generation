@@ -106,7 +106,7 @@ process EUKCC_SINGLE {
     tag "${genome}"
 
     publishDir(
-        path: "${params.outdir}/eukcc_mags/",
+        path: "${params.outdir}/final_qc_euk/",
         mode: 'copy',
         failOnError: true
     )
