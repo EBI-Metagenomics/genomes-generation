@@ -75,7 +75,7 @@ process CHANGE_DOT_TO_UNDERSCORE {
 
 process CHANGE_DOT_TO_UNDERSCORE_READS {
     tag "${name}"
-    container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
+    container 'quay.io/biocontainers/pigz:2.3.4'
 
     publishDir(
         path: "${params.outdir}/intermediate_steps/prepare_data",
@@ -130,6 +130,7 @@ process CHANGE_UNDERSCORE_TO_DOT {
 */
 process CHANGE_ERR_TO_ERZ {
     tag "${name}"
+    container 'quay.io/biocontainers/pigz:2.3.4'
 
     input:
     tuple val(name), path(files)
