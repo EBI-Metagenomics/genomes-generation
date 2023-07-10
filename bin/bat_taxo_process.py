@@ -27,21 +27,12 @@ def taxo_reporter( out_file, bat_files ):
             with open(current_bin, 'r') as file_in:
                 next(file_in)
                 for line in file_in:
-                    line = line.rstrip().split("\t")
-                    concat_list = []
-                    genome = line.pop(0)
-                    concat_list.append(genome)
-                    classification = line.pop(0)
-                    concat_list.append(classification)
-                    reason = line.pop(0)
-                    concat_list.append(reason)
-                    lineage = line.pop(0)
-                    concat_list.append(lineage)
-                    lineage_scores = line.pop(0)
-                    concat_list.append(lineage_scores)
-                    to_concat.write("\t".join(concat_list)+'\n')
+                    genome,classification,reason,lineage,lineage_scores = line.rstrip().split("\t")[:5]
+                    to_concat.write("\t".join(line.rstrip().split("\t")[:5])+'\n')
+                    
                     clean_lineage = []
-                    for tax_rank in line:
+                    tax_line = line.rstrip().split("\t")[5:]
+                    for tax_rank in tax_line:
                         name_rank = tax_rank.split(':')[0].split(' (')[0]
                         clean_lineage.append(name_rank)
                     clean_lineage = ";".join(clean_lineage)
@@ -61,7 +52,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--bat_names", 
         help="BAT names files (*.BAT_run.bin2classification.names.txt)", 
-        nargs="*",
+        nargs="+",
         required=True
     )
     args = parser.parse_args()
