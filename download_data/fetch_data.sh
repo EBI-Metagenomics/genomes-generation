@@ -47,6 +47,17 @@ function Rename {
 }
 
 
+#function ChangeERRtoERZinReads {
+#  for read_file in (ls $CATALOGUE/Raw_reads/${SAMPLE}/raw/* )
+#    grep "${name}" ${rename_file} > help_file
+#    export from_accession=\$(cat help_file | cut -f1)
+#    export to_accession=\$(cat help_file | cut -f2)
+#    echo "\${from_accession} --> \${to_accession}"
+#
+#    zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed.fastq.gz
+#}
+
+
 while getopts 'a:r:c:f:' flag; do
     case "${flag}" in
         a) export SAMPLE=$OPTARG ;;
@@ -64,3 +75,4 @@ then
 fi
 RunRenamingScript
 Rename
+#ChangeERRtoERZinReads

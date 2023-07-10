@@ -148,7 +148,7 @@ process CHANGE_ERR_TO_ERZ {
         export to_accession=\$(cat help_file | cut -f2)
         echo "\${from_accession} --> \${to_accession}"
 
-        zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed.fastq.gz
+        zcat "${input_ch[0]}" | sed 's/\${from_accession}/\${to_accession}/g' | pigz > ${name}_changed.fastq.gz
         """
     }
     else if (input_ch.size() == 2 ) {
@@ -159,8 +159,8 @@ process CHANGE_ERR_TO_ERZ {
         export to_accession=\$(cat help_file | cut -f2)
         echo "\${from_accession} --> \${to_accession}"
 
-        zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${name}_changed_1.fastq.gz
-        zcat "${input_ch[1]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${name}_changed_2.fastq.gz
+        zcat "${input_ch[0]}" | sed 's/\${from_accession}/\${to_accession}/g' | pigz > ${name}_changed_1.fastq.gz
+        zcat "${input_ch[1]}" | sed 's/\${from_accession}/\${to_accession}/g' | pigz > ${name}_changed_2.fastq.gz
         """
     }
     else {
