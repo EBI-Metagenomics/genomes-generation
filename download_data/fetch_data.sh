@@ -58,7 +58,7 @@ while getopts 'a:r:c:f:p:' flag; do
         a) export SAMPLE=$OPTARG ;;
         r) export READS_ACC=$OPTARG ;;
         c) export CATALOGUE_PATH=$OPTARG ;;
-        f) SKIP_FETCH='true' ;;
+        f) SKIP_FETCH='false' ;;
         p) export REPO_PATH=$OPTARG ;;
     esac
 done
