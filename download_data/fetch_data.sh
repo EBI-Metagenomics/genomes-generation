@@ -27,12 +27,6 @@ function RunRenamingScript {
 
   cat ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt | tr ',' '\t' > ${CATALOGUE_PATH}/rename.tsv
   export CONVERT=${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
-
-  if [[ ! -f $CONVERT ]]; then
-    echo 'ERZ to run accession conversion file was not generated successfully'
-    exit 1
-  fi
-  rm -rf ${CATALOGUE_PATH}/Uploaded_Assembly_IDs
 }
 
 
