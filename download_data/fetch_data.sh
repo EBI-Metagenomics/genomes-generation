@@ -4,14 +4,14 @@ function FetchAssembliesAndReads {
   echo 'Fetching reads and assemblies...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
-  bsub -I -q production "bash fetch-assemblies-tool.sh -v -p $SAMPLE -d $CATALOGUE/Assemblies/"
-  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d $CATALOGUE/Raw_reads/"
+  bsub -I -q production "bash fetch-assemblies-tool.sh -v -p $SAMPLE -d ${CATALOGUE_PATH}/Assemblies/"
+  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/"
 }
 
 
 function Unzip {
   echo 'Unzipping...'
-  gunzip -f $CATALOGUE/Assemblies/${SAMPLE}/raw/*gz
+  gunzip -f ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/*gz
 }
 
 
@@ -20,19 +20,19 @@ function RunRenamingScript {
   . /hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh
   mitload assembly_pipeline
   sleep 1
-  mkdir -p $CATALOGUE/Uploaded_Assembly_IDs
+  mkdir -p ${CATALOGUE_PATH}/Uploaded_Assembly_IDs
 
-  python3 ./download_data/rename-erz.py \
-  -d $CATALOGUE/Assemblies/${SAMPLE}/raw/ -o $CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
+  python3 ${REPO_PATH}/download_data/rename-erz.py \
+  -d ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/ -o ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
-  cat $CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt | tr ',' '\t' > $CATALOGUE/rename.tsv
-  export CONVERT=$CATALOGUE/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
+  cat ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt | tr ',' '\t' > ${CATALOGUE_PATH}/rename.tsv
+  export CONVERT=${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
   if [[ ! -f $CONVERT ]]; then
     echo 'ERZ to run accession conversion file was not generated successfully'
     exit 1
   fi
-  rm -rf $CATALOGUE/Uploaded_Assembly_IDs
+  rm -rf ${CATALOGUE_PATH}/Uploaded_Assembly_IDs
 }
 
 
@@ -42,7 +42,7 @@ function Rename {
     then
       export OLD=$(echo $line | cut -d ',' -f1)
       export NEW=$(echo $line | cut -d ',' -f2)
-      mv $CATALOGUE/Assemblies/${SAMPLE}/raw/${NEW}.fasta $CATALOGUE/Assemblies/${SAMPLE}/raw/${OLD}.fasta
+      mv ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/${NEW}.fasta ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/${OLD}.fasta
     fi
   done < $CONVERT
 }
@@ -59,16 +59,17 @@ function Rename {
 #}
 
 
-while getopts 'a:r:c:f:' flag; do
+while getopts 'a:r:c:f:p:' flag; do
     case "${flag}" in
         a) export SAMPLE=$OPTARG ;;
         r) export READS_ACC=$OPTARG ;;
-        c) export CATALOGUE=$OPTARG ;;
+        c) export CATALOGUE_PATH=$OPTARG ;;
         f) SKIP_FETCH='true' ;;
+        p) export REPO_PATH=$OPTARG ;;
     esac
 done
 
-mkdir -p $CATALOGUE
+mkdir -p ${CATALOGUE_PATH}
 if [[ $SKIP_FETCH = false ]]
 then
   FetchAssembliesAndReads
