@@ -29,7 +29,7 @@ process METAWRAP_BINNING {
     }
     """
     echo "Running binning"
-    metawrap binning -t ${task.cpus} -m 50 -l 2500 -a ${contigs} -o binning ${args}
+    metawrap binning -t ${task.cpus} -m 80 -l 2500 -a ${contigs} -o binning ${args}
 
     echo "rename bins"
     mkdir -p output_${binner}
