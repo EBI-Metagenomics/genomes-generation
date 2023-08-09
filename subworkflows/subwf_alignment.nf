@@ -4,6 +4,8 @@
     ~~~~~~~~~~~~~~~~~~
 */
 include { ALIGNMENT_WITH_INDEXING } from '../modules/align_bwa'
+include { INDEX_FASTA_META } from '../modules/align_bwa'
+include { ALIGNMENT_META } from '../modules/align_bwa'
 
 workflow ALIGN {
     take:
@@ -23,4 +25,21 @@ workflow ALIGN {
 
     emit:
         annotated_bams = ALIGNMENT_WITH_INDEXING.out.bams
+}
+
+workflow ALIGN_META {
+    take:
+        input_data  // tuple (meta, fasta, [reads])
+    main:
+
+    INDEX_FASTA_META(input_data.map(item -> tuple(item[0], item[1])))
+
+    ALIGNMENT_META(
+        input_data.map(item -> tuple(item[0], item[2])),
+        INDEX_FASTA_META.out.fasta_with_index,
+        channel.value("-q 20 -Sb")
+    )
+
+    emit:
+        bams = ALIGNMENT_META.out.bams
 }
