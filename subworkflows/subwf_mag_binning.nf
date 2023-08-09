@@ -10,10 +10,6 @@ include { GUNZIP as GUNZIP_UNBINS               } from '../modules/nf-core/gunzi
 
 include { CONVERT_DEPTHS                        } from '../modules/nf-core-mag/convert_depths'
 include { ADJUST_MAXBIN2_EXT                    } from '../modules/nf-core-mag/adjust_maxbin2_ext'
-include { SPLIT_FASTA                           } from '../modules/nf-core-mag/split_fasta'
-include { MAG_DEPTHS                            } from '../modules/nf-core-mag/mag_depths'
-include { MAG_DEPTHS_PLOT                       } from '../modules/nf-core-mag/mag_depths_plot'
-include { MAG_DEPTHS_SUMMARY                    } from '../modules/nf-core-mag/mag_depths_summary'
 include { FASTA_BINNING_CONCOCT                 } from '../subworkflows/nf-core/fasta_binning_concoct/main'
 
 /*
@@ -80,12 +76,14 @@ workflow BINNING {
 
     // final gzipped bins
     ch_binning_results_gzipped_final = Channel.empty()
+    ch_binning_results_gzipped_final_euk = Channel.empty()
     // run binning
     if ( !params.skip_metabat2 ) {
         METABAT2_METABAT2 ( ch_metabat2_input )
         // before decompressing first have to separate and re-group due to limitation of GUNZIP module
         ch_binning_results_gzipped_final = ch_binning_results_gzipped_final.mix( METABAT2_METABAT2.out.fasta )
         ch_versions = ch_versions.mix(METABAT2_METABAT2.out.versions.first())
+        ch_binning_results_gzipped_final_euk = ch_binning_results_gzipped_final.mix( METABAT2_METABAT2.out.fasta )
     }
     if ( !params.skip_maxbin2 ) {
         MAXBIN2 ( ch_maxbin2_input )
@@ -111,12 +109,14 @@ workflow BINNING {
         FASTA_BINNING_CONCOCT ( ch_concoct_input )
         ch_binning_results_gzipped_final = ch_binning_results_gzipped_final.mix( FASTA_BINNING_CONCOCT.out.bins )
         ch_versions = ch_versions.mix(FASTA_BINNING_CONCOCT.out.versions)
+        ch_binning_results_gzipped_final_euk = ch_binning_results_gzipped_final.mix( FASTA_BINNING_CONCOCT.out.bins )
     }
 
     ch_binning_results_gzipped_final.view()
 
     emit:
     bins_gz                                      = ch_binning_results_gzipped_final
+    euk_bins                                     = ch_binning_results_gzipped_final_euk
     metabat2depths                               = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
     versions                                     = ch_versions
 }
