@@ -1,5 +1,5 @@
 process ADJUST_MAXBIN2_EXT {
-    tag "${meta.assembler}-${meta.id}"
+    tag "${meta.id}"
     label 'process_low'
 
     // Using container from multiqc since it'll be included anyway
