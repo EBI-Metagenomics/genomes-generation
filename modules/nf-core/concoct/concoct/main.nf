@@ -13,11 +13,11 @@ process CONCOCT_CONCOCT {
 
     output:
     tuple val(meta), path("*_args.txt")                         , emit: args_txt
-    tuple val(meta), path("*_clustering_gt1000.csv")            , emit: clustering_csv
+    tuple val(meta), path("*_clustering_gt*.csv")            , emit: clustering_csv
     tuple val(meta), path("*_log.txt")                          , emit: log_txt
-    tuple val(meta), path("*_original_data_gt1000.csv")         , emit: original_data_csv
-    tuple val(meta), path("*_PCA_components_data_gt1000.csv")   , emit: pca_components_csv
-    tuple val(meta), path("*_PCA_transformed_data_gt1000.csv")  , emit: pca_transformed_csv
+    tuple val(meta), path("*_original_data_gt*.csv")         , emit: original_data_csv
+    tuple val(meta), path("*_PCA_components_data_gt*.csv")   , emit: pca_components_csv
+    tuple val(meta), path("*_PCA_transformed_data_gt*.csv")  , emit: pca_transformed_csv
     path "versions.yml"                                         , emit: versions
 
     when:
