@@ -28,11 +28,13 @@ ref_busco = channel.fromPath("${params.busco_ref_db}", checkIfExists: true)
      Steps
     ~~~~~~~~~~~~~~~~~~
 */
-include { PREPARE_INPUT } from '../subworkflows/subwf_prepare_input_files'
-include { BINNING } from '../subworkflows/subwf_binning'
+include { PROCESS_INPUT } from '../subworkflows/subwf_process_input_files'
+include { BINNING } from '../subworkflows/subwf_mag_binning'
 include { EUK_SUBWF } from '../subworkflows/per_sample_euk_part'
 include { PROK_SUBWF } from '../subworkflows/per_sample_prok_part'
 include { GZIP } from '../modules/utils'
+include { FASTP as FILTERING_READS_FASTP} from '../modules/fastp'
+include { DECONTAMINATION } from '../subworkflows/subwf_decontamination'
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
@@ -42,31 +44,42 @@ workflow GGP {
     // ---- combine data for reads and contigs pre-processing
     groupAssemblies = { fasta_file ->
             def cluster = fasta_file.toString().tokenize("/")[-1].tokenize(".")[0]
-            return tuple(cluster, fasta_file)
+                def meta = [:]
+                meta.id = cluster
+                meta.library_layout = "paired"
+            return tuple(meta, fasta_file)
         }
     groupReads = { fastq ->
             def cluster = fastq.toString().tokenize("/")[-1].tokenize(".")[0].tokenize('_')[0]
-            return tuple(cluster, fastq)
+            def meta = [:]
+            meta.id = cluster
+            meta.library_layout = "paired"
+            return tuple(meta, fastq)
         }
 
-    tuple_assemblies = assemblies.map(groupAssemblies)      // [ run_accession, assembly_file ]
-    tuple_reads = raw_reads.map(groupReads).groupTuple()    // [ run_accession, [raw_reads] ]
-    data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: 0)  // [ run_accession, assembly_file, [raw_reads] ]
+    tuple_assemblies = assemblies.map(groupAssemblies)      // [ meta, assembly_file ]
+    tuple_reads = raw_reads.map(groupReads).groupTuple()    // [ meta, [raw_reads] ]
+    tuple_reads.view()
+    data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: 0)  // [ meta, assembly_file, [raw_reads] ]
     data_by_run_accession.view()
 
     // ---- pre-processing
-    PREPARE_INPUT(data_by_run_accession, ref_genome, ref_genome_name, rename_file)      // output: [ run_accession, assembly_file, [raw_reads] ]
+    PROCESS_INPUT(data_by_run_accession, rename_file)      // output: [ meta, assembly_file, [raw_reads] ]
 
+    // --- trimming reads
+    //FILTERING_READS_FASTP(CHANGE_DOT_TO_UNDERSCORE_READS.out.underscore_reads)
+
+    //DECONTAMINATION(FILTERING_READS_FASTP.out.output_reads, ref_genome.first(), ref_genome_name)
     // ---- binning
-    BINNING(PREPARE_INPUT.out.return_tuple)
+    //BINNING(PREPARE_INPUT.out.return_tuple)
 
     // ---- detect euk
     // input: tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
-    EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc, ref_busco, ref_catdb, ref_cat_taxonomy)
+    //EUK_SUBWF(BINNING.out.output_for_euk_part, ref_eukcc, ref_busco, ref_catdb, ref_cat_taxonomy)
 
     // ---- detect prok
     // input: tuple( run_accession, bin_refinement, depth_file )
-    PROK_SUBWF(BINNING.out.collect_binners, BINNING.out.metabat_depth, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
+    //PROK_SUBWF(BINNING.out.collect_binners, BINNING.out.metabat_depth, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
 
     // ---- compress results
     //GZIP(PROK_SUBWF.out.prok_mags, channel.value("dereplicated_genomes_prok"))
