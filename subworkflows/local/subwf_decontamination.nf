@@ -3,30 +3,21 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { ALIGNMENT } from '../../modules/align_bwa'
-include { BAM_TO_FASTQ } from '../../modules/bam_to_fastq'
+include { ALIGNMENT           } from '../../modules/local/align_bwa'
+include { SAMTOOLS_FASTQ      } from '../../modules/nf-core/samtools/fastq/main'
+include { GZIP                } from '../../modules/local/utils'
 
 workflow DECONTAMINATION {
     take:
-        reads    // tuple(name, contigs)
-        ref_genome
-        ref_genome_name
+        reads           // tuple(meta, contigs)
+        ref_genome      // tuple(meta, ref_genome, ref_genome_index)
 
     main:
-    // TODO: fix mode
-    def mode = "paired"
-    //if (reads_list.size() == 1) {
-    //    mode = 'single' }
-    //else if (reads_list.size() == 2) {
-    //    mode = 'paired' }
-    //else {
-    //    print('incorrect reads') }
 
-    samtools_args = channel.value("-f 12 -F 256 -uS")
-    ALIGNMENT(reads, ref_genome, ref_genome_name, samtools_args)
+    ALIGNMENT(reads, ref_genome, false)
 
-    BAM_TO_FASTQ(ALIGNMENT.out.bams, mode)
+    SAMTOOLS_FASTQ(ALIGNMENT.out.bams.map{it -> [it[0], it[2]]}, false)
 
     emit:
-        decontaminated_reads = BAM_TO_FASTQ.out.clean_reads
+        decontaminated_reads = SAMTOOLS_FASTQ.out.fastq
 }

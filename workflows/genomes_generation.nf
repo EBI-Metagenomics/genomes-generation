@@ -12,8 +12,8 @@ rename_file = channel.fromPath(params.rename_file)
      DBs
     ~~~~~~~~~~~~~~~~~~
 */
-ref_genome = channel.fromPath(params.ref_genome, checkIfExists: true)
-ref_genome_name = channel.value(params.ref_genome_name)
+ref_genome = file(params.ref_genome)
+ref_genome_index = file("${params.ref_genome}.*")
 ref_eukcc = channel.fromPath("${params.eukcc_ref_db}", checkIfExists: true)
 ref_catdb = channel.fromPath("${params.CAT_ref_db}/${params.cat_db_name}", checkIfExists: true)
 ref_cat_diamond = channel.fromPath("${params.CAT_ref_db}/${params.cat_diamond_db_name}", checkIfExists: true)
@@ -71,10 +71,11 @@ workflow GGP {
     PROCESS_INPUT(data_by_run_accession, rename_file)      // output: [ meta, assembly_file, [raw_reads] ]
 
     // --- trimming reads
-    input_reads = PROCESS_INPUT.out.return_tuple.map(it -> [it[0], it[2]])
-    FILTERING_READS_FASTP(input_reads)
+    FILTERING_READS_FASTP(PROCESS_INPUT.out.return_tuple.map(it -> [it[0], it[2]]))
 
-    //DECONTAMINATION(FILTERING_READS_FASTP.out.output_reads, ref_genome.first(), ref_genome_name)
+    ref_genome_ch = FILTERING_READS_FASTP.out.reads.map { it -> [it[0], ref_genome, ref_genome_index] }
+    DECONTAMINATION(FILTERING_READS_FASTP.out.reads, ref_genome_ch)
+
     // ---- binning
     //BINNING(PREPARE_INPUT.out.return_tuple)
 

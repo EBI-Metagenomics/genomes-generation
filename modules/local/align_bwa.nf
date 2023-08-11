@@ -1,7 +1,7 @@
 /*
  * Host decontamination
 */
-process ALIGNMENT {
+process ALIGNMENT_OLD {
     tag "${name}"
     label 'alignment'
 
@@ -123,7 +123,7 @@ process INDEX_FASTA_META {
     """
 }
 
-process ALIGNMENT_META {
+process ALIGNMENT {
 
     tag "${meta.id} align to ${ref_fasta}"
 
@@ -134,7 +134,7 @@ process ALIGNMENT_META {
     input:
     tuple val(meta), path(input_ch_reads)
     tuple val(meta), path(ref_fasta), path(ref_fasta_index)
-    val samtools_args
+    val align                                                  // if true: align (include reads), else: decontaminate (exclude reads)
 
     output:
     tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai") , emit: bams
@@ -144,16 +144,21 @@ process ALIGNMENT_META {
     // define reads
     reads = input_ch_reads.collect()
     def input_reads = "";
-    if (reads.size() == 1 ) {
+    if ( meta.single_end ) {
         input_reads = "${reads[0]}";
-    } else if ( reads.size() == 2 ) {
+    } else {
         if (reads[0].name.contains("_1")) {
             input_reads = "${reads[0]} ${reads[1]}"
         } else {
             input_reads = "${reads[1]} ${reads[0]}"
         }
+    }
+
+    def samtools_args = ""
+    if ( align ) {
+        samtools_args = task.ext.alignment_args
     } else {
-        error "Invalid mode input"
+        samtools_args = task.ext.decontamination_args
     }
 
     // align

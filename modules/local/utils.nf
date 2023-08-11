@@ -28,15 +28,15 @@ process GZIP {
     stageInMode 'copy'
     tag "${file_to_compress}"
 
-    publishDir(
-        path: "${params.outdir}/${output_folder}",
-        mode: 'copy',
-        failOnError: true
-    )
+    //publishDir(
+    //    path: "${params.outdir}/${output_folder}",
+    //    mode: 'copy',
+    //    failOnError: true
+    //)
 
     input:
-    file(file_to_compress)
-    val output_folder
+    tuple val(meta), file(file_to_compress)
+    //val output_folder
 
     output:
     path("*.gz"), emit: compressed
