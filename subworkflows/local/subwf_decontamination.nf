@@ -3,8 +3,8 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { ALIGNMENT } from '../modules/align_bwa'
-include { BAM_TO_FASTQ } from '../modules/bam_to_fastq'
+include { ALIGNMENT } from '../../modules/align_bwa'
+include { BAM_TO_FASTQ } from '../../modules/bam_to_fastq'
 
 workflow DECONTAMINATION {
     take:

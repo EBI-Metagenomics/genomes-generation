@@ -28,13 +28,16 @@ ref_busco = channel.fromPath("${params.busco_ref_db}", checkIfExists: true)
      Steps
     ~~~~~~~~~~~~~~~~~~
 */
-include { PROCESS_INPUT } from '../subworkflows/subwf_process_input_files'
-include { BINNING } from '../subworkflows/subwf_mag_binning'
-include { EUK_SUBWF } from '../subworkflows/per_sample_euk_part'
-include { PROK_SUBWF } from '../subworkflows/per_sample_prok_part'
-include { GZIP } from '../modules/utils'
-include { FASTP as FILTERING_READS_FASTP} from '../modules/fastp'
-include { DECONTAMINATION } from '../subworkflows/subwf_decontamination'
+include { PROCESS_INPUT                         } from '../subworkflows/local/subwf_process_input_files'
+include { DECONTAMINATION                       } from '../subworkflows/local/subwf_decontamination'
+
+include { QC_AND_MERGE as FILTERING_READS_FASTP } from '../subworkflows/nf-core/taxprofiler/qc_and_merge'
+include { BINNING                               } from '../subworkflows/nf-core/mag/subwf_mag_binning'
+
+//include { EUK_SUBWF                             } from '../subworkflows/per_sample_euk_part'
+//include { PROK_SUBWF                            } from '../subworkflows/per_sample_prok_part'
+//include { GZIP                                   } from '../modules/local/utils'
+
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
@@ -47,6 +50,7 @@ workflow GGP {
                 def meta = [:]
                 meta.id = cluster
                 meta.library_layout = "paired"
+                meta.single_end = false
             return tuple(meta, fasta_file)
         }
     groupReads = { fastq ->
@@ -54,12 +58,12 @@ workflow GGP {
             def meta = [:]
             meta.id = cluster
             meta.library_layout = "paired"
+            meta.single_end = false
             return tuple(meta, fastq)
         }
 
     tuple_assemblies = assemblies.map(groupAssemblies)      // [ meta, assembly_file ]
     tuple_reads = raw_reads.map(groupReads).groupTuple()    // [ meta, [raw_reads] ]
-    tuple_reads.view()
     data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: 0)  // [ meta, assembly_file, [raw_reads] ]
     data_by_run_accession.view()
 
@@ -67,7 +71,8 @@ workflow GGP {
     PROCESS_INPUT(data_by_run_accession, rename_file)      // output: [ meta, assembly_file, [raw_reads] ]
 
     // --- trimming reads
-    //FILTERING_READS_FASTP(CHANGE_DOT_TO_UNDERSCORE_READS.out.underscore_reads)
+    input_reads = PROCESS_INPUT.out.return_tuple.map(it -> [it[0], it[2]])
+    FILTERING_READS_FASTP(input_reads)
 
     //DECONTAMINATION(FILTERING_READS_FASTP.out.output_reads, ref_genome.first(), ref_genome_name)
     // ---- binning

@@ -1,11 +1,7 @@
-/*
-    ~~~~~~~~~~~~~~~~~~
-     Run subworkflow
-    ~~~~~~~~~~~~~~~~~~
-*/
-include { CHANGE_DOT_TO_UNDERSCORE as CHANGE_DOT_TO_UNDERSCORE_CONTIGS} from '../modules/utils'
-include { CHANGE_DOT_TO_UNDERSCORE_READS } from '../modules/utils'
-include { CHANGE_ERR_TO_ERZ as CHANGE_ERR_TO_ERZ_READS } from '../modules/utils'
+include { CHANGE_DOT_TO_UNDERSCORE_CONTIGS              } from '../../modules/local/utils'
+include { CHANGE_DOT_TO_UNDERSCORE_READS                } from '../../modules/local/utils'
+include { CHANGE_ERR_TO_ERZ_READS                       } from '../../modules/local/utils'
+
 
 workflow PROCESS_INPUT {
     take:
@@ -15,11 +11,14 @@ workflow PROCESS_INPUT {
     reads = input_data.map(item -> tuple(item[0], item[2]))
     contigs = input_data.map(item -> tuple(item[0], item[1]))
 
-    // --- fix contig names
+    // --- MODIFY CONTIGS
+    // change . to _
     CHANGE_DOT_TO_UNDERSCORE_CONTIGS(contigs)           // tuple(meta, assembly)
 
+    // --- MODIFY READS
     // change ERR in reads to ERZ
     CHANGE_ERR_TO_ERZ_READS(reads, rename_file.first())    // tuple(meta, [reads]])
+    // change . to _
     CHANGE_DOT_TO_UNDERSCORE_READS(CHANGE_ERR_TO_ERZ_READS.out.return_files)
 
     emit:

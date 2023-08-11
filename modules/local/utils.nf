@@ -50,7 +50,7 @@ process GZIP {
 /*
  * clean reads, change . to _ from contigs
 */
-process CHANGE_DOT_TO_UNDERSCORE {
+process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
 
     tag "${meta.id}"
     container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
@@ -128,8 +128,8 @@ process CHANGE_UNDERSCORE_TO_DOT {
 /*
  * change run accession to assembly accession
 */
-process CHANGE_ERR_TO_ERZ {
-    tag "${name}"
+process CHANGE_ERR_TO_ERZ_READS {
+    tag "${meta.id}"
     container 'quay.io/biocontainers/pigz:2.3.4'
 
     input:
