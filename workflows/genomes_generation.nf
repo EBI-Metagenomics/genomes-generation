@@ -30,6 +30,7 @@ ref_busco = channel.fromPath("${params.busco_ref_db}", checkIfExists: true)
 */
 include { PROCESS_INPUT                         } from '../subworkflows/local/subwf_process_input_files'
 include { DECONTAMINATION                       } from '../subworkflows/local/subwf_decontamination'
+include { ALIGN                                 } from '../subworkflows/local/subwf_alignment'
 
 include { QC_AND_MERGE as FILTERING_READS_FASTP } from '../subworkflows/nf-core/taxprofiler/qc_and_merge'
 include { BINNING                               } from '../subworkflows/nf-core/mag/subwf_mag_binning'
@@ -69,12 +70,17 @@ workflow GGP {
 
     // ---- pre-processing
     PROCESS_INPUT(data_by_run_accession, rename_file)      // output: [ meta, assembly_file, [raw_reads] ]
+    assembly = PROCESS_INPUT.out.return_tuple.map(it -> [it[0], it[1]])
 
     // --- trimming reads
     FILTERING_READS_FASTP(PROCESS_INPUT.out.return_tuple.map(it -> [it[0], it[2]]))
 
+    // --- decontamination
     ref_genome_ch = FILTERING_READS_FASTP.out.reads.map { it -> [it[0], ref_genome, ref_genome_index] }
     DECONTAMINATION(FILTERING_READS_FASTP.out.reads, ref_genome_ch)
+
+    // --- align reads to assembly
+    ALIGN(assembly.combine(DECONTAMINATION.out.decontaminated_reads, by:0))  // tuple (meta, fasta, [reads])
 
     // ---- binning
     //BINNING(PREPARE_INPUT.out.return_tuple)

@@ -5,7 +5,6 @@
 */
 include { ALIGNMENT           } from '../../modules/local/align_bwa'
 include { SAMTOOLS_FASTQ      } from '../../modules/nf-core/samtools/fastq/main'
-include { GZIP                } from '../../modules/local/utils'
 
 workflow DECONTAMINATION {
     take:
