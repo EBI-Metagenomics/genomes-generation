@@ -110,7 +110,6 @@ workflow BINNING {
         ch_binning_results_gzipped_final_euk = ch_binning_results_gzipped_final.mix( FASTA_BINNING_CONCOCT.out.bins )
     }
 
-    ch_versions.view()
     size_binner = ch_binning_results_gzipped_final.map{it -> [it[0], it[1].collect().size()]}
     size_binner.view()
 

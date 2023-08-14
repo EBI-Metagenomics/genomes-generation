@@ -1,6 +1,6 @@
 
 process CONCOCT_CONCOCTCOVERAGETABLE {
-    tag "$meta.id"
+    tag "${meta.id} ${bed} ${bamfiles}"
     label 'process_single'
 
     // conda "bioconda::concoct=1.1.0"

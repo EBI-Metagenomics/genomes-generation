@@ -83,7 +83,7 @@ workflow GGP {
     ALIGN(assembly.combine(DECONTAMINATION.out.decontaminated_reads, by:0))  // tuple (meta, fasta, [reads])
 
     // ---- binning
-    //BINNING(PREPARE_INPUT.out.return_tuple)
+    BINNING(ALIGN.out.output, DECONTAMINATION.out.decontaminated_reads)
 
     // ---- detect euk
     // input: tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )

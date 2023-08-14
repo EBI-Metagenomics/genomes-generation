@@ -1,5 +1,5 @@
 process METABAT2_METABAT2 {
-    tag "$meta.id"
+    tag "$meta.id ${fasta} with ${depth}"
     label 'process_medium'
 
     //conda "bioconda::metabat2=2.15"

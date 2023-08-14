@@ -20,5 +20,5 @@ workflow ALIGN {
     )
 
     emit:
-        bams = ALIGNMENT.out.bams
+        output = ALIGNMENT.out.bams  // [meta, fasta, bam, bai]
 }

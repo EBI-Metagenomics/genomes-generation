@@ -1,5 +1,5 @@
 process MAXBIN2 {
-    tag "$meta.id"
+    tag "$meta.id $contigs $reads"
     label 'process_medium'
 
     //conda "bioconda::maxbin2=2.2.7"
