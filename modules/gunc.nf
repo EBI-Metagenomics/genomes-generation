@@ -1,6 +1,6 @@
 process GUNC {
 
-    tag "${name} ${fasta}"
+    tag "${meta} ${fasta}"
     container 'quay.io/microbiome-informatics/genomes-pipeline.gunc:v4'
     publishDir(
         path: "${params.outdir}/intermediate_steps/gunc/",
@@ -9,11 +9,11 @@ process GUNC {
     )
 
     input:
-    tuple val(name), path(fasta)
+    tuple val(meta), path(fasta)
     file gunc_db
 
     output:
-    tuple val(name), path("${fasta.baseName.replaceAll('_clean', '')}.${fasta.extension}"), path('*_gunc_*'), emit: tuple_gunc_result
+    tuple val(meta), path("${fasta.baseName.replaceAll('_clean', '')}.${fasta.extension}"), path('*_gunc_*'), emit: tuple_gunc_result
     path('gunc_contaminated.txt'), emit: gunc_result
 
     script:

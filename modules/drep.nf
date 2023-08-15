@@ -3,7 +3,7 @@
 */
 process DREP {
 
-    tag "${name} ${drep_params}"
+    tag "${meta.id} ${drep_params}"
 
     publishDir(
         path: "${params.outdir}/intermediate_steps/drep_${type}",
@@ -13,13 +13,13 @@ process DREP {
     container 'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0'
 
     input:
-    tuple val(name), path(genomes_list, stageAs: "genomes_dir/*"), path(quality_csv)
+    tuple val(meta), path(genomes_list, stageAs: "genomes_dir/*"), path(quality_csv)
     val drep_params
     val type
 
     output:
-    tuple val(name), path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
-    tuple val(name), path("dereplicated_genomes.txt"), optional: true, emit: dereplicated_genomes_list
+    tuple val(meta), path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
+    tuple val(meta), path("dereplicated_genomes.txt"), optional: true, emit: dereplicated_genomes_list
 
     script:
     """
@@ -51,7 +51,7 @@ process DREP {
 
 process DREP_MAGS {
 
-    tag "${name} ${drep_params}"
+    tag "${meta.id} ${drep_params}"
 
     publishDir(
         path: "${params.outdir}/intermediate_steps/drep_${type}",
@@ -61,7 +61,7 @@ process DREP_MAGS {
     container 'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0'
 
     input:
-    val(name)
+    val(meta)
     path(genomes_list, stageAs: "genomes_dir/*")
     path(quality_csv)
     val drep_params
@@ -69,7 +69,7 @@ process DREP_MAGS {
 
     output:
     path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
-    tuple val(name), path("dereplicated_genomes.txt"), optional: true, emit: dereplicated_genomes_list
+    tuple val(meta), path("dereplicated_genomes.txt"), optional: true, emit: dereplicated_genomes_list
 
     script:
     """

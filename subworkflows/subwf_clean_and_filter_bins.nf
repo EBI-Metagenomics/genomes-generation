@@ -19,8 +19,8 @@ workflow CLEAN_AND_FILTER_BINS {
         bins = input_data.transpose()
         MAG_CLEANUP_CAT(bins, cat_db, cat_taxonomy_db, cat_diamond_db)
 
-        // input: tuple(name, bin, summary, names)
-        // output: tuple(name, clean.fa)
+        // input: tuple(meta, bin, summary, names)
+        // output: tuple(meta, clean.fa)
         SELECT_CONT_SEQUENCES(MAG_CLEANUP_CAT.out.cat_results)
 
         GUNC(SELECT_CONT_SEQUENCES.out.cleaned_fasta, gunc_db.first())

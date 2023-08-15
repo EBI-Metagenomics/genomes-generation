@@ -21,7 +21,7 @@ include { EUK_TAXONOMY_WRITER } from '../modules/euk_taxo'
 
 
 process CONCATENATE_QUALITY_FILES {
-    tag "${name}"
+    tag "${meta.id}"
 
     publishDir(
         path: "${params.outdir}/qs50",
@@ -29,11 +29,11 @@ process CONCATENATE_QUALITY_FILES {
     )
 
     input:
-    tuple val(name), path(input_files)
+    tuple val(meta), path(input_files)
     val output_name
 
     output:
-    tuple val(name), path("${output_name}"), emit: concatenated_result
+    tuple val(meta), path("${output_name}"), emit: concatenated_result
 
     script:
     """
@@ -64,7 +64,7 @@ process MODIFY_QUALITY_FILE {
 }
 
 process FILTER_QS50 {
-    tag "${name}"
+    tag "${meta.id}"
 
     publishDir(
         path: "${params.outdir}/intermediate_steps/qs50",
@@ -74,10 +74,10 @@ process FILTER_QS50 {
     label 'process_light'
 
     input:
-    tuple val(name), path(quality_file), path(concoct_bins), path(metabat_bins), path(concoct_bins_merged), path(metabat_bins_merged)
+    tuple val(meta), path(quality_file), path(concoct_bins), path(metabat_bins), path(concoct_bins_merged), path(metabat_bins_merged)
 
     output:
-    tuple val(name), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
+    tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
 
     script:
     """
@@ -109,7 +109,7 @@ process FILTER_QS50 {
 
 workflow EUK_SUBWF {
     take:
-        input_data  // tuple( run_accession, assembly_file, [raw_reads], concoct_folder, metabat_folder )
+        input_data  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder )
         eukcc_db
         busco_db
         cat_db
@@ -125,7 +125,7 @@ workflow EUK_SUBWF {
 
         // -- concoct
         binner1 = channel.value("concoct")
-        LINKTABLE_CONCOCT(ALIGN.out.annotated_bams.combine(bins_concoct, by: 0), binner1)       // output: tuple(name, links.csv, bin_dir)
+        LINKTABLE_CONCOCT(ALIGN.out.annotated_bams.combine(bins_concoct, by: 0), binner1)       // output: tuple(meta, links.csv, bin_dir)
         EUKCC_CONCOCT(binner1, LINKTABLE_CONCOCT.out.links_table, eukcc_db.first())
 
         // -- metabat2
@@ -137,10 +137,10 @@ workflow EUK_SUBWF {
         combine_quality = EUKCC_CONCOCT.out.eukcc_csv.combine(EUKCC_METABAT.out.eukcc_csv, by: 0)
         // "genome,completeness,contamination"
         functionCatCSV = { item ->
-            def name = item[0]
+            def meta = item[0]
             def list_files = [item[1], item[2]]
             //def combine_quality_file = list_files.collectFile(name: "quality_eukcc.csv", newLine: true)
-            return tuple(name, list_files)
+            return tuple(meta, list_files)
         }
         CONCATENATE_QUALITY_FILES(combine_quality.map(functionCatCSV), channel.value("quality_eukcc.csv"))
         quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
@@ -150,22 +150,22 @@ workflow EUK_SUBWF {
         FILTER_QS50(collect_data)
 
         // -- drep
-        // input: tuple (name, genomes/*, quality_file)
+        // input: tuple (meta, genomes/*, quality_file)
         euk_drep_args = channel.value('-pa 0.80 -sa 0.99 -nc 0.40 -cm larger -comp 49 -con 21')
         DREP(FILTER_QS50.out.qs50_filtered_genomes, euk_drep_args, channel.value('euk'))
 
         // -- coverage
-        bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0)  // tuple(name, drep_genomes, [reads]),...
+        bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0)  // tuple(meta, drep_genomes, [reads]),...
         spreadBins = { record ->
             if (record[1] instanceof List) {
                 return record}
             else {
                 return tuple(record[0], [record[1]], record[2])}
         }
-        bins_alignment_by_bins = bins_alignment.map(spreadBins).transpose(by:1)  // tuple(name, MAG1, [reads]); tuple(name, MAG2, [reads])
-        ALIGN_BINS(bins_alignment_by_bins)      // out: tuple(name, [bam, bai])
+        bins_alignment_by_bins = bins_alignment.map(spreadBins).transpose(by:1)  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
+        ALIGN_BINS(bins_alignment_by_bins)      // out: tuple(meta, [bam, bai])
         breadth_input = ALIGN_BINS.out.annotated_bams.combine(bins_alignment_by_bins, by:0).map(item -> tuple(item[0], item[1], item[2]))
-        // input: tuple(name, [bam, bai], MAG)
+        // input: tuple(meta, [bam, bai], MAG)
         BREADTH_DEPTH(breadth_input)
 
         // -- aggregate by samples

@@ -73,20 +73,15 @@ workflow BINNING {
     }
 
     // final gzipped bins
-    ch_binning_results_gzipped_final = Channel.empty()
-    ch_binning_results_gzipped_final_euk = Channel.empty()
     // run binning
     if ( !params.skip_metabat2 ) {
         METABAT2_METABAT2 ( ch_metabat2_input )
         // before decompressing first have to separate and re-group due to limitation of GUNZIP module
-        ch_binning_results_gzipped_final = ch_binning_results_gzipped_final.mix( METABAT2_METABAT2.out.fasta )
         ch_versions = ch_versions.mix(METABAT2_METABAT2.out.versions.first())
-        ch_binning_results_gzipped_final_euk = ch_binning_results_gzipped_final.mix( METABAT2_METABAT2.out.fasta )
     }
     if ( !params.skip_maxbin2 ) {
         MAXBIN2 ( ch_maxbin2_input )
         ADJUST_MAXBIN2_EXT ( MAXBIN2.out.binned_fastas )
-        ch_binning_results_gzipped_final = ch_binning_results_gzipped_final.mix( ADJUST_MAXBIN2_EXT.out.renamed_bins )
         ch_versions = ch_versions.mix(MAXBIN2.out.versions)
     }
     if ( !params.skip_concoct ){
@@ -105,17 +100,22 @@ workflow BINNING {
                             }
 
         FASTA_BINNING_CONCOCT ( ch_concoct_input )
-        ch_binning_results_gzipped_final = ch_binning_results_gzipped_final.mix( FASTA_BINNING_CONCOCT.out.bins )
         ch_versions = ch_versions.mix(FASTA_BINNING_CONCOCT.out.versions)
-        ch_binning_results_gzipped_final_euk = ch_binning_results_gzipped_final.mix( FASTA_BINNING_CONCOCT.out.bins )
     }
 
     size_binner = ch_binning_results_gzipped_final.map{it -> [it[0], it[1].collect().size()]}
     size_binner.view()
 
+    assembly = assemblies.map{it -> it[1]}
+    raw_reads = reads.map{it -> it[1]}
+
     emit:
-    bins_gz                                      = ch_binning_results_gzipped_final
-    euk_bins                                     = ch_binning_results_gzipped_final_euk
+
+    concoct_bins                                 = FASTA_BINNING_CONCOCT.out.bins
+    metabat_bins                                 = METABAT2_METABAT2.out.fasta
+    maxbin_bins                                  = ADJUST_MAXBIN2_EXT.out.renamed_bins
     metabat2depths                               = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
     versions                                     = ch_versions
+    euk_input                                    = tuple(meta, assembly, raw_reads, FASTA_BINNING_CONCOCT.out.bins, METABAT2_METABAT2.out.fasta)
+    prok_input                                   = tuple(meta, FASTA_BINNING_CONCOCT.out.bins, METABAT2_METABAT2.out.fasta, ADJUST_MAXBIN2_EXT.out.renamed_bins)
 }

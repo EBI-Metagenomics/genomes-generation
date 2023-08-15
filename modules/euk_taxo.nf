@@ -1,6 +1,6 @@
 process EUK_TAXONOMY_WRITER {
 
-    tag "${name} ${}"
+    tag "${bat_names}"
 
     publishDir(
         path: "${params.outdir}/euk_taxonomy",

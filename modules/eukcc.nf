@@ -1,5 +1,5 @@
 process LINKTABLE {
-    tag "${name} ${binner}"
+    tag "${meta.id} ${binner}"
     publishDir(
         path: "${params.outdir}/eukcc/",
         mode: 'copy',
@@ -9,20 +9,20 @@ process LINKTABLE {
     container 'quay.io/microbiome-informatics/eukrecover.python3base:v1'
 
     input:
-    tuple val(name), path(bam), path(bindir)
+    tuple val(meta), path(bam), path(bindir)
     val(binner)
 
     output:
-    tuple val(name), path("*.links.csv"), path(bindir), emit: links_table
+    tuple val(meta), path("*.links.csv"), path(bindir), emit: links_table
 
     script:
     """
     BINS=\$(ls ${bindir} | grep -v "unbinned" | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "creating empty links file"
-        touch ${name}.${binner}.links.csv
+        touch ${meta.id}.${binner}.links.csv
     else
-        binlinks.py  --ANI 99 --within 1500 --out ${name}.${binner}.links.csv --bindir ${bindir} --bam ${bam[0]}
+        binlinks.py  --ANI 99 --within 1500 --out ${meta.id}.${binner}.links.csv --bindir ${bindir} --bam ${bam[0]}
     fi
     """
 }
@@ -31,7 +31,7 @@ process LINKTABLE {
  * EukCC
 */
 process EUKCC {
-    tag "${name} ${binner}"
+    tag "${meta.id} ${binner}"
 
     publishDir(
         path: "${params.outdir}/eukcc/",
@@ -43,12 +43,12 @@ process EUKCC {
 
     input:
     val binner
-    tuple val(name), path(links), path(bindir)
+    tuple val(meta), path(links), path(bindir)
     path eukcc_db
 
     output:
-    tuple val(name), path("*_merged_bins"), emit: eukcc_results
-    tuple val(name), path("${name}_${binner}.eukcc.csv"), emit: eukcc_csv
+    tuple val(meta), path("*_merged_bins"), emit: eukcc_results
+    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"), emit: eukcc_csv
 
     script:
     """
@@ -61,16 +61,16 @@ process EUKCC {
         --min_links 100 \
         --suffix .fa \
         --db ${eukcc_db} \
-        --out ${binner}_${name}_merged_bins \
-        --prefix "${binner}_${name}_merged." \
+        --out ${binner}_${meta.id}_merged_bins \
+        --prefix "${binner}_${meta.id}_merged." \
         ${bindir}
 
-    cp *_merged_bins/eukcc.csv ${name}_${binner}.eukcc.csv
+    cp *_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
     """
 }
 
 process EUKCC_MAG {
-    tag "${name}"
+    tag "${meta.id}"
 
     publishDir(
         path: "${params.outdir}/eukcc_mags/",
@@ -81,11 +81,11 @@ process EUKCC_MAG {
     container 'quay.io/microbiome-informatics/eukcc:latest'
 
     input:
-    tuple val(name), path(genomes_list, stageAs: "mags_dir/*")
+    tuple val(meta), path(genomes_list, stageAs: "mags_dir/*")
     path eukcc_db
 
     output:
-    tuple val(name), path("output/*eukcc.csv"), emit: eukcc_mags_results
+    tuple val(meta), path("output/*eukcc.csv"), emit: eukcc_mags_results
 
     script:
     """

@@ -1,6 +1,6 @@
 process GTDBTK {
 
-    tag "${name}"
+    tag "${meta.id}"
 
     container 'quay.io/microbiome-informatics/gtdb-tk:2.1.0'
     containerOptions "--bind ${gtdbtk_refdata}:/opt/gtdbtk_refdata"
@@ -14,11 +14,11 @@ process GTDBTK {
     label 'process_bigmem'
 
     input:
-    tuple val(name), path(genomes_fna, stageAs: "genomes_dir/*")
+    tuple val(meta), path(genomes_fna, stageAs: "genomes_dir/*")
     path gtdbtk_refdata
 
     output:
-    tuple val(name), path("Taxonomy")
+    tuple val(meta), path("Taxonomy")
 
 
     script:

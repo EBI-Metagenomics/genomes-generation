@@ -1,6 +1,6 @@
 process CHECKM2 {
 
-    tag "${name}"
+    tag "${meta.id}"
 
     publishDir(
         path: "${params.outdir}/intermediate_steps/checkm2",
@@ -9,12 +9,12 @@ process CHECKM2 {
     )
 
     input:
-    val(name)
+    val(meta)
     path(bins)
     path checkm_db
 
     output:
-    tuple val(name), path(bins), path("all.stats.clean"), emit: checkm2_results
+    tuple val(meta), path(bins), path("all.stats.clean"), emit: checkm2_results
 
     script:
     """

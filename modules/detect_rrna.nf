@@ -3,7 +3,7 @@
 */
 process DETECT_RRNA {
 
-    tag "${name} ${fasta}"
+    tag "${meta.id} ${fasta}"
 
     publishDir(
         path: "${params.outdir}/RNA",
@@ -46,11 +46,11 @@ process DETECT_RRNA {
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'
 
     input:
-    tuple val(name), path(fasta)
+    tuple val(meta), path(fasta)
     path cm_models
 
     output:
-    tuple val(name), path('results_folder/*'), emit: rrna_out_results
+    tuple val(meta), path('results_folder/*'), emit: rrna_out_results
 
     script:
     """

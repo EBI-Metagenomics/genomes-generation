@@ -1,34 +1,34 @@
 process SELECT_CONT_SEQUENCES {
 
-    tag "${name} ${bin}"
+    tag "${meta.id} ${bin}"
     container 'quay.io/biocontainers/biopython:1.75'
 
     input:
-    tuple val(name), path(bin), path(summary), path(names)
+    tuple val(meta), path(bin), path(summary), path(names)
 
     output:
-    tuple val(name), path("${name}_${bin.baseName}_clean.fa"), emit: cleaned_fasta
-    tuple val(name), path("${name}.cont-contigs.txt"), path("*.cont-stats.tsv"), emit: contamination_stats
+    tuple val(meta), path("${meta.id}_${bin.baseName}_clean.fa"), emit: cleaned_fasta
+    tuple val(meta), path("${meta.id}.cont-contigs.txt"), path("*.cont-stats.tsv"), emit: contamination_stats
 
     script:
     """
     echo "detect contamination"
-    detect_contamination.py -s ${summary} -n ${names} -i ${name}
+    detect_contamination.py -s ${summary} -n ${names} -i ${meta.id}
 
-    LEN=\$(wc -l ${name}.cont-contigs.txt)
+    LEN=\$(wc -l ${meta.id}.cont-contigs.txt)
     if [ \$LEN -eq 0 ]; then
         echo "no contamination"
     else
         echo "cleaning fasta"
-        select_seqs_notin_IDs.py -i ${bin} -d ${name}.cont-contigs.txt -o "${name}_${bin.baseName}_clean.fa"
+        select_seqs_notin_IDs.py -i ${bin} -d ${meta.id}.cont-contigs.txt -o "${meta.id}_${bin.baseName}_clean.fa"
     fi
     """
 
     stub:
     """
     touch \
-        "${name}.cont-contigs.txt" \
-        "${name}.cont-stats.tsv" \
-        "${name}_${bin.baseName}_clean.fa"
+        "${meta.id}.cont-contigs.txt" \
+        "${meta.id}.cont-stats.tsv" \
+        "${meta.id}_${bin.baseName}_clean.fa"
     """
 }
