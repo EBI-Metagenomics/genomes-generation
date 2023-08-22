@@ -48,7 +48,7 @@ process EUKCC {
         --improve_ratio  5 \
         --links ${links} \
         --min_links 100 \
-        --suffix .fa \
+        --suffix .fa.gz \
         --db ${eukcc_db} \
         --out ${binner}_${meta.id}_merged_bins \
         --prefix "${binner}_${meta.id}_merged." \
