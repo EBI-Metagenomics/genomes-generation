@@ -5,9 +5,6 @@ include { CHECKM2 as CHECKM_FINAL                                           } fr
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER1  } from '../../modules/mgbinrefinder/utils'
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER2  } from '../../modules/mgbinrefinder/utils'
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER3  } from '../../modules/mgbinrefinder/utils'
-include { GUNZIP_FILES_IN_FOLDER as GUNZIP1                                 } from '../../modules/mgbinrefinder/utils'
-include { GUNZIP_FILES_IN_FOLDER as GUNZIP2                                 } from '../../modules/mgbinrefinder/utils'
-include { GUNZIP_FILES_IN_FOLDER as GUNZIP3                                 } from '../../modules/mgbinrefinder/utils'
 include { REFINE as REFINE12                                                } from './refine'
 include { REFINE as REFINE13                                                } from './refine'
 include { REFINE as REFINE23                                                } from './refine'
@@ -25,16 +22,15 @@ workflow REFINEMENT {
         collected_binners
         ref_checkm
     main:
+        meta = collected_binners.map{it -> it[0]}
+        binner1 = collected_binners.map{it -> it[1]}
+        binner2 = collected_binners.map{it -> it[2]}
+        binner3 = collected_binners.map{it -> it[3]}
 
-        binner1 = collected_binners.map{it -> [it[0], it[1]]}
-        binner2 = collected_binners.map{it -> [it[0], it[2]]}
-        binner3 = collected_binners.map{it -> [it[0], it[3]]}
-        GUNZIP1(binner1)
-        GUNZIP2(binner2)
-        GUNZIP3(binner3)
-        RENAME_AND_CHECK_SIZE_BINS_BINNER1(channel.value("binner1"), GUNZIP1.out.output.flatten())
-        RENAME_AND_CHECK_SIZE_BINS_BINNER2(channel.value("binner2"), GUNZIP2.out.output.flatten())
-        RENAME_AND_CHECK_SIZE_BINS_BINNER3(channel.value("binner3"), GUNZIP3.out.output.flatten())
+        binner1.view()
+        RENAME_AND_CHECK_SIZE_BINS_BINNER1(channel.value("binner1"), binner1.flatten())
+        RENAME_AND_CHECK_SIZE_BINS_BINNER2(channel.value("binner2"), binner2.flatten())
+        RENAME_AND_CHECK_SIZE_BINS_BINNER3(channel.value("binner3"), binner3.flatten())
 
         renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed.collect()
         size_1 = renamed_binner1.size()
@@ -75,5 +71,5 @@ workflow REFINEMENT {
 
     emit:
         //checkm_stats = CHECKM_FINAL.out.checkm_results
-        bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins
+        bin_ref_bins = tuple(meta, CONSOLIDATE_BINS.out.dereplicated_bins)
 }

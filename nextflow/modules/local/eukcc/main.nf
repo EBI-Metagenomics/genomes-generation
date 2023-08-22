@@ -17,7 +17,7 @@ process LINKTABLE {
         echo "creating empty links file"
         touch ${meta.id}.${binner}.links.csv
     else
-        binlinks.py  --ANI 99 --within 1500 --out ${meta.id}.${binner}.links.csv --bindir ${bindir} --bam ${bam[0]}
+        binlinks.py  --ANI 99 --within 1500 --out ${meta.id}.${binner}.links.csv --bindir ${bindir} --bam ${bam[0]} -d
     fi
     """
 }
@@ -48,7 +48,7 @@ process EUKCC {
         --improve_ratio  5 \
         --links ${links} \
         --min_links 100 \
-        --suffix .fa.gz \
+        --suffix .fa \
         --db ${eukcc_db} \
         --out ${binner}_${meta.id}_merged_bins \
         --prefix "${binner}_${meta.id}_merged." \

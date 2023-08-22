@@ -8,12 +8,13 @@ process CHECKM2 {
     path checkm_db
 
     output:
-    path("${name}.checkm2.tsv"), emit: checkm2_results
-    path("${name}_filtered_genomes"), optional: true, emit: checkm2_results_filtered
-    path("${name}_filtered_genomes.tsv"), optional: true, emit: checkm2_results_filtered_stats
+    path("*.checkm2.tsv"), emit: checkm2_results
+    path("*_filtered_genomes"), optional: true, emit: checkm2_results_filtered
+    path("*_filtered_genomes.tsv"), optional: true, emit: checkm2_results_filtered_stats
 
     script:
-    if (meta.id) {
+    def name = ""
+    if (meta instanceof Map) {
         name = meta.id }
     else {
         name = meta

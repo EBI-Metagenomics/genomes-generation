@@ -22,13 +22,16 @@ process RENAME_AND_CHECK_SIZE_BINS {
 }
 
 process GUNZIP_FILES_IN_FOLDER {
+
+    tag "${meta.id}"
     stageInMode 'copy'
 
     input:
     tuple val(meta), path(folder)
 
     output:
-    path("${folder}/*"), emit: output
+    tuple val(meta), path("${folder}/*"), emit: output_list
+    tuple val(meta), path("${folder}"), emit: output_folder
 
     script:
     """

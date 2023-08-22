@@ -55,7 +55,6 @@ process ALIGNMENT {
     } else {
         samtools_args = task.ext.decontamination_args
     }
-    print(samtools_args)
     // align
     """
     mkdir -p output

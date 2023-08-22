@@ -52,7 +52,7 @@ def contig_map(bindir, bin_sep, suffix=".fa"):
     bins = [item for item in os.listdir(bindir) if 'unbinned' not in item]
     for f in bins:
         logging.debug(f"Processing {f}")
-        if f.endswith(suffix) or f.endswith(suffix + '.gz') is False:
+        if not (f.endswith(suffix) or f.endswith(suffix + '.gz')):
             continue
         path = os.path.join(bindir, f)
         handle = open_fasta_file(path)
