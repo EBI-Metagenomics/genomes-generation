@@ -1,24 +1,18 @@
 process CHECKM2 {
 
-    tag "${meta}"
+    tag "${name} ${meta.id}"
 
     input:
-    val(meta)
-    path(bins)
+    val(name)
+    tuple val(meta), path(bins)
     path checkm_db
 
     output:
-    path("*.checkm2.tsv"), emit: checkm2_results
-    path("*_filtered_genomes"), optional: true, emit: checkm2_results_filtered
-    path("*_filtered_genomes.tsv"), optional: true, emit: checkm2_results_filtered_stats
+    tuple val(meta), path("*.checkm2.tsv"), emit: checkm2_results
+    tuple val(meta), path("*_filtered_genomes"), optional: true, emit: checkm2_results_filtered
+    tuple val(meta), path("*_filtered_genomes.tsv"), optional: true, emit: checkm2_results_filtered_stats
 
     script:
-    def name = ""
-    if (meta instanceof Map) {
-        name = meta.id }
-    else {
-        name = meta
-    }
     """
     echo "checkm predict"
     checkm2 predict --threads ${task.cpus} --input ${bins} -x fa --output-directory ${name}_checkm_output

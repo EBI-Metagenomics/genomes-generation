@@ -1,5 +1,6 @@
-include { BINNING_REFINER   } from '../../modules/mgbinrefinder/binning_refiner'
-include { CHECKM2           } from '../../modules/local/checkm2/main'
+include { BINNING_REFINER    } from '../../modules/mgbinrefinder/binning_refiner'
+include { BINNING_REFINER3   } from '../../modules/mgbinrefinder/binning_refiner'
+include { CHECKM2            } from '../../modules/local/checkm2/main'
 
 workflow REFINE {
     take:
@@ -9,15 +10,25 @@ workflow REFINE {
         binner3
         checkm_db
     main:
-        BINNING_REFINER(name, binner1, binner2, binner3)
-        size_refined_bins = BINNING_REFINER.out.refined_bins.collect().size()
+        refined = Channel.empty()
+        if (binner3) {
+            BINNING_REFINER3(name, binner1, binner2, binner3)
+            refined = BINNING_REFINER3.out.refined_bins
+        }
+        else {
+            BINNING_REFINER(name, binner1, binner2)
+            refined = BINNING_REFINER.out.refined_bins
+        }
+
+        size_refined_bins = refined.map{it->it[1]}.collect().size()
         size_refined_bins.subscribe { println "Refinder: $name.value: $it.value" }
 
-        CHECKM2(name, BINNING_REFINER.out.refined_bins, checkm_db)
-        //size_filtered_bins = CHECKM2.out.checkm2_results_filtered.collect().size()
-        //size_filtered_bins.subscribe { println "Checkm2: $name.value: $it.value" }
+        CHECKM2(name, refined, checkm_db)
+
     emit:
-        refined = BINNING_REFINER.out.refined_bins
+        refined = refined
         filtered_bins = CHECKM2.out.checkm2_results_filtered
         filtered_bins_stats = CHECKM2.out.checkm2_results_filtered_stats
 }
+
+

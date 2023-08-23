@@ -134,6 +134,8 @@ workflow EUK_SUBWF {
         collect_data = quality.combine(bins_concoct, by: 0).combine(bins_metabat, by: 0).combine(EUKCC_CONCOCT.out.eukcc_results, by: 0).combine(EUKCC_METABAT.out.eukcc_results, by: 0)
         FILTER_QS50(collect_data)
 
+        size_filtered_bins = FILTER_QS50(collect_data).out.qs50_filtered_genomes.map{it->it[1]}.collect().size()
+        size_refined_bins.subscribe { println "Euk QS50: $it.value" }
         // -- drep
         // input: tuple (meta, genomes/*, quality_file)
         euk_drep_args = channel.value('-pa 0.80 -sa 0.99 -nc 0.40 -cm larger -comp 49 -con 21')

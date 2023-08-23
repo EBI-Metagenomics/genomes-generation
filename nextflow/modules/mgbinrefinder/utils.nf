@@ -4,10 +4,10 @@ process RENAME_AND_CHECK_SIZE_BINS {
 
     input:
     val(name)
-    path(bin)
+    tuple val(meta), path(bin)
 
     output:
-    path("${name}.*.fa"), emit: renamed, optional: true
+    tuple val(meta), path("${name}.*.fa"), emit: renamed, optional: true
 
     script:
     """
