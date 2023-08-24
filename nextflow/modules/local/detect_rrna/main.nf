@@ -3,16 +3,16 @@
 */
 process DETECT_RRNA {
 
-    tag "${meta.id} ${fasta}"
+    tag "${fasta}"
 
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'
 
     input:
-    tuple val(meta), path(fasta)
+    path(fasta)
     path cm_models
 
     output:
-    tuple val(meta), path('results_folder/*'), emit: rrna_out_results
+    path('results_folder/*'), emit: rrna_out_results
 
     script:
     """

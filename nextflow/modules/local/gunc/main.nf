@@ -1,6 +1,6 @@
 process GUNC {
 
-    tag "${meta} ${fasta}"
+    tag "${meta.id} ${fasta}"
     container 'quay.io/microbiome-informatics/genomes-pipeline.gunc:v4'
 
     input:

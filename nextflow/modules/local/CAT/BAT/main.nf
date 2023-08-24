@@ -4,12 +4,12 @@ process BAT {
     container 'quay.io/microbiome-informatics/cat:5.2.3'
 
     input:
-    path bin
+    path(bin)
     path cat_db
     path taxonomy_db
 
     output:
-    path '*.BAT_run.bin2classification.names.txt', emit: bat_names
+    path('*.BAT_run.bin2classification.names.txt'), emit: bat_names
 
     script:
     """

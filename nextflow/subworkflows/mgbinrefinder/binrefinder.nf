@@ -51,9 +51,9 @@ workflow REFINEMENT {
         REFINE23(channel.value("binner23"), renamed_binner2, renamed_binner3, false, ref_checkm)
         REFINE123(channel.value("binner123"), renamed_binner1, renamed_binner2, renamed_binner3, ref_checkm)
 
-        CHECKM_1(channel.value("binner1"), renamed_binner1, ref_checkm)
-        CHECKM_2(channel.value("binner2"), renamed_binner2, ref_checkm)
-        CHECKM_3(channel.value("binner3"), renamed_binner3, ref_checkm)
+        CHECKM_1(channel.value("binner1"), renamed_binner1, ref_checkm.first())
+        CHECKM_2(channel.value("binner2"), renamed_binner2, ref_checkm.first())
+        CHECKM_3(channel.value("binner3"), renamed_binner3, ref_checkm.first())
 
         binners = CHECKM_1.out.checkm2_results_filtered.combine(
                     CHECKM_2.out.checkm2_results_filtered, by:0).combine(

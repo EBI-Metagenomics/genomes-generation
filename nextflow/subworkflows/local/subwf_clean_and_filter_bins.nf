@@ -10,7 +10,7 @@ include { GUNC                      } from '../../modules/local/gunc/main'
 */
 workflow CLEAN_AND_FILTER_BINS {
     take:
-        input_data // sample_name, [bin.fa, ...]
+        input_data // meta, [bin.fa, ...]
         cat_db
         cat_diamond_db
         cat_taxonomy_db
@@ -31,6 +31,6 @@ workflow CLEAN_AND_FILTER_BINS {
             })
         filtered_bins.view()
     emit:
-        filtered_bins
+        bins = filtered_bins
         gunc_report = GUNC.out.gunc_result.collectFile(name: "gunc_report.txt")
 }

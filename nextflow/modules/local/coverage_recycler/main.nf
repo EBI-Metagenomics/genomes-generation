@@ -1,6 +1,6 @@
 process COVERAGE_RECYCLER {
 
-    tag "${meta.id} ${metabat_depth}"
+    tag "${meta.id}"
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/biopython:1.75':
@@ -16,6 +16,7 @@ process COVERAGE_RECYCLER {
 
     script:
     """
-    cov_recycler.py -g genomes_dir -m ${metabat_depth} -n ${meta.id}
+    zcat ${metabat_depth} > depth.txt
+    cov_recycler.py -g genomes_dir -m depth.txt -n ${meta.id}
     """
 }

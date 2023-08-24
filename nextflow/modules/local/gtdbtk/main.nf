@@ -1,19 +1,16 @@
 process GTDBTK {
 
-    tag "${meta.id}"
-
     container 'quay.io/microbiome-informatics/gtdb-tk:2.1.0'
     containerOptions "--bind ${gtdbtk_refdata}:/opt/gtdbtk_refdata"
 
     label 'process_bigmem'
 
     input:
-    tuple val(meta), path(genomes_fna, stageAs: "genomes_dir/*")
+    path(genomes_fna, stageAs: "genomes_dir/*")
     path gtdbtk_refdata
 
     output:
-    tuple val(meta), path("Taxonomy")
-
+    path("Taxonomy")
 
     script:
     // TODO: tweak the cpus based on the number of genomes

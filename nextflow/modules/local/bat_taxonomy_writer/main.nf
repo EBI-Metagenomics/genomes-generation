@@ -7,14 +7,14 @@ process BAT_TAXONOMY_WRITER {
         'quay.io/biocontainers/biopython:1.75' }"
 
     input:
-        path bat_names
+        path(bat_names)
 
     output:
-        path "euk_taxonomy.csv"
-	path "all_bin2classification.txt"
+        path("*euk_taxonomy.csv")
+        path("all_bin2classification.txt")
 
     script:
     """
-    bat_taxo_process.py --bat_names ${bat_names}
+    bat_taxo_process.py --bat_names ${bat_names} --output "${bat_names.baseName}.euk_taxonomy.csv"
     """
 }

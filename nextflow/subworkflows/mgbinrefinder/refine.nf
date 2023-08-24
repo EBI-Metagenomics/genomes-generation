@@ -23,7 +23,7 @@ workflow REFINE {
         size_refined_bins = refined.map{it->it[1]}.collect().size()
         size_refined_bins.subscribe { println "Refinder: $name.value: $it.value" }
 
-        CHECKM2(name, refined, checkm_db)
+        CHECKM2(name, refined, checkm_db.first())
 
     emit:
         refined = refined

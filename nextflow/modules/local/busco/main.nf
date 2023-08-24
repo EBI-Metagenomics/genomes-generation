@@ -4,11 +4,11 @@ process BUSCO {
     container 'quay.io/biocontainers/busco:5.4.7--pyhdfd78af_0'
 
     input:
-    path bin
+    path(bin)
     path busco_db
 
     output:
-    path "*.short_summary.specific.txt", emit: busco_summary
+    path("*.short_summary.specific.txt"), emit: busco_summary
 
     script:
     """

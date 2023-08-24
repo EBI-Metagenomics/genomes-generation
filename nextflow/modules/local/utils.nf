@@ -102,10 +102,10 @@ process CHANGE_UNDERSCORE_TO_DOT {
     tag "${name} ${contigs}"
 
     input:
-    tuple val(name), path(contigs)
+    path(contigs)
 
     output:
-    tuple val(name), path("${contigs}"), emit: return_files
+    path("${contigs}"), emit: return_files
 
     script:
     """
