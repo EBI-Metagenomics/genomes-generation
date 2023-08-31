@@ -1,10 +1,6 @@
 /*
  * Binning with MetaBAT2, MaxBin2 and Concoct
  */
-include { CREATE_FOLDER as FOLDER_METABAT       } from '../../../modules/local/utils'
-include { CREATE_FOLDER as FOLDER_CONCOCT       } from '../../../modules/local/utils'
-include { CREATE_FOLDER as FOLDER_MAXBIN        } from '../../../modules/local/utils'
-
 include { METABAT2_METABAT2                     } from '../../../modules/nf-core/metabat2/metabat2/main'
 include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS  } from '../../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
 include { MAXBIN2                               } from '../../../modules/nf-core/maxbin2/main'
@@ -111,24 +107,22 @@ workflow BINNING {
         ch_versions = ch_versions.mix(FASTA_BINNING_CONCOCT.out.versions)
     }
 
-    assembly = assemblies.map{it -> [it[0],it[1]]}
-    meta = assemblies.map{it -> it[0]}
-    FOLDER_MAXBIN(ADJUST_MAXBIN2_EXT.out.renamed_bins.map{meta, bins ->
+    maxbin_output = ADJUST_MAXBIN2_EXT.out.renamed_bins.map{meta, bins ->
                                                             meta.remove('binner')
-                                                            [meta, bins]
-                                                         }, channel.value('maxbin'))
-    FOLDER_CONCOCT(FASTA_BINNING_CONCOCT.out.bins.map{meta, bins ->
+                                                            return [meta, bins]
+                                                         }
+    concoct_output = FASTA_BINNING_CONCOCT.out.bins.map{meta, bins ->
                                                             meta.remove('binner')
-                                                            [meta, bins]
-                                                         }, channel.value('concoct'))
-    FOLDER_METABAT(METABAT2_METABAT2.out.fasta.map{meta, bins ->
+                                                            return [meta, bins]
+                                                         }
+    metabat_output = METABAT2_METABAT2.out.fasta.map{meta, bins ->
                                                             meta.remove('binner')
-                                                            [meta, bins]
-                                                         }, channel.value('metabat'))
+                                                            return [meta, bins]
+                                                         }
     emit:
-        concoct_bins                                 = FOLDER_CONCOCT.out.output
-        metabat_bins                                 = FOLDER_METABAT.out.output
-        maxbin_bins                                  = FOLDER_MAXBIN.out.output
+        concoct_bins                                 = concoct_output
+        metabat_bins                                 = metabat_output
+        maxbin_bins                                  = maxbin_output
         metabat2depths                               = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
         versions                                     = ch_versions
 }

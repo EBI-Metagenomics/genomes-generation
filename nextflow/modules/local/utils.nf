@@ -155,20 +155,3 @@ process CHANGE_ERR_TO_ERZ_READS {
     else {
         print('incorrect input') }
 }
-
-process CREATE_FOLDER {
-    tag "${meta.id} ${folder_name}"
-
-    input:
-    tuple val(meta), path(list_files)
-    val folder_name
-
-    output:
-    tuple val(meta), path("${folder_name}"), emit: output
-
-    script:
-    """
-    mkdir -p ${folder_name}
-    mv ${list_files} ${folder_name}
-    """
-}

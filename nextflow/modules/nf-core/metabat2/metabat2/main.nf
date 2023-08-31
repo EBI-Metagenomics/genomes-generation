@@ -15,7 +15,7 @@ process METABAT2_METABAT2 {
     tuple val(meta), path("bins/*.lowDepth.fa")       , optional:true , emit: lowdepth
     tuple val(meta), path("bins/*.unbinned.fa")       , optional:true , emit: unbinned
     tuple val(meta), path("*.tsv.gz")               , optional:true , emit: membership
-    tuple val(meta), path("bins/*.[0-9]*.fa")              , optional:true , emit: fasta
+    tuple val(meta), path("${meta.id}_metabat_bins")              , optional:true , emit: fasta
     path "versions.yml"                                             , emit: versions
 
     when:
@@ -41,6 +41,9 @@ process METABAT2_METABAT2 {
     mv metabat2 bins
 
     gzip ${prefix}.tsv
+
+    mkdir -p ${meta.id}_metabat_bins
+    mv bins/*.[0-9]*.fa ${meta.id}_metabat_bins
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

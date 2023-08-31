@@ -12,10 +12,12 @@ process ADJUST_MAXBIN2_EXT {
     tuple val(meta), path(bins)
 
     output:
-    tuple val(meta), path("*.fa"), emit: renamed_bins
+    tuple val(meta), path("${meta.id}_maxbin_bins"), emit: renamed_bins
 
     script:
     """
+    mkdir -p "${meta.id}_maxbin_bins"
+
     if [ -n "${bins}" ]
     then
         for file in ${bins}; do
@@ -24,5 +26,6 @@ process ADJUST_MAXBIN2_EXT {
             mv \${file} \${bin}.fa
         done
     fi
+    mv *.fa "${meta.id}_maxbin_bins"
     """
 }
