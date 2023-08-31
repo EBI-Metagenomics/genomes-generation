@@ -1,7 +1,5 @@
 process BAT_TAXONOMY_WRITER {
 
-    tag "${bat_names}"
-
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/biopython:1.75':
         'quay.io/biocontainers/biopython:1.75' }"

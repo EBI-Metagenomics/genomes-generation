@@ -172,7 +172,7 @@ workflow EUK_SUBWF {
         BUSCO(drep_result, busco_db.first())
 
         // -- QC MAGs
-        BUSCO_QC(quality, BUSCO.out.busco_summary)
+        BUSCO_QC(q, BUSCO.out.busco_summary.collect())
 
         // -- BAT
         EUK_TAXONOMY(drep_result, cat_db.first(), cat_taxonomy_db.first())
