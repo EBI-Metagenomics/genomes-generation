@@ -11,7 +11,7 @@ process CONCOCT_EXTRACTFASTABINS {
     tuple val(meta), path(original_fasta), path(csv)
 
     output:
-    tuple val(meta), path("${prefix}/*.fa.gz"), emit: fasta
+    tuple val(meta), path("${prefix}/*.fa"), emit: fasta
     path "versions.yml"                     , emit: versions
 
     when:
@@ -32,7 +32,6 @@ process CONCOCT_EXTRACTFASTABINS {
     ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
     for i in ${prefix}/*.fa; do
         mv \${i} \${i/\\///${prefix}_}
-        gzip \${i/\\///${prefix}_}
     done
 
     cat <<-END_VERSIONS > versions.yml

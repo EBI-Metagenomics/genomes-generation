@@ -36,9 +36,7 @@ include { BINNING                                          } from '../subworkflo
 include { EUK_SUBWF                                        } from '../subworkflows/per_sample_euk_part'
 include { PROK_SUBWF                                       } from '../subworkflows/per_sample_prok_part'
 //include { GZIP                                   } from '../modules/local/utils'
-include { GUNZIP_FILES_IN_FOLDER as GUNZIP_BINNER1         } from '../modules/mgbinrefinder/utils'
-include { GUNZIP_FILES_IN_FOLDER as GUNZIP_BINNER2         } from '../modules/mgbinrefinder/utils'
-include { GUNZIP_FILES_IN_FOLDER as GUNZIP_BINNER3         } from '../modules/mgbinrefinder/utils'
+
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
@@ -84,20 +82,20 @@ workflow GGP {
 
     // ---- binning
     BINNING(ALIGN.out.output, DECONTAMINATION.out.decontaminated_reads)
-    GUNZIP_BINNER1(BINNING.out.concoct_bins)
-    GUNZIP_BINNER2(BINNING.out.maxbin_bins)
-    GUNZIP_BINNER3(BINNING.out.metabat_bins)
+    concoct_bins = BINNING.out.concoct_bins  // uncompressed bins
+    maxbin_bins = BINNING.out.maxbin_bins
+    metabat_bins = BINNING.out.metabat_bins
 
     if ( !params.skip_euk ) {
         // ---- detect euk
         // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
-        euk_input = assembly.combine(DECONTAMINATION.out.decontaminated_reads, by:0).combine(GUNZIP_BINNER1.out.output_folder, by:0).combine(GUNZIP_BINNER2.out.output_folder, by:0)
+        euk_input = assembly.combine(DECONTAMINATION.out.decontaminated_reads, by:0).combine(concoct_bins, by:0).combine(maxbin_bins, by:0)
         EUK_SUBWF(euk_input, ref_eukcc, ref_busco, ref_catdb, ref_cat_taxonomy)
     }
     if ( !params.skip_prok ) {
         // ---- detect prok
         // input: tuple( meta, concoct, metabat, maxbin, depth_file), dbs...
-        prok_input = GUNZIP_BINNER1.out.output_list.combine(GUNZIP_BINNER2.out.output_list, by:0).combine(GUNZIP_BINNER3.out.output_list, by:0).combine(BINNING.out.metabat2depths, by:0)
+        prok_input = concoct_bins.combine(maxbin_bins, by:0).combine(metabat_bins, by:0).combine(BINNING.out.metabat2depths, by:0)
         PROK_SUBWF(prok_input, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
     }
     // ---- compress results

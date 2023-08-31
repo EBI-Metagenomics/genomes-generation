@@ -12,16 +12,16 @@ process ADJUST_MAXBIN2_EXT {
     tuple val(meta), path(bins)
 
     output:
-    tuple val(meta), path("*.fa.gz"), emit: renamed_bins
+    tuple val(meta), path("*.fa"), emit: renamed_bins
 
     script:
     """
     if [ -n "${bins}" ]
     then
         for file in ${bins}; do
-            [[ \${file} =~ (.*).fasta.gz ]];
+            [[ \${file} =~ (.*).fasta ]];
             bin="\${BASH_REMATCH[1]}"
-            mv \${file} \${bin}.fa.gz
+            mv \${file} \${bin}.fa
         done
     fi
     """

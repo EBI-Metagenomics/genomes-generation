@@ -11,11 +11,11 @@ process METABAT2_METABAT2 {
     tuple val(meta), path(fasta), path(depth)
 
     output:
-    tuple val(meta), path("*.tooShort.fa.gz")       , optional:true , emit: tooshort
-    tuple val(meta), path("*.lowDepth.fa.gz")       , optional:true , emit: lowdepth
-    tuple val(meta), path("*.unbinned.fa.gz")       , optional:true , emit: unbinned
+    tuple val(meta), path("bins/*.tooShort.fa")       , optional:true , emit: tooshort
+    tuple val(meta), path("bins/*.lowDepth.fa")       , optional:true , emit: lowdepth
+    tuple val(meta), path("bins/*.unbinned.fa")       , optional:true , emit: unbinned
     tuple val(meta), path("*.tsv.gz")               , optional:true , emit: membership
-    tuple val(meta), path("bins/*.fa.gz")           , optional:true , emit: fasta
+    tuple val(meta), path("bins/*.[0-9]*.fa")              , optional:true , emit: fasta
     path "versions.yml"                                             , emit: versions
 
     when:
@@ -41,8 +41,6 @@ process METABAT2_METABAT2 {
     mv metabat2 bins
 
     gzip ${prefix}.tsv
-    find ./bins/ -name "*.fa" -type f | xargs -t -n 1 bgzip -@ ${task.cpus}
-    find ./bins/ -name "*[lowDepth,tooShort,unbinned].fa.gz" -type f -exec mv {} . \\;
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
