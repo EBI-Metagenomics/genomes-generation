@@ -44,36 +44,29 @@ class fa_class:
         return len(self.seq)
 
 
-def busco_score(path):
+def busco_stats(path):
     d = {
+        "BUSCO_completeness": None,
+        "BUSCO_contamination": None,
         "BUSCO_C": None,
         "BUSCO_M": None,
         "BUSCO_D": None,
         "BUSCO_S": None,
         "BUSCO_F": None,
+        "N50": None,
+        "bp": None,
+        "contigs": None
     }
 
-    with open(path) as fin:
-        for line in fin:
-            if line.strip().startswith("C:"):
-                elem = line.strip().replace("[", ",").replace("]", "").split(",")
-                for e in elem:
-                    x = e.split(":")
-                    d["BUSCO_{}".format(x[0])] = x[1].replace("%", "")
-                # this is the last info we need
-                break
-            if line.strip().startswith("# The lineage dataset is: "):
-                d["BUSCO_lineage"] = line.strip().split()[5]
-    return d
-
-def genome_stats(path):
     with open(path) as fin:
         for line in fin:
             line = line.strip().lstrip()
             if 'Number of scaffolds' in line:
                 total_fragments = line.split()[0]
+                d["contigs"] = str(total_fragments)
             elif 'Total length' in line:
                 genome_size = line.split()[0]
+                d["bp"] = str(genome_size)
             elif 'Scaffold N50' in line:
                 n50 = line.split()[0]
                 units = line.split()[1]
@@ -81,24 +74,42 @@ def genome_stats(path):
                     n50 = int(n50)*1000000
                 elif units == 'KB':
                     n50 = int(n50)*1000
+                d["N50"] = str(n50)
+            elif line.startswith("C:"):
+                elem = line.strip().replace("[", ",").replace("]", "").split(",")
+                for e in elem:
+                    x = e.split(":")
+                    d["BUSCO_{}".format(x[0])] = x[1].replace("%", "")
+            elif line.startswith("# The lineage dataset is: "):
+                d["BUSCO_lineage"] = str(line.strip().split()[5])
+        d["BUSCO_completeness"] = str(100 - float(d["BUSCO_M"]))
+        d["BUSCO_contamination"] = d["BUSCO_D"]
+    return d
 
-    return {"N50": n50, "bp": genome_size, "contigs": total_fragments}
 
-def eukcc_parser( eukcc_concat ):
+def eukcc_parser(eukcc_concat, genomes_list, output_file):
     eukcc_data = {}
     with open(eukcc_concat, 'r') as file_in:
-        next(file_in)
+        logging.info("Processing eukcc stats")
         for line in file_in:
-            genome,completeness,contamination,lineage = line.strip().split("\t")
-            eukcc_data[genome] = {
-                    'bin_id' : genome,
-                    'completeness': completeness,
-                    'contamination': contamination}
-
+            if "completeness" not in line:
+                genome,completeness,contamination,lineage = line.strip().split("\t")
+                eukcc_data[genome] = {
+                        'bin_id' : genome,
+                        'completeness': completeness,
+                        'contamination': contamination}
+        logging.info(f"Eukcc stats has {len(eukcc_data)} records")
+    with open(output_file, 'w') as file_out:
+        logging.info("Writing eukcc stats")
+        file_out.write("genome,completeness,contamination" + '\n')
+        for item in eukcc_data:
+            if item in genomes_list:
+                file_out.write(','.join([eukcc_data[item]['bin_id'], eukcc_data[item]['completeness'], eukcc_data[item]['contamination']]) + '\n')
+        logging.info("Writing eukcc stats DONE")
     return eukcc_data
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--output", 
@@ -107,15 +118,33 @@ if __name__ == "__main__":
         type=str
     )
     parser.add_argument(
+        "--output_busco",
+        help="path for the busco output table",
+        default="busco_final_qc.csv",
+        type=str
+    )
+    parser.add_argument(
+        "--output_eukcc",
+        help="path for the eukccoutput table",
+        default="eukcc_final_qc.csv",
+        type=str
+    )
+    parser.add_argument(
         "--eukcc_concat", 
         help="Eukcc combined results for QC50 (euk_quality.csv)", 
         type=str,
-        required=True
+        required=False
     )
     parser.add_argument(
         "--busco_files",
         help="List of busco outputs",
         nargs="*",
+        required=False
+    )
+    parser.add_argument(
+        "--genomes_list",
+        help="List of genomes to output stats for",
+        type=str,
         required=True
     )
     parser.add_argument(
@@ -136,6 +165,7 @@ if __name__ == "__main__":
         help="Make it more verbose", 
         default=False
     )
+
     args = parser.parse_args()
 
     # define logging
@@ -147,45 +177,53 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(message)s", datefmt="%d/%m/%Y %H:%M:%S: ", level=logLevel
     )
+    # check inputs
+    if not(args.eukcc_concat or args.busco_files):
+        logging.error("No necessary files provided")
+        exit(1)
 
-    # for each mag learn eukcc and BUSCO values
-    fields = [
-        "fasta",
-        "completeness",
-        "contamination",
-        "BUSCO_C",
-        "BUSCO_M",
-        "BUSCO_D",
-        "BUSCO_S",
-        "BUSCO_F",
-        "BUSCO_n",
-        "BUSCO_lineage",
-        "N50",
-        "bp",
-        "contigs",
-    ]
-
+    # create list of genomes
     genomes_list = []
-    for file_in in args.busco_files:
-        prefix = file_in.replace('.short_summary.specific.txt','') 
-        genomes_list.append(prefix)
+    with open(args.genomes_list, 'r') as file_in:
+        for line in file_in:
+            genomes_list.append(line.strip())
+        logging.info(f"There are {len(genomes_list)} genomes")
 
-    eukcc_data = eukcc_parser( args.eukcc_concat )
+    # parse eukcc tables
+    eukcc_data = {}
+    if args.eukcc_concat:
+        eukcc_data = eukcc_parser(args.eukcc_concat, genomes_list, args.output_eukcc)
 
-    with open(args.output, "w") as outfile:
-        cout = csv.DictWriter(outfile, fieldnames=fields, extrasaction="ignore")
-        cout.writeheader()
+    busco_data = {}
+    if args.busco_files:
+        logging.info("Processing busco stats")
+        with open(args.output_busco, 'w') as file_out:
+            file_out.write("genome,completeness,contamination,BUSCO_C,BUSCO_M,BUSCO_D,BUSCO_S,BUSCO_F,BUSCO_n,BUSCO_lineage,N50,bp,contigs" + '\n')
+            for input_file in args.busco_files:
+                logging.info(f"Processing {input_file}")
+                stats = busco_stats(input_file)
+                prefix = input_file.replace('.short_summary.specific.txt', '') + '.fa'
+                busco_data[prefix] = stats
+                if prefix in genomes_list:
+                    file_out.write(",".join([prefix, stats['BUSCO_completeness'], stats['BUSCO_contamination'],
+                                             stats['BUSCO_C'], stats['BUSCO_M'], stats['BUSCO_D'], stats['BUSCO_S'],
+                                             stats['BUSCO_F'], stats['BUSCO_n'], stats['BUSCO_lineage'], stats['N50'],
+                                             stats['bp'], stats['contigs']]) + '\n')
+        logging.info("Processing busco stats DONE")
 
-        for mag in genomes_list:
-            busco_p = mag+".short_summary.specific.txt"
-            stat = genome_stats(busco_p)
+    if args.busco_files and args.eukcc_concat:
+        logging.info("Writing final output")
+        with open(args.output, "w") as outfile:
+            outfile.write("genome,eukcc_completeness,eukcc_contamination,BUSCO_completeness,BUSCO_contamination,BUSCO_C,BUSCO_M,BUSCO_D,BUSCO_S,BUSCO_F,BUSCO_n,BUSCO_lineage,N50,bp,contigs" + '\n')
+            for genome in genomes_list:
+                if genome in eukcc_data and genome in busco_data:
+                    stats = busco_data[genome]
+                    outfile.write(
+                        ",".join([genome, eukcc_data[genome]['completeness'], eukcc_data[genome]['contamination'],
+                                  stats['BUSCO_completeness'], stats['BUSCO_contamination'],
+                                  stats['BUSCO_C'], stats['BUSCO_M'], stats['BUSCO_D'], stats['BUSCO_S'],
+                                  stats['BUSCO_F'], stats['BUSCO_n'], stats['BUSCO_lineage'], stats['N50'],
+                                  stats['bp'], stats['contigs']]) + '\n')
 
-            eukcc = eukcc_data[mag+'.fa']
-            stat = {**stat, **eukcc}
-
-            stat["fasta"] = mag+'.fa'
-            busco = busco_score(busco_p)
-            stat = {**stat, **busco}
-            cout.writerow(stat)
-
-
+if __name__ == "__main__":
+    main()

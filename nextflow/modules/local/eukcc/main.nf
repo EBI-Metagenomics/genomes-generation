@@ -38,6 +38,7 @@ process EUKCC {
     output:
     tuple val(meta), path("*_merged_bins"), emit: eukcc_results
     tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"), emit: eukcc_csv
+    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"), emit: eukcc_merged_csv
 
     script:
     """
@@ -55,60 +56,6 @@ process EUKCC {
         ${bindir}
 
     cp *_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-    """
-}
-
-process EUKCC_MAG {
-    tag "${meta.id}"
-
-    container 'quay.io/microbiome-informatics/eukcc:latest'
-
-    input:
-    tuple val(meta), path(genomes_list, stageAs: "mags_dir/*")
-    path eukcc_db
-
-    output:
-    tuple val(meta), path("output/*eukcc.csv"), emit: eukcc_mags_results
-
-    script:
-    """
-    eukcc --debug folder \
-            --threads ${task.cpus} \
-            --db ${eukcc_db} \
-            --out output \
-            mags_dir
-    """
-
-    stub:
-    """
-    touch mags.eukcc.csv
-    """
-}
-
-process EUKCC_SINGLE {
-    tag "${genome}"
-
-    container 'quay.io/microbiome-informatics/eukcc:latest'
-
-    input:
-    path(genome)
-    path eukcc_db
-
-    output:
-    path("*eukcc.csv"), emit: eukcc_mags_results
-
-    script:
-    """
-    eukcc --debug single \
-            --threads ${task.cpus} \
-            --db ${eukcc_db} \
-            --out output \
-            ${genome}
-    cp output/eukcc.csv ${genome.baseName}.eukcc.csv
-    """
-
-    stub:
-    """
-    touch mags.eukcc.csv
+    cp *_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
     """
 }

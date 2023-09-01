@@ -6,7 +6,7 @@ include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS  } from '../../../modules/nf-core
 include { MAXBIN2                               } from '../../../modules/nf-core/maxbin2/main'
 
 include { CONVERT_DEPTHS                        } from '../../../modules/nf-core/mag/convert_depths'
-include { ADJUST_MAXBIN2_EXT                    } from '../../../modules/nf-core/mag/adjust_maxbin2_ext'
+include { RENAME_MAXBIN                         } from '../../../modules/local/rename_maxbin/main'
 include { FASTA_BINNING_CONCOCT                 } from '../fasta_binning_concoct/main'
 
 /*
@@ -82,8 +82,8 @@ workflow BINNING {
     }
     if ( !params.skip_maxbin2 ) {
         MAXBIN2 ( ch_maxbin2_input )
-        ADJUST_MAXBIN2_EXT ( MAXBIN2.out.binned_fastas )
-        size_binner = ADJUST_MAXBIN2_EXT.out.renamed_bins.map{it -> [it[0], it[1].collect().size()]}
+        RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )
+        size_binner = RENAME_MAXBIN.out.renamed_bins.map{it -> [it[0], it[1].collect().size()]}
         size_binner.view()
         ch_versions = ch_versions.mix(MAXBIN2.out.versions)
     }
@@ -107,7 +107,7 @@ workflow BINNING {
         ch_versions = ch_versions.mix(FASTA_BINNING_CONCOCT.out.versions)
     }
 
-    maxbin_output = ADJUST_MAXBIN2_EXT.out.renamed_bins.map{meta, bins ->
+    maxbin_output = RENAME_MAXBIN.out.renamed_bins.map{meta, bins ->
                                                             meta.remove('binner')
                                                             return [meta, bins]
                                                          }

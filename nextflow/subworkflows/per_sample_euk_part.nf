@@ -8,14 +8,12 @@ include { ALIGN as ALIGN_BINS            } from './local/subwf_alignment'
 include { BUSCO                          } from '../modules/local/busco/main'
 include { EUKCC as EUKCC_CONCOCT         } from '../modules/local/eukcc/main'
 include { EUKCC as EUKCC_METABAT         } from '../modules/local/eukcc/main'
-include { EUKCC_MAG                      } from '../modules/local/eukcc/main'
-include { EUKCC_SINGLE                   } from '../modules/local/eukcc/main'
 include { LINKTABLE as LINKTABLE_CONCOCT } from '../modules/local/eukcc/main'
 include { LINKTABLE as LINKTABLE_METABAT } from '../modules/local/eukcc/main'
 include { DREP                           } from '../modules/local/drep/main'
 include { DREP as DREP_MAGS              } from '../modules/local/drep/main'
 include { BREADTH_DEPTH                  } from '../modules/local/breadth_depth/main'
-include { BUSCO_QC                       } from '../modules/local/busco_qc/main'
+include { BUSCO_EUKCC_QC                 } from '../modules/local/qc/main'
 include { BAT as EUK_TAXONOMY            } from '../modules/local/CAT/BAT/main'
 include { BAT_TAXONOMY_WRITER            } from '../modules/local/bat_taxonomy_writer/main'
 
@@ -138,19 +136,6 @@ workflow EUK_SUBWF {
         euk_drep_args = channel.value('-pa 0.80 -sa 0.99 -nc 0.40 -cm larger -comp 49 -con 21')
         DREP(FILTER_QS50.out.qs50_filtered_genomes, euk_drep_args, channel.value('euk'))
 
-        // -- coverage
-        bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0)  // tuple(meta, drep_genomes, [reads]),...
-        spreadBins = { record ->
-            if (record[1] instanceof List) {
-                return record}
-            else {
-                return tuple(record[0], [record[1]], record[2])}
-        }
-        bins_alignment_by_bins = bins_alignment.map(spreadBins).transpose(by:1)  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
-        ALIGN_BINS(bins_alignment_by_bins)      // out: [meta, fasta, bam, bai]
-        // input: tuple(meta, MAG, bam, bai)
-        BREADTH_DEPTH(ALIGN_BINS.out.output)
-
         // -- aggregate by samples
         q = quality.map{it->it[1]}.collectFile(name: "all.csv", newLine: false)
         MODIFY_QUALITY_FILE(q, channel.value("aggregated_euk_quality.csv"))
@@ -167,12 +152,26 @@ workflow EUK_SUBWF {
                                                                                                     return tuple(meta, it)}
         DREP_MAGS(combine_drep.combine(aggregated_quality, by:0), euk_drep_args_mags, channel.value('euk_mags'))
 
+        // -- coverage
+        bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by:0)  // tuple(meta, drep_genomes, [reads]),...
+        spreadBins = { record ->
+            if (record[1] instanceof List) {
+                return record}
+            else {
+                return tuple(record[0], [record[1]], record[2])}
+        }
+        bins_alignment_by_bins = bins_alignment.map(spreadBins).transpose(by:1)  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
+        // TODO: leave only DREP_MAGS instead of DREP
+        ALIGN_BINS(bins_alignment_by_bins)      // out: [meta, fasta, bam, bai]
+        // input: tuple(meta, MAG, bam, bai)
+        BREADTH_DEPTH(ALIGN_BINS.out.output)
+
         // -- busco MAGs
         drep_result = DREP_MAGS.out.dereplicated_genomes.map{it -> it[1]}.flatten()
         BUSCO(drep_result, busco_db.first())
 
         // -- QC MAGs
-        BUSCO_QC(q, BUSCO.out.busco_summary.collect())
+        BUSCO_EUKCC_QC(q, BUSCO.out.busco_summary.collect(), DREP_MAGS.out.dereplicated_genomes_list.map{it->it[1]})
 
         // -- BAT
         EUK_TAXONOMY(drep_result, cat_db.first(), cat_taxonomy_db.first())

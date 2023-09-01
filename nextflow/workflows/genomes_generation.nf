@@ -89,7 +89,7 @@ workflow GGP {
     if ( !params.skip_euk ) {
         // ---- detect euk
         // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
-        euk_input = assembly.combine(DECONTAMINATION.out.decontaminated_reads, by:0).combine(concoct_bins, by:0).combine(maxbin_bins, by:0)
+        euk_input = assembly.combine(DECONTAMINATION.out.decontaminated_reads, by:0).combine(concoct_bins, by:0).combine(metabat_bins, by:0)
         EUK_SUBWF(euk_input, ref_eukcc, ref_busco, ref_catdb, ref_cat_taxonomy)
     }
     if ( !params.skip_prok ) {

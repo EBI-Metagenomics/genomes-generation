@@ -8,11 +8,11 @@ process BAT_TAXONOMY_WRITER {
         path(bat_names)
 
     output:
-        path("*euk_taxonomy.csv")
+        path("human_readable.taxonomy.csv")
         path("all_bin2classification.txt")
 
     script:
     """
-    bat_taxo_process.py --bat_names ${bat_names} --output "${bat_names.baseName}.euk_taxonomy.csv"
+    bat_taxo_process.py --bat_names ${bat_names} --output "human_readable.taxonomy.csv"
     """
 }

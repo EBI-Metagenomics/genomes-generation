@@ -4,25 +4,23 @@
     ~~~~~~~~~~~~~~~~~~
 */
 
-include { INPUT_CHECK_ALIGN } from '../subworkflows/local/input_check'
-include { ALIGN_META } from '../subworkflows/subwf_alignment'
-include { BINNING } from '../subworkflows/subwf_mag_binning'
-
+include { RENAME_MAXBIN } from '../modules/local/rename_maxbin/main'
+assemblies =            channel.fromPath("/Users/kates/Desktop/EBI/pipelines/eukrecover/nextflow/workflows/*.fasta", checkIfExists: true)
 /*
     ~~~~~~~~~~~~~~~~~~
      Run workflow
     ~~~~~~~~~~~~~~~~~~
 */
 workflow GGP {
-
-    INPUT_CHECK_ALIGN (
-        file(params.input)
-    )
-    //assemblies           // channel: [ val(meta), path(assembly)]
-    //reads                // channel: [ val(meta), [ reads ] ]
-    INPUT_CHECK_ALIGN.out.data.view()
-    ALIGN_META(INPUT_CHECK_ALIGN.out.data)
-
-    reads = INPUT_CHECK_ALIGN.out.data.map {it -> [it[0], it[2]]}
-    BINNING(ALIGN_META.out.bams, reads)
+    groupAssemblies = { fasta_file ->
+            def cluster = fasta_file.toString().tokenize("/")[-1].tokenize(".")[0]
+                def meta = [:]
+                meta.id = cluster
+                meta.library_layout = "paired"
+                meta.single_end = false
+            return tuple(meta, fasta_file)
+        }
+    tuple_assemblies = assemblies.map(groupAssemblies)
+    tuple_assemblies.view()
+    RENAME_MAXBIN(tuple_assemblies)
 }

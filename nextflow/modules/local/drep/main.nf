@@ -11,7 +11,7 @@ process DREP {
         'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0' }"
 
     publishDir(
-        path: "${params.outdir}/intermediate_steps/drep_${type}",
+        path: "${params.outdir}/intermediate_steps/dRep/${type}/${meta.id}/",
         mode: params.publish_dir_mode,
         failOnError: true
     )

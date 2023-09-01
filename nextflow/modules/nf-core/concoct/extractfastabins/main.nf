@@ -31,12 +31,17 @@ process CONCOCT_EXTRACTFASTABINS {
 
     ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
     for i in ${prefix}/*.fa; do
-        mv \${i} \${i/\\///${prefix}_}
+        mv \${i} \${i/\\///${prefix}_bin.}
     done
+
+    version=\$(echo \$(concoct --version 2>&1) | sed 's/concoct //g')
 
     mkdir -p ${meta.id}_concoct_bins
     for i in ${prefix}/*.fa; do
-        mv \${i} ${meta.id}_concoct_bins
+        original_name=\$(basename \${i})
+        new_filename=\${original_name#*-}
+        new_name="${meta.id}_concoct_bins/CONCOCT_v\${version}-\${new_filename}"
+        mv \${i} \${new_name}
     done
 
     cat <<-END_VERSIONS > versions.yml

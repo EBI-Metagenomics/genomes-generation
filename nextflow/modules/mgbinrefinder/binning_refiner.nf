@@ -5,9 +5,10 @@ process BINNING_REFINER {
     container 'quay.io/biocontainers/biopython:1.75'
 
     publishDir(
-        path: "${params.outdir}/binref_${name}",
-        mode: 'copy',
-        failOnError: true
+        path: "${params.outdir}/intermediate_steps/Refinement/binref_${name}",
+        mode: params.publish_dir_mode,
+        failOnError: true,
+        pattern: "output_${name}/Refined/*.fa"
     )
 
     input:
