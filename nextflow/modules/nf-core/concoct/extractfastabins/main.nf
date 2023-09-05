@@ -37,12 +37,16 @@ process CONCOCT_EXTRACTFASTABINS {
     version=\$(echo \$(concoct --version 2>&1) | sed 's/concoct //g')
 
     mkdir -p ${meta.id}_concoct_bins
-    for i in ${prefix}/*.fa; do
-        original_name=\$(basename \${i})
-        new_filename=\${original_name#*-}
-        new_name="${meta.id}_concoct_bins/CONCOCT_v\${version}-\${new_filename}"
-        mv \${i} \${new_name}
-    done
+    if [ -z "\$(ls -A ${prefix}/)" ]; then
+        echo "Folder is empty"
+    else
+        for i in ${prefix}/*.fa; do
+            original_name=\$(basename \${i})
+            new_filename=\${original_name#*-}
+            new_name="${meta.id}_concoct_bins/CONCOCT_v\${version}-\${new_filename}"
+            mv \${i} \${new_name}
+        done
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -31,7 +31,8 @@ process CONCATENATE_QUALITY_FILES {
     script:
     """
     echo "bin\tcompleteness\tcontamination\tncbi_lng" > "${meta.id}.${output_name}"
-    cat ${input_files} | grep -v "completeness" >> "${meta.id}.${output_name}"
+    cat ${input_files} > out
+    grep -v "completeness" out >> "${meta.id}.${output_name}"
     """
 }
 

@@ -44,13 +44,18 @@ process METABAT2_METABAT2 {
 
     mkdir -p ${meta.id}_metabat_bins
     version=\$( metabat2 --help 2>&1 | head -n 2 | tail -n 1| sed 's/.*\\:\\([0-9]*\\.[0-9]*\\).*/\\1/' )
-    for i in bins/*.[0-9]*.fa; do
-        original_name=\$(basename \${i})
-        new_filename=\${original_name#*-}
-        digit=\${new_filename#*.}
-        new_name="${meta.id}_metabat_bins/MetaBAT2_v\${version}-${meta.id}_bin.\${digit}"
-        mv \${i} \${new_name}
-    done
+
+    if [ -z "\$(ls -A bins/)" ]; then
+        echo "Folder is empty"
+    else
+        for i in bins/*.[0-9]*.fa; do
+            original_name=\$(basename \${i})
+            new_filename=\${original_name#*-}
+            digit=\${new_filename#*.}
+            new_name="${meta.id}_metabat_bins/MetaBAT2_v\${version}-${meta.id}_bin.\${digit}"
+            mv \${i} \${new_name}
+        done
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
