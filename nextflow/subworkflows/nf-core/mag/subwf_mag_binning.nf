@@ -76,15 +76,11 @@ workflow BINNING {
     if ( !params.skip_metabat2 ) {
         METABAT2_METABAT2 ( ch_metabat2_input )
         // before decompressing first have to separate and re-group due to limitation of GUNZIP module
-        size_binner = METABAT2_METABAT2.out.fasta.map{it -> [it[0], it[1].collect().size()]}
-        size_binner.view()
         ch_versions = ch_versions.mix(METABAT2_METABAT2.out.versions.first())
     }
     if ( !params.skip_maxbin2 ) {
         MAXBIN2 ( ch_maxbin2_input )
         RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )
-        size_binner = RENAME_MAXBIN.out.renamed_bins.map{it -> [it[0], it[1].collect().size()]}
-        size_binner.view()
         ch_versions = ch_versions.mix(MAXBIN2.out.versions)
     }
     if ( !params.skip_concoct ){
@@ -102,8 +98,6 @@ workflow BINNING {
                             }
 
         FASTA_BINNING_CONCOCT ( ch_concoct_input )
-        size_binner = FASTA_BINNING_CONCOCT.out.bins.map{it -> [it[0], it[1].collect().size()]}
-        size_binner.view()
         ch_versions = ch_versions.mix(FASTA_BINNING_CONCOCT.out.versions)
     }
 

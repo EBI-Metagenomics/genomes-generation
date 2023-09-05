@@ -36,16 +36,6 @@ workflow REFINEMENT {
         renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed.groupTuple(by:0)
         renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed.groupTuple(by:0)
 
-        size_1 = renamed_binner1.map{it -> it[1]}.collect().size()
-        //size_1 = renamed_binner1.size()
-        //size_1.subscribe { println "Filter results: Binner1: $it.value" }
-        //renamed_binner2 = collected_binner2.renamed.collect()
-        //size_2 = renamed_binner2.size()
-        //size_2.subscribe { println "Filter results: Binner2: $it.value" }
-        //renamed_binner3 = collected_binner3.renamed.collect()
-        //size_3 = renamed_binner3.size()
-        //size_3.subscribe { println "Filter results: Binner3: $it.value" }
-
         REFINE12(channel.value("binner12"), renamed_binner1, renamed_binner2, false, ref_checkm)
         REFINE13(channel.value("binner13"), renamed_binner1, renamed_binner3, false, ref_checkm)
         REFINE23(channel.value("binner23"), renamed_binner2, renamed_binner3, false, ref_checkm)

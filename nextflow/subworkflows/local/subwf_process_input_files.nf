@@ -1,6 +1,5 @@
 include { CHANGE_DOT_TO_UNDERSCORE_CONTIGS              } from '../../modules/local/utils'
-include { CHANGE_DOT_TO_UNDERSCORE_READS                } from '../../modules/local/utils'
-include { CHANGE_ERR_TO_ERZ_READS                       } from '../../modules/local/utils'
+include { CHANGE_READS                                  } from '../../modules/local/utils'
 
 
 workflow PROCESS_INPUT {
@@ -17,11 +16,9 @@ workflow PROCESS_INPUT {
 
     // --- MODIFY READS
     // change ERR in reads to ERZ
-    CHANGE_ERR_TO_ERZ_READS(reads, rename_file.first())    // tuple(meta, [reads]])
-    // change . to _
-    CHANGE_DOT_TO_UNDERSCORE_READS(CHANGE_ERR_TO_ERZ_READS.out.return_files)
+    CHANGE_READS(reads, rename_file.first())    // tuple(meta, [reads]])
 
     emit:
         // tuple( meta, assembly_file, [raw_reads] )
-        return_tuple = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.combine(CHANGE_DOT_TO_UNDERSCORE_READS.out.underscore_reads, by: 0)
+        return_tuple = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.combine(CHANGE_READS.out.modified_reads, by: 0)
 }
