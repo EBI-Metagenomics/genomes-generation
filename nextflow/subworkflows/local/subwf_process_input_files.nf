@@ -16,6 +16,7 @@ workflow PROCESS_INPUT {
 
     // --- MODIFY READS
     // change ERR in reads to ERZ
+    // TODO: make this process faster (biopython is slow)
     CHANGE_READS(reads, rename_file.first())    // tuple(meta, [reads]])
 
     emit:

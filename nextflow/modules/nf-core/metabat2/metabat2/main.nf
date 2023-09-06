@@ -45,7 +45,7 @@ process METABAT2_METABAT2 {
     mkdir -p ${meta.id}_metabat_bins
     version=\$( metabat2 --help 2>&1 | head -n 2 | tail -n 1| sed 's/.*\\:\\([0-9]*\\.[0-9]*\\).*/\\1/' )
 
-    if [ -z "\$(ls -A bins/)" ]; then
+    if [ -z "\$(ls -A bins/*.[0-9]*.fa)" ]; then
         echo "Folder is empty"
     else
         for i in bins/*.[0-9]*.fa; do

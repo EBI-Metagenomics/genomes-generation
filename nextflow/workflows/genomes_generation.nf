@@ -82,7 +82,7 @@ workflow GGP {
 
     // ---- binning
     BINNING(ALIGN.out.output, DECONTAMINATION.out.decontaminated_reads)
-    concoct_bins = BINNING.out.concoct_bins  // uncompressed bins
+    concoct_bins = BINNING.out.concoct_bins  // uncompressed folders bins
     maxbin_bins = BINNING.out.maxbin_bins
     metabat_bins = BINNING.out.metabat_bins
 
@@ -94,8 +94,11 @@ workflow GGP {
     }
     if ( !params.skip_prok ) {
         // ---- detect prok
+        concoct_list = concoct_bins.map{it -> [it[0], it[1].listFiles().flatten()]}
+        maxbin_list = maxbin_bins.map{it -> [it[0], it[1].listFiles().flatten()]}
+        metabat_list = metabat_bins.map{it -> [it[0], it[1].listFiles().flatten()]}
         // input: tuple( meta, concoct, metabat, maxbin, depth_file), dbs...
-        prok_input = concoct_bins.combine(maxbin_bins, by:0).combine(metabat_bins, by:0).combine(BINNING.out.metabat2depths, by:0)
+        prok_input = concoct_list.combine(maxbin_list, by:0).combine(metabat_list, by:0).combine(BINNING.out.metabat2depths, by:0)
         PROK_SUBWF(prok_input, ref_catdb, ref_cat_diamond, ref_cat_taxonomy, ref_gunc, ref_checkm, ref_gtdbtk, ref_rfam_rrna_models)
     }
     // ---- compress results

@@ -37,7 +37,7 @@ process CONCOCT_EXTRACTFASTABINS {
     version=\$(echo \$(concoct --version 2>&1) | sed 's/concoct //g')
 
     mkdir -p ${meta.id}_concoct_bins
-    if [ -z "\$(ls -A ${prefix}/)" ]; then
+    if [ -z "\$(ls -A ${prefix}/*.fa)" ]; then
         echo "Folder is empty"
     else
         for i in ${prefix}/*.fa; do

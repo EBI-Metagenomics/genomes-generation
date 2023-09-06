@@ -1,6 +1,6 @@
-include { CHECKM2 as CHECKM_1                                               } from '../../modules/local/checkm2/main'
-include { CHECKM2 as CHECKM_2                                               } from '../../modules/local/checkm2/main'
-include { CHECKM2 as CHECKM_3                                               } from '../../modules/local/checkm2/main'
+include { CHECKM2 as CHECKM2_BINNER1                                        } from '../../modules/local/checkm2/main'
+include { CHECKM2 as CHECKM2_BINNER2                                        } from '../../modules/local/checkm2/main'
+include { CHECKM2 as CHECKM2_BINNER3                                        } from '../../modules/local/checkm2/main'
 include { CHECKM2 as CHECKM_FINAL                                           } from '../../modules/local/checkm2/main'
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER1  } from '../../modules/mgbinrefinder/utils'
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER2  } from '../../modules/mgbinrefinder/utils'
@@ -41,21 +41,21 @@ workflow REFINEMENT {
         REFINE23(channel.value("binner23"), renamed_binner2, renamed_binner3, false, ref_checkm)
         REFINE123(channel.value("binner123"), renamed_binner1, renamed_binner2, renamed_binner3, ref_checkm)
 
-        CHECKM_1(channel.value("binner1"), renamed_binner1, ref_checkm.first())
-        CHECKM_2(channel.value("binner2"), renamed_binner2, ref_checkm.first())
-        CHECKM_3(channel.value("binner3"), renamed_binner3, ref_checkm.first())
+        CHECKM2_BINNER1(channel.value("binner1"), renamed_binner1, ref_checkm.first())
+        CHECKM2_BINNER2(channel.value("binner2"), renamed_binner2, ref_checkm.first())
+        CHECKM2_BINNER3(channel.value("binner3"), renamed_binner3, ref_checkm.first())
 
-        binners = CHECKM_1.out.checkm2_results_filtered.combine(
-                    CHECKM_2.out.checkm2_results_filtered, by:0).combine(
-                    CHECKM_3.out.checkm2_results_filtered,by:0).combine(
+        binners = CHECKM2_BINNER1.out.checkm2_results_filtered.combine(
+                    CHECKM2_BINNER2.out.checkm2_results_filtered, by:0).combine(
+                    CHECKM2_BINNER3.out.checkm2_results_filtered,by:0).combine(
                     REFINE12.out.filtered_bins,by:0).combine(
                     REFINE13.out.filtered_bins,by:0).combine(
                     REFINE23.out.filtered_bins,by:0).combine(
                     REFINE123.out.filtered_bins,by:0)
 
-        stats = CHECKM_1.out.checkm2_results_filtered_stats.combine(
-                    CHECKM_2.out.checkm2_results_filtered_stats, by:0).combine(
-                    CHECKM_3.out.checkm2_results_filtered_stats, by:0).combine(
+        stats = CHECKM2_BINNER1.out.checkm2_results_filtered_stats.combine(
+                    CHECKM2_BINNER2.out.checkm2_results_filtered_stats, by:0).combine(
+                    CHECKM2_BINNER3.out.checkm2_results_filtered_stats, by:0).combine(
                     REFINE12.out.filtered_bins_stats, by:0).combine(
                     REFINE13.out.filtered_bins_stats, by:0).combine(
                     REFINE23.out.filtered_bins_stats, by:0).combine(

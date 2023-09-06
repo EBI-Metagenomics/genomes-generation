@@ -1,6 +1,6 @@
-include { BINNING_REFINER    } from '../../modules/mgbinrefinder/binning_refiner'
-include { BINNING_REFINER3   } from '../../modules/mgbinrefinder/binning_refiner'
-include { CHECKM2            } from '../../modules/local/checkm2/main'
+include { BINNING_REFINER                } from '../../modules/mgbinrefinder/binning_refiner'
+include { BINNING_REFINER3               } from '../../modules/mgbinrefinder/binning_refiner'
+include { CHECKM2 as CHECKM2_REFINE      } from '../../modules/local/checkm2/main'
 
 workflow REFINE {
     take:
@@ -20,12 +20,12 @@ workflow REFINE {
             refined = BINNING_REFINER.out.refined_bins
         }
 
-        CHECKM2(name, refined, checkm_db.first())
+        CHECKM2_REFINE(name, refined, checkm_db.first())
 
     emit:
         refined = refined
-        filtered_bins = CHECKM2.out.checkm2_results_filtered
-        filtered_bins_stats = CHECKM2.out.checkm2_results_filtered_stats
+        filtered_bins = CHECKM2_REFINE.out.checkm2_results_filtered
+        filtered_bins_stats = CHECKM2_REFINE.out.checkm2_results_filtered_stats
 }
 
 
