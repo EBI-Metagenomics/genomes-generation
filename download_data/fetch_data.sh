@@ -51,24 +51,35 @@ function Rename {
 #
 #    zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed.fastq.gz
 #}
+SAMPLE=""
+READS_ACC=""
+CATALOGUE_PATH=""
+SKIP_FETCH="true" # Default to true
+REPO_PATH=""
 
-
-while getopts 'a:r:c:f:p:' flag; do
+while getopts 'a:r:c:fp:' flag; do
     case "${flag}" in
-        a) export SAMPLE=$OPTARG ;;
-        r) export READS_ACC=$OPTARG ;;
-        c) export CATALOGUE_PATH=$OPTARG ;;
+        a) SAMPLE="$OPTARG" ;;
+        r) READS_ACC="$OPTARG" ;;
+        c) CATALOGUE_PATH="$OPTARG" ;;
         f) SKIP_FETCH='false' ;;
-        p) export REPO_PATH=$OPTARG ;;
+        p) REPO_PATH="$OPTARG" ;;
+        *) echo "Invalid option"; exit 1 ;;
     esac
 done
 
-mkdir -p ${CATALOGUE_PATH}
-if [[ $SKIP_FETCH = false ]]
-then
+if [[ -z $SAMPLE || -z $READS_ACC || -z $CATALOGUE_PATH || -z $REPO_PATH ]]; then
+    echo "Missing required options"
+    exit 1
+fi
+
+mkdir -p "$CATALOGUE_PATH"
+
+if [[ $SKIP_FETCH == 'false' ]]; then
   FetchAssembliesAndReads
   Unzip
 fi
+
 RunRenamingScript
 Rename
 #ChangeERRtoERZinReads

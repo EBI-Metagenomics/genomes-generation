@@ -10,6 +10,7 @@ import argparse
 import os
 import subprocess
 import glob
+import gzip
 
 COVERAGE_FOLDER_NAME = 'coverage'
 
@@ -49,12 +50,11 @@ def process_metabat_depth(metabat_depth):
     contig_cov = {}
     for cov_path in coverageFiles:
         with open(cov_path, 'r') as curr_cov:
-            for line in curr_cov.readlines():
+            for line in curr_cov:
                 if not line.startswith('contigName'):
-                    contigName,contigLen, totalAvgDepth, bam, bamvar=line.strip().split('\t')
+                    contigName, contigLen, totalAvgDepth, bam, bamvar = line.strip().split('\t')
                     values = (contigLen, totalAvgDepth, bam, bamvar)
                     contig_cov[contigName] = values
-    print(contig_cov)
     return contig_cov
 
 

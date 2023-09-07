@@ -7,6 +7,7 @@ import os
 import argparse
 import logging
 import csv
+import gzip
 
 BIN_DEFAULT_SEPARATOR = '_'
 BAM_DEFAULT_SEPARATOR = '_'
@@ -37,21 +38,30 @@ def keep_read(read, contig_map, within=1000, min_ANI=98, min_cov=0):
         return False
 
 
+def open_fasta_file(filename):
+    if filename.endswith('.gz'):
+        f = gzip.open(filename, "rt")
+    else:
+        f = open(filename, "rt")
+    return f
+
+
 def contig_map(bindir, bin_sep, suffix=".fa"):
     logging.debug("Map contigs")
     m = {}
     bins = [item for item in os.listdir(bindir) if 'unbinned' not in item]
     for f in bins:
         logging.debug(f"Processing {f}")
-        if f.endswith(suffix) is False:
+        if not (f.endswith(suffix) or f.endswith(suffix + '.gz')):
             continue
         path = os.path.join(bindir, f)
-        with open(path, "r") as handle:
-            for record in SeqIO.parse(handle, "fasta"):
-                if bin_sep != BIN_DEFAULT_SEPARATOR:
-                    m[record.name.replace(bin_sep, BIN_DEFAULT_SEPARATOR)] = len(record.seq)
-                else:
-                    m[record.name] = len(record.seq)
+        handle = open_fasta_file(path)
+        for record in SeqIO.parse(handle, "fasta"):
+            if bin_sep != BIN_DEFAULT_SEPARATOR:
+                m[record.name.replace(bin_sep, BIN_DEFAULT_SEPARATOR)] = len(record.seq)
+            else:
+                m[record.name] = len(record.seq)
+        handle.close()
     logging.debug(f"Map contigs {len(m)}")
     return m
 
@@ -62,14 +72,16 @@ def bin_map(bindir, bin_sep, suffix=".fa"):
     contigs_per_bin = defaultdict(int)
     bins = [item for item in os.listdir(bindir) if 'unbinned' not in item]
     for f in bins:
-        if f.endswith(suffix) is False:
+        if not f.endswith(suffix) or f.endswith(suffix + '.gz'):
             continue
+        logging.debug(f"Processing {f}")
         path = os.path.join(bindir, f)
         binname = os.path.basename(f)
-        with open(path, "r") as handle:
-            for record in SeqIO.parse(handle, "fasta"):
-                contigs[record.name] = binname
-                contigs_per_bin[binname] += 1
+        handle = open_fasta_file(path)
+        for record in SeqIO.parse(handle, "fasta"):
+            contigs[record.name] = binname
+            contigs_per_bin[binname] += 1
+        handle.close()
     logging.debug(f"Bin map contigs:{len(contigs)}, contigs_per_bin:{len(contigs_per_bin)}")
     logging.debug(f'Change separator in bin dictionary if {bin_sep} != {BIN_DEFAULT_SEPARATOR}')
     return_contigs = defaultdict(str)
@@ -115,7 +127,7 @@ def main():
     parser.add_argument("--bam",
         dest="bam",
         type=str,
-        help="Bam with allr eads aligned against all contigs making up the bins",
+        help="Bam with all reads aligned against all contigs making up the bins",
     )
     parser.add_argument("--bam-separator",
         dest="bam_sep",
