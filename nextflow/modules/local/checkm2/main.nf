@@ -6,7 +6,7 @@ process CHECKM2 {
 
     input:
     val(name)
-    tuple val(meta), path(bins)  // bins can be a list or directory (checkm2 supports both)
+    tuple val(meta), path(bins)  // bins must be a LIST
     path checkm_db
 
     output:
@@ -14,19 +14,13 @@ process CHECKM2 {
     tuple val(meta), path("${meta.id}_${name}_filtered_genomes"), optional: true, emit: checkm2_results_filtered
     tuple val(meta), path("${meta.id}_${name}_filtered_genomes.tsv"), optional: true, emit: checkm2_results_filtered_stats
 
-    // TODO: fix check for empty directory and generate all.stats.csv. Checkm2 fails on empty directory
+
     script:
-    def touch = false
-    if (!(bins instanceof List)) {
-        if (${bins}.listFiles().size() == 0) {
-            touch = true
-        }
-    }
-    if (touch) {
+    def bins_list = bins.collect()
+    if (bins_list.size() == 0) {
         """
-        touch "all.stats.csv"
-        """
-    }
+        echo "genome,completeness,contamination" > all.stats.csv
+        """ }
     else {
         """
         echo "checkm predict"

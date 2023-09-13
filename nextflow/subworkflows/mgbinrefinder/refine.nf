@@ -20,7 +20,7 @@ workflow REFINE {
             refined = BINNING_REFINER.out.refined_bins
         }
 
-        CHECKM2_REFINE(name, refined, checkm_db.first())
+        CHECKM2_REFINE(name, refined.map{it -> [it[0], it[1].listFiles().flatten()]}, checkm_db.first())
 
     emit:
         refined = refined
