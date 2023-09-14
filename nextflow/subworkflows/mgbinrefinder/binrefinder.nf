@@ -41,9 +41,9 @@ workflow REFINEMENT {
         REFINE23(channel.value("binner23"), renamed_binner2, renamed_binner3, false, ref_checkm)
         REFINE123(channel.value("binner123"), renamed_binner1, renamed_binner2, renamed_binner3, ref_checkm)
 
-        CHECKM2_BINNER1(channel.value("binner1"), renamed_binner1.map{it -> [it[0], it[1].listFiles().flatten()]}, ref_checkm.first())
-        CHECKM2_BINNER2(channel.value("binner2"), renamed_binner2.map{it -> [it[0], it[1].listFiles().flatten()]}, ref_checkm.first())
-        CHECKM2_BINNER3(channel.value("binner3"), renamed_binner3.map{it -> [it[0], it[1].listFiles().flatten()]}, ref_checkm.first())
+        CHECKM2_BINNER1(channel.value("binner1"), renamed_binner1.map{it -> [it[0], it[1]]}, ref_checkm.first())
+        CHECKM2_BINNER2(channel.value("binner2"), renamed_binner2.map{it -> [it[0], it[1]]}, ref_checkm.first())
+        CHECKM2_BINNER3(channel.value("binner3"), renamed_binner3.map{it -> [it[0], it[1]]}, ref_checkm.first())
 
         binners = CHECKM2_BINNER1.out.checkm2_results_filtered.combine(
                     CHECKM2_BINNER2.out.checkm2_results_filtered, by:0).combine(
