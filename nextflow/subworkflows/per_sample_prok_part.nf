@@ -70,7 +70,7 @@ workflow PROK_SUBWF {
         DETECT_RRNA(DREP.out.dereplicated_genomes.map{it->it[1]}.flatten(), ref_rfam_rrna_models.first())
 
         // -- Taxonomy
-        GTDBTK(CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(), ref_gtdbtk)
+        //GTDBTK(CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(), ref_gtdbtk)
 
         // -- checkm_results_MAGs.txt
         CHECKM_TABLE_FOR_DREP_GENOMES(CHECKM2.out.checkm2_results.map(item -> item[2]), DREP.out.dereplicated_genomes_list.map(item -> item[1]))
