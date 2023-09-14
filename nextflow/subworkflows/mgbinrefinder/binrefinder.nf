@@ -19,31 +19,40 @@ include { CONSOLIDATE_BINS                                                  } fr
 
 workflow REFINEMENT {
     take:
-        collected_binners
+        collected_binners  // [meta, concoct, maxbin, metabat]
         ref_checkm
     main:
         meta = collected_binners.map{it -> it[0]}
-        binner1 = collected_binners.map{it -> [it[0], it[1]]}.transpose()
-        binner2 = collected_binners.map{it -> [it[0], it[2]]}.transpose()
-        binner3 = collected_binners.map{it -> [it[0], it[3]]}.transpose()
+        def minSize = 50000
+        def maxSize = 20000000
+        //.transpose() to make [[meta, bin],..]
+        binner1 = collected_binners.map{it -> [it[0], it[1].filter({ file ->
+                        file.length() >= minSize && file.length() <= maxSize
+                        })]}
+        binner2 = collected_binners.map{it -> [it[0], it[2].filter({ file ->
+                        file.length() >= minSize && file.length() <= maxSize
+                        })]}
+        binner3 = collected_binners.map{it -> [it[0], it[3].filter({ file ->
+                        file.length() >= minSize && file.length() <= maxSize
+                        })]}
 
-        RENAME_AND_CHECK_SIZE_BINS_BINNER1(channel.value("binner1"), binner1)
-        RENAME_AND_CHECK_SIZE_BINS_BINNER2(channel.value("binner2"), binner2)
-        RENAME_AND_CHECK_SIZE_BINS_BINNER3(channel.value("binner3"), binner3)
+        //RENAME_AND_CHECK_SIZE_BINS_BINNER1(channel.value("binner1"), binner1)
+        //RENAME_AND_CHECK_SIZE_BINS_BINNER2(channel.value("binner2"), binner2)
+        //RENAME_AND_CHECK_SIZE_BINS_BINNER3(channel.value("binner3"), binner3)
 
         // collect by meta
-        renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed.groupTuple(by:0)
-        renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed.groupTuple(by:0)
-        renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed.groupTuple(by:0)
+        //renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed.groupTuple(by:0)
+        //renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed.groupTuple(by:0)
+        //renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed.groupTuple(by:0)
 
-        REFINE12(channel.value("binner12"), renamed_binner1, renamed_binner2, false, ref_checkm)
-        REFINE13(channel.value("binner13"), renamed_binner1, renamed_binner3, false, ref_checkm)
-        REFINE23(channel.value("binner23"), renamed_binner2, renamed_binner3, false, ref_checkm)
-        REFINE123(channel.value("binner123"), renamed_binner1, renamed_binner2, renamed_binner3, ref_checkm)
+        REFINE12(channel.value("binner12"), binner1, binner2, false, ref_checkm)
+        REFINE13(channel.value("binner13"), binner1, binner3, false, ref_checkm)
+        REFINE23(channel.value("binner23"), binner2, binner3, false, ref_checkm)
+        REFINE123(channel.value("binner123"), binner1, binner2, binner3, ref_checkm)
 
-        CHECKM2_BINNER1(channel.value("binner1"), renamed_binner1.map{it -> [it[0], it[1]]}, ref_checkm.first())
-        CHECKM2_BINNER2(channel.value("binner2"), renamed_binner2.map{it -> [it[0], it[1]]}, ref_checkm.first())
-        CHECKM2_BINNER3(channel.value("binner3"), renamed_binner3.map{it -> [it[0], it[1]]}, ref_checkm.first())
+        CHECKM2_BINNER1(channel.value("binner1"), binner1.map{it -> [it[0], it[1]]}, ref_checkm.first())
+        CHECKM2_BINNER2(channel.value("binner2"), binner2.map{it -> [it[0], it[1]]}, ref_checkm.first())
+        CHECKM2_BINNER3(channel.value("binner3"), binner3.map{it -> [it[0], it[1]]}, ref_checkm.first())
 
         binners = CHECKM2_BINNER1.out.checkm2_results_filtered.combine(
                     CHECKM2_BINNER2.out.checkm2_results_filtered, by:0).combine(
