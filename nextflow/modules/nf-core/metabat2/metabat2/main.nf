@@ -21,6 +21,16 @@ process METABAT2_METABAT2 {
     when:
     task.ext.when == null || task.ext.when
 
+    errorStrategy {
+        task.exitStatus {
+            exitVal ->
+                // Retry on non-zero exit codes
+                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
+        }
+        maxRetries 3  // Set the maximum number of retries
+        sleep 10       // Set the delay between retries in seconds
+    }
+
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
