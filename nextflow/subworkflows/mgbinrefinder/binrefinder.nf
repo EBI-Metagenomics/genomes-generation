@@ -24,12 +24,13 @@ workflow REFINEMENT {
     main:
         meta = collected_binners.map{it -> it[0]}
 
-        binner1 = collected_binners.map{it -> [it[0], it[1]]}.transpose()
-        binner2 = collected_binners.map{it -> [it[0], it[2]]}.transpose()
-        binner3 = collected_binners.map{it -> [it[0], it[3]]}.transpose()
+        // if it needs to be a list of (meta, bin1), (meta, bin2) - use .transpose()
+        binner1 = collected_binners.map{it -> [it[0], it[1]]}
+        binner2 = collected_binners.map{it -> [it[0], it[2]]}
+        binner3 = collected_binners.map{it -> [it[0], it[3]]}
 
-        // TODO: it should be possible to filter by size using findAll ot filter
-        // but I don't know how to do it with list of paths properly
+        // TODO: it should be possible to filter by size using findAll() ot filter()
+        // but I don't know how to do it properly with list of paths
 
         RENAME_AND_CHECK_SIZE_BINS_BINNER1(channel.value("binner1"), binner1)
         RENAME_AND_CHECK_SIZE_BINS_BINNER2(channel.value("binner2"), binner2)
