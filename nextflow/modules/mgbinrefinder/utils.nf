@@ -7,13 +7,13 @@ process RENAME_AND_CHECK_SIZE_BINS {
     tuple val(meta), path(bins, stageAs: "bins_dir/*")
 
     output:
-    tuple val(meta), path("out/*"), emit: renamed
+    tuple val(meta), path("out/*"), emit: renamed, optional: true
 
     script:
     """
     mkdir -p out
-    for bin in \$(find \${bins_dir} -type f); do
-        SIZE=\$(stat -Lc "%s" \${bin})
+    for bin in \$(find \${bins} -type f); do
+        SIZE=\$(stat -c "%s" \${bin})
         if (( \$SIZE > 50000)) && (( \$SIZE < 20000000)); then
             echo "\${SIZE}"
             cp \${bin} out
