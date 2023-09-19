@@ -37,9 +37,9 @@ workflow REFINEMENT {
         RENAME_AND_CHECK_SIZE_BINS_BINNER3(channel.value("binner3"), binner3)
 
         // collect by meta
-        renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed.groupTuple(by:0)
-        renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed.groupTuple(by:0)
-        renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed.groupTuple(by:0)
+        renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed
+        renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed
+        renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed
 
         REFINE12(channel.value("binner12"), renamed_binner1, renamed_binner2, false, ref_checkm)
         REFINE13(channel.value("binner13"), renamed_binner1, renamed_binner3, false, ref_checkm)
