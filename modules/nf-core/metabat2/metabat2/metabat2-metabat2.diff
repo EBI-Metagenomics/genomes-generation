@@ -1,0 +1,89 @@
+Changes in module 'nf-core/metabat2/metabat2'
+--- modules/nf-core/metabat2/metabat2/main.nf
++++ modules/nf-core/metabat2/metabat2/main.nf
+@@ -1,5 +1,5 @@
+ process METABAT2_METABAT2 {
+-    tag "$meta.id"
++    tag "$meta.id ${fasta} with ${depth}"
+     label 'process_medium'
+ 
+     conda "bioconda::metabat2=2.15"
+@@ -11,21 +11,31 @@
+     tuple val(meta), path(fasta), path(depth)
+ 
+     output:
+-    tuple val(meta), path("*.tooShort.fa.gz")                    , optional:true, emit: tooshort
+-    tuple val(meta), path("*.lowDepth.fa.gz")                    , optional:true, emit: lowdepth
+-    tuple val(meta), path("*.unbinned.fa.gz")                    , optional:true, emit: unbinned
+-    tuple val(meta), path("*.tsv.gz")                            , optional:true, emit: membership
+-    tuple val(meta), path("*[!lowDepth|tooShort|unbinned].fa.gz"), optional:true, emit: fasta
+-    path "versions.yml"                                                         , emit: versions
++    tuple val(meta), path("bins/*.tooShort.fa")                    , optional:true , emit: tooshort
++    tuple val(meta), path("bins/*.lowDepth.fa")                    , optional:true , emit: lowdepth
++    tuple val(meta), path("bins/*.unbinned.fa")                    , optional:true , emit: unbinned
++    tuple val(meta), path("*.tsv.gz")                              , optional:true , emit: membership
++    tuple val(meta), path("${meta.id}_metabat_bins")               , optional:true , emit: fasta
++    path "versions.yml"                                            , emit: versions
+ 
+     when:
+     task.ext.when == null || task.ext.when
+ 
++    errorStrategy {
++        task.exitStatus {
++            exitVal ->
++                // Retry on non-zero exit codes
++                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
++        }
++        maxRetries 3  // Set the maximum number of retries
++        sleep 10       // Set the delay between retries in seconds
++    }
++
+     script:
+-    def args             = task.ext.args   ?: ''
+-    def prefix           = task.ext.prefix ?: "${meta.id}"
+-    def decompress_depth = depth           ? "gzip -d -f $depth"    : ""
+-    def depth_file       = depth           ? "-a ${depth.baseName}" : ""
++    def args = task.ext.args ?: ''
++    def prefix = task.ext.prefix ?: "${meta.id}"
++    def decompress_depth = depth ? "gzip -d -f $depth" : ""
++    def depth_file = depth ? "-a ${depth.baseName}" : ""
+     """
+     $decompress_depth
+ 
+@@ -35,14 +45,31 @@
+         $depth_file \\
+         -t $task.cpus \\
+         --saveCls \\
+-        -o ${prefix}
++        -o metabat2/${prefix}
+ 
+-    gzip -cn ${prefix} > ${prefix}.tsv.gz
+-    find . -name "*.fa" -type f | xargs -t -n 1 bgzip -@ ${task.cpus}
++    mv metabat2/${prefix} ${prefix}.tsv
++    mv metabat2 bins
++
++    gzip ${prefix}.tsv
++
++    mkdir -p ${meta.id}_metabat_bins
++    version=\$( metabat2 --help 2>&1 | head -n 2 | tail -n 1| sed 's/.*\\:\\([0-9]*\\.[0-9]*\\).*/\\1/' )
++
++    if [ -z "\$(ls -A bins/*.[0-9]*.fa)" ]; then
++        echo "Folder is empty"
++    else
++        for i in bins/*.[0-9]*.fa; do
++            original_name=\$(basename \${i})
++            new_filename=\${original_name#*-}
++            digit=\${new_filename#*.}
++            new_name="${meta.id}_metabat_bins/MetaBAT2_v\${version}-${meta.id}_bin.\${digit}"
++            mv \${i} \${new_name}
++        done
++    fi
+ 
+     cat <<-END_VERSIONS > versions.yml
+     "${task.process}":
+         metabat2: \$( metabat2 --help 2>&1 | head -n 2 | tail -n 1| sed 's/.*\\:\\([0-9]*\\.[0-9]*\\).*/\\1/' )
+     END_VERSIONS
+     """
+-}
++}
+************************************************************

@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+
+###!/usr/bin/env python
+
+# TODO: this scripts needs to be improved
 
 """takes a list of record.ids and returns to you the sequences
 from a fasta list that are part of the list"""
