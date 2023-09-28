@@ -26,7 +26,7 @@ workflow PROCESS_INPUT {
     ERZ_TO_ERR( reads, erz_to_err_mapping_file ) // tuple(meta, [reads]])
 
     result = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.combine(
-        CHANGE_READS.out.modified_reads, by: 0
+        ERZ_TO_ERR.out.modified_reads, by: 0
     )
 
     emit:

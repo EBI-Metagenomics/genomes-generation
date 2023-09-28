@@ -10,27 +10,29 @@ include { GUNC                      } from '../../modules/local/gunc/main'
 */
 workflow CLEAN_AND_FILTER_BINS {
     take:
-        input_data // meta, [bin.fa, ...]
-        cat_db
-        cat_diamond_db
-        cat_taxonomy_db
-        gunc_db
+    input_data // meta, [bin.fa, ...]
+    cat_db_folder
+    cat_diamond_db
+    cat_taxonomy_db
+    gunc_db
+
     main:
-        bins = input_data.transpose()
-        MAG_CLEANUP_CAT(bins, cat_db, cat_taxonomy_db, cat_diamond_db)
+    bins = input_data.transpose()
 
-        // input: tuple(meta, bin, summary, names)
-        // output: tuple(meta, clean.fa)
-        DETECT_CONTAMINATION(MAG_CLEANUP_CAT.out.cat_results)
+    MAG_CLEANUP_CAT( bins, cat_db_folder, cat_taxonomy_db, cat_diamond_db )
 
-        GUNC(DETECT_CONTAMINATION.out.cleaned_fasta, gunc_db.first())
-        filtered_bins = GUNC.out.tuple_gunc_result.filter({
-                it[2].name.contains('_complete.txt')
-            }).map({ name, cluster_fasta, cluster_gunc ->
-                return cluster_fasta
-            })
-        filtered_bins.view()
+    // input: tuple(meta, bin, summary, names)
+    // output: tuple(meta, clean.fa)
+    DETECT_CONTAMINATION(MAG_CLEANUP_CAT.out.cat_results)
+
+    GUNC(DETECT_CONTAMINATION.out.cleaned_fasta, gunc_db.first())
+    filtered_bins = GUNC.out.tuple_gunc_result.filter({
+            it[2].name.contains('_complete.txt')
+        }).map({ name, cluster_fasta, cluster_gunc ->
+            return cluster_fasta
+        })
+
     emit:
-        bins = filtered_bins
-        gunc_report = GUNC.out.gunc_result.collectFile(name: "gunc_report.txt")
+    bins = filtered_bins
+    gunc_report = GUNC.out.gunc_result.collectFile(name: "gunc_report.txt")
 }

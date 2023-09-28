@@ -17,34 +17,35 @@ log.info paramsSummaryLog(workflow)
 //     ~~~~~~~
 // */
 
-assemblies  = channel.fromPath("$assemblies/*", checkIfExists: true)
-raw_reads   = channel.fromPath("$raw_reads}/*", checkIfExists: true)
-erz_to_err_mapping_file = channel.fromPath("erz_to_err_mapping_file")
+assemblies  = channel.fromPath("${params.assemblies}/*", checkIfExists: true)
+raw_reads   = channel.fromPath("${params.raw_reads}/*", checkIfExists: true)
+erz_to_err_mapping_file = channel.fromPath(params.erz_to_err_mapping_file, checkIfExists: true)
 
 /*
     ~~~~~~~~~~~~~~~~~~
      DBs
-    ~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~process {
+
+    cpus   = { check_max( 1    * task.attempt, 'cpus'   ) }
+    memory = { check_max( 6.GB * task.attempt, 'memory' ) }
+    time   = { check_max( 4.h  * task.attempt, 'time'   ) }
+
+    errorStrategy = { task.exitStatus in ((130..145) + 104) ? 'retry' : 'finish' }
+    maxRetries    = 1
+    maxErrors     = '-1'
 */
+eukcc_db           = file(params.eukcc_db, checkIfExists: true)
+cat_db_folder      = file(params.cat_db_folder, checkIfExists: true)
+cat_diamond_db     = file(params.cat_diamond_db, checkIfExists: true)
+cat_taxonomy_db    = file(params.cat_taxonomy_db, checkIfExists: true)
+gunc_db            = file(params.gunc_db, checkIfExists: true)
+checkm2_db         = file(params.checkm2_db, checkIfExists: true)
+busco_db           = file(params.busco_db, checkIfExists: true)
+gtdbtk_db          = file(params.gtdbtk_db, checkIfExists: true)
+rfam_rrna_models   = file(params.rfam_rrna_models, checkIfExists: true)
+
 ref_genome         = file(params.ref_genome)
-ref_genome_index   = file("${params.ref_genome}.*")
-
-eukcc_db           = file("${params.eukcc_ref_db}", checkIfExists: true)
-
-cat_diamond_db     = file("${params.cat_diamond_db}", checkIfExists: true)
-cat_taxonomy_db    = file("${params.cat_taxonomy_db}", checkIfExists: true)
-
-gunc_db            = file("${params.gunc_ref_db}", checkIfExists: true)
-
-checkm2_db          = file("${params.checkm2_ref_db}", checkIfExists: true)
-
-rfam_rrna_models   = file("${params.rfam_rrna_models}", checkIfExists: true)
-
-ref_gtdbtk         = file("${params.gtdbtk}", checkIfExists: true)
-
-ref_busco          = file("${params.busco_ref_db}", checkIfExists: true)
-gtdbtk_db          = file("${params.gtdbtk_db}", checkIfExists: true)
-
+ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
 
 /*
     ~~~~~~~~~~~~~~~~~~
@@ -67,23 +68,22 @@ include { BINNING              } from '../subworkflows/local/mag_binning'
 */
 workflow GGP {
     // ---- combine data for reads and contigs pre-processing ---- //
+
+    // TODO: use a samplesheet instead of this grouping //
     groupAssemblies = { fasta_file ->
-        def cluster = fasta_file.toString().tokenize("/")[-1].tokenize(".")[0]
-        def meta = [:]
-        meta.id = cluster
+        id = fasta_file.toString().tokenize("/")[-1].tokenize(".")[0]
+        meta = [id:id, single_end: false]
         return tuple(meta, fasta_file)
     }
     groupReads = { fastq ->
-        def cluster = fastq.toString().tokenize("/")[-1].tokenize(".")[0].tokenize('_')[0]
-        def meta = [:]
-        meta.id = cluster
+        id = fastq.toString().tokenize("/")[-1].tokenize(".")[0].tokenize('_')[0]
+        meta = [id:id, single_end: false]
         return tuple(meta, fastq)
     }
 
     tuple_assemblies = assemblies.map(groupAssemblies) // [ meta, assembly_file ]
     tuple_reads = raw_reads.map(groupReads).groupTuple() // [ meta, [raw_reads] ]
-    data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: [0])  // [ meta, assembly_file, [raw_reads] ]
-    data_by_run_accession.view()
+    data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: [0, 0])  // [ meta, assembly_file, [raw_reads] ]
 
     // ---- pre-processing ---- //
     PROCESS_INPUT( data_by_run_accession, erz_to_err_mapping_file ) // output: [ meta, assembly_file, [raw_reads] ]
@@ -93,10 +93,10 @@ workflow GGP {
 
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
-    DECONTAMINATION( QC_AND_MERGE_READS.out.reads.map { it -> tuple( it[0], it[1], ref_genome, ref_genome_index ) } )
+    DECONTAMINATION( QC_AND_MERGE_READS.out.reads.map { it -> tuple( it[0], it[1] ) }, ref_genome, ref_genome_index )
 
-    // --- align reads to assembly ---- //
-    ALIGN( assembly.combine( DECONTAMINATION.out.decontaminated_reads, by: [0]) ) // tuple (meta, fasta, [reads])
+    // --- align reads to assemblies ---- //
+    ALIGN( assemblies.combine( DECONTAMINATION.out.decontaminated_reads ) ) // tuple (meta, fasta, [reads])
 
     // ---- binning ---- //
     BINNING( ALIGN.out.output, DECONTAMINATION.out.decontaminated_reads )
@@ -108,15 +108,15 @@ workflow GGP {
     if ( !params.skip_euk ) {
         // ---- detect euk ---- //
         // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
-        euk_input = assembly.combine(
-            DECONTAMINATION.out.decontaminated_reads, by: [0]
+        euk_input = assemblies.combine(
+            DECONTAMINATION.out.decontaminated_reads
         ).combine(
-            concoct_bins, by: [0]
+            concoct_bins
         ).combine(
-            metabat_bins, by: [0]
+            metabat_bins
         )
 
-        EUK_MAGS_GENERATION( euk_input, eukcc_db, busco_db, cat_db, cat_taxonomy_db )
+        EUK_MAGS_GENERATION( euk_input, eukcc_db, busco_db, cat_diamond_db, cat_taxonomy_db )
     }
 
     if ( !params.skip_prok ) {
@@ -132,7 +132,7 @@ workflow GGP {
 
         PROK_MAGS_GENERATION(
             prok_input,
-            cat_db,
+            cat_db_folder,
             cat_diamond_db,
             cat_taxonomy_db,
             gunc_db,

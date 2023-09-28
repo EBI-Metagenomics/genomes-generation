@@ -8,7 +8,7 @@ process SAMTOOLS_FASTQ {
         'biocontainers/samtools:1.17--h00cdaf9_0' }"
 
     input:
-    tuple val(meta), path(input)
+    tuple val(meta), path(bam)
     val(interleave)
 
     output:
@@ -33,7 +33,7 @@ process SAMTOOLS_FASTQ {
         $args \\
         --threads ${task.cpus-1} \\
         -0 ${prefix}_other.fastq.gz \\
-        $input \\
+        $bam \\
         $output
 
     cat <<-END_VERSIONS > versions.yml

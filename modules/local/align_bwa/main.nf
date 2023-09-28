@@ -10,7 +10,7 @@ process INDEX_FASTA {
 
     output:
     tuple val(meta), path(fasta), path("${fasta.baseName}*.?*"), emit: fasta_with_index
-    path("versions.yml"): emit: versions
+    path("versions.yml"),                                        emit: versions
 
     script:
     """
@@ -37,8 +37,8 @@ process ALIGNMENT {
     val align  // if true: align (include reads), else: decontaminate (exclude reads)
 
     output:
-    tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bams
-    path("versions.yml"): emit: versions
+    tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bam
+    path("versions.yml"), emit: versions
 
     script:
     // define reads
@@ -62,12 +62,6 @@ process ALIGNMENT {
     }
     """
     mkdir -p output
-
-    if [[ ref_fasta_index == 'NO_FILE' ]];
-    then
-
-    fi
-
     echo "mapping files to host genome"
     bwa-mem2 mem -M \
       -t ${task.cpus} \

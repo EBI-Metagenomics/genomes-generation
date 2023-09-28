@@ -4,14 +4,14 @@
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { REFINEMENT as BIN_REFINEMENT       } from './mgbinrefinder/binrefinder'
-include { CLEAN_AND_FILTER_BINS              } from '../subworkflows/local/clean_and_filter_bins'
+include { CLEAN_AND_FILTER_BINS              } from './clean_and_filter_bins'
 
-include { CHECKM2                            } from '../modules/local/checkm2/main'
-include { DREP                               } from '../modules/local/drep/main'
-include { COVERAGE_RECYCLER                  } from '../modules/local/coverage_recycler/main'
-include { DETECT_RRNA                        } from '../modules/local/detect_rrna/main'
-include { GTDBTK                             } from '../modules/local/gtdbtk/main'
-include { CHANGE_UNDERSCORE_TO_DOT           } from '../modules/local/utils'
+include { CHECKM2                            } from '../../modules/local/checkm2/main'
+include { DREP                               } from '../../modules/local/drep/main'
+include { COVERAGE_RECYCLER                  } from '../../modules/local/coverage_recycler/main'
+include { DETECT_RRNA                        } from '../../modules/local/detect_rrna/main'
+include { GTDBTK                             } from '../../modules/local/gtdbtk/main'
+include { CHANGE_UNDERSCORE_TO_DOT           } from '../../modules/local/utils'
 
 
 process CHECKM_TABLE_FOR_DREP_GENOMES {
@@ -32,8 +32,8 @@ process CHECKM_TABLE_FOR_DREP_GENOMES {
 
 workflow PROK_MAGS_GENERATION {
     take:
-    collected_binners_and_depth // //
-    cat_db
+    collected_binners_and_depth //
+    cat_db_folder
     cat_diamond_db
     cat_taxonomy_db
     gunc_db
@@ -49,7 +49,7 @@ workflow PROK_MAGS_GENERATION {
     BIN_REFINEMENT( collected_binners, checkm2_db )
 
     // -- clean bins
-    CLEAN_AND_FILTER_BINS( BIN_REFINEMENT.out.bin_ref_bins, cat_db, cat_diamond_db, cat_taxonomy_db, gunc_db )
+    CLEAN_AND_FILTER_BINS( BIN_REFINEMENT.out.bin_ref_bins, cat_db_folder, cat_diamond_db, cat_taxonomy_db, gunc_db )
 
     // -- aggregate bins by samples
     // -- checkm2 on ALL bins in all samples

@@ -1,11 +1,12 @@
 process CAT {
+
     tag "${meta.id} ${bin_fa}"
 
     container 'quay.io/microbiome-informatics/cat:5.2.3'
 
     input:
     tuple val(meta), path(bin_fa)
-    path cat_db
+    path cat_db_folder
     path taxonomy_db
     path diamond_db
 
@@ -15,8 +16,13 @@ process CAT {
     script:
     """
     echo "[MAG clean-up] Analysing contigs"
-    CAT contigs -n ${task.cpus} -c ${bin_fa} \
-    --path_to_diamond ${diamond_db} -d ${cat_db} -t ${taxonomy_db} --out_prefix ${meta.id}
+    CAT contigs \
+    -n ${task.cpus} \
+    -c ${bin_fa} \
+    -d ${cat_db_folder} \
+    -t ${taxonomy_db} \
+    --path_to_diamond ${cat_diamond_db} \
+    --out_prefix ${meta.id}
 
     echo "[MAG clean-up] Adding taxonomy names"
     CAT add_names \

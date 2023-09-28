@@ -24,11 +24,11 @@
         },
         "erz_to_err_mapping_file": {
           "type": "string",
-          "description": "Text file that contains the assemblies ERZ accessions mapping to the runs ERR files.",
+          "description": "TSV file that contains the assemblies ERZ accessions mapping to the runs ERR files.",
           "help_text": "This is required to keep the naming consistent during the MAGs generation",
-          "pattern": "^\\S+\\.txt$",
+          "pattern": "^\\S+\\.tsv$",
           "format": "file-path",
-          "mimetype": "text/txt"
+          "mimetype": "text/tsv"
         },
         "outdir": {
           "type": "string",
@@ -84,10 +84,15 @@
           "description": "RNG seed for MetaBAT2",
           "help_text": "MetaBAT2 is run by default with a fixed seed within this pipeline, thus producing reproducible results. You can set it also to any other positive integer to ensure reproducibility. Set the parameter to 0 to use a random seed."
         },
-        "cat_diamond_db": {
+        "cat_db_folder": {
           "type": "string",
           "description": "CAT diamond reference DB folder path",
           "format": "directory-path"
+        },
+        "cat_diamond_db": {
+          "type": "string",
+          "description": "CAT diamond reference DB file",
+          "format": "file-path"
         },
         "cat_taxonomy_db": {
           "type": "string",

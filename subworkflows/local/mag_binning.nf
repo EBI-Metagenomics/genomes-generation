@@ -5,13 +5,13 @@ include { METABAT2_METABAT2                     } from '../../modules/nf-core/me
 include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS  } from '../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
 include { MAXBIN2                               } from '../../modules/nf-core/maxbin2/main'
 
-include { CONVERT_DEPTHS                        } from '../../modules/nf-core/mag/convert_depths'
+include { CONVERT_DEPTHS                        } from '../../modules/local/mag/convert_depths'
 include { RENAME_MAXBIN                         } from '../../modules/local/rename_maxbin/main'
 include { FASTA_BINNING_CONCOCT                 } from '../nf-core/fasta_binning_concoct/main'
 
 /*
  * Get number of columns in file (first line)
- */`
+ */
 def getColNo(filename) {
     lines  = file(filename).readLines()
     return lines[0].split('\t').size()
@@ -30,7 +30,7 @@ workflow BINNING {
     concoct_output = Channel.empty()
 
     // generate coverage depths for each contig
-    ch_summarizedepth_input = assemblies.map({ meta, assembly, bams, bais ->
+    ch_summarizedepth_input = assemblies.map { meta, assembly, bams, bais ->
         def meta_new = meta.clone()
         [ meta_new, bams, bais ]
     }
@@ -97,7 +97,7 @@ workflow BINNING {
 
 
         ch_versions = ch_versions.mix(MAXBIN2.out.versions.first())
-        ch_versions = ch_versions.mix(RENAME_MAXBIN.out.versions.first())
+        // ch_versions = ch_versions.mix(RENAME_MAXBIN.out.versions.first())
     }
 
     if ( !params.skip_concoct ){

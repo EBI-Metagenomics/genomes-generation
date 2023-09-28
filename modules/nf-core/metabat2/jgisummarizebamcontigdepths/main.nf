@@ -12,7 +12,7 @@ process METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS {
 
     output:
     tuple val(meta), path("*.txt.gz"), emit: depth
-    path "versions.yml"                    , emit: versions
+    path "versions.yml"              , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
