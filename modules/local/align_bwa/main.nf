@@ -33,7 +33,7 @@ process ALIGNMENT {
     container 'quay.io/microbiome-informatics/bwamem2:2.2.1'
 
     input:
-    tuple val(meta), path(input_ch_reads), path(ref_fasta), path(ref_fasta_index)
+    tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
     val align  // if true: align (include reads), else: decontaminate (exclude reads)
 
     output:
@@ -41,8 +41,6 @@ process ALIGNMENT {
     path("versions.yml"), emit: versions
 
     script:
-    // define reads
-    reads = input_ch_reads.collect()
     def input_reads = "";
     if ( meta.single_end ) {
         input_reads = "${reads[0]}";

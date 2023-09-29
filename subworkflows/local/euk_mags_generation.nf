@@ -122,7 +122,7 @@ workflow EUK_MAGS_GENERATION {
     // -- concoct
     binner1 = channel.value("concoct")
 
-    LINKTABLE_CONCOCT( ALIGN.out.output.combine(bins_concoct, by: [0]), binner1 ) // output: tuple(meta, links.csv, bin_dir)
+    LINKTABLE_CONCOCT( ALIGN.out.assembly_bam.combine(bins_concoct, by: [0]), binner1 ) // output: tuple(meta, links.csv, bin_dir)
 
     EUKCC_CONCOCT( binner1, LINKTABLE_CONCOCT.out.links_table, eukcc_db )
 
@@ -132,7 +132,7 @@ workflow EUK_MAGS_GENERATION {
     // -- metabat2
     binner2 = channel.value("metabat2")
 
-    LINKTABLE_METABAT( ALIGN.out.output.combine(bins_metabat, by: [0]), binner2 )
+    LINKTABLE_METABAT( ALIGN.out.assembly_bam.combine(bins_metabat, by: [0]), binner2 )
 
     EUKCC_METABAT( binner2, LINKTABLE_METABAT.out.links_table, eukcc_db )
 
@@ -221,7 +221,7 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( ALIGN_BINS.out.versions.first() )
 
     // input: tuple(meta, MAG, bam, bai)
-    BREADTH_DEPTH( ALIGN_BINS.out.output )
+    BREADTH_DEPTH( ALIGN_BINS.out.assembly_bam )
 
     // ch_versions.mix( BREADTH_DEPTH.out.versions.first() )
 

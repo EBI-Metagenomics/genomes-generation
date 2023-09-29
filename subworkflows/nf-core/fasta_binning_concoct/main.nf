@@ -17,27 +17,30 @@ workflow FASTA_BINNING_CONCOCT {
     produce_bedfile = true
 
     CONCOCT_CUTUPFASTA ( ch_fasta, produce_bedfile )
+
     ch_versions = ch_versions.mix(CONCOCT_CUTUPFASTA.out.versions.first())
 
-    ch_cutupfasta_for_concoctcoveragetable = CONCOCT_CUTUPFASTA.out.bed
-                                                .join( ch_bam, failOnMismatch: true )
+    ch_cutupfasta_for_concoctcoveragetable = CONCOCT_CUTUPFASTA.out.bed.join( ch_bam, failOnMismatch: true )
 
     CONCOCT_CONCOCTCOVERAGETABLE ( ch_cutupfasta_for_concoctcoveragetable )
+
     ch_versions = ch_versions.mix(CONCOCT_CONCOCTCOVERAGETABLE.out.versions.first())
 
-    ch_concoctcoveragetable_for_concoctconcoct = CONCOCT_CONCOCTCOVERAGETABLE.out.tsv
-                                                    .join(CONCOCT_CUTUPFASTA.out.fasta, failOnMismatch: true)
+    ch_concoctcoveragetable_for_concoctconcoct = CONCOCT_CONCOCTCOVERAGETABLE.out.tsv.join( CONCOCT_CUTUPFASTA.out.fasta, failOnMismatch: true )
 
     CONCOCT_CONCOCT( ch_concoctcoveragetable_for_concoctconcoct )
+
     ch_versions = ch_versions.mix(CONCOCT_CONCOCT.out.versions.first())
 
     CONCOCT_MERGECUTUPCLUSTERING ( CONCOCT_CONCOCT.out.clustering_csv )
+
     ch_versions = ch_versions.mix( CONCOCT_MERGECUTUPCLUSTERING.out.versions.first())
 
     ch_mergecutupclustering_for_extractfastabins = ch_fasta
                                                     .join(CONCOCT_MERGECUTUPCLUSTERING.out.csv, failOnMismatch: true)
 
     CONCOCT_EXTRACTFASTABINS ( ch_mergecutupclustering_for_extractfastabins )
+
     ch_versions = ch_versions.mix(CONCOCT_EXTRACTFASTABINS.out.versions.first())
 
     emit:

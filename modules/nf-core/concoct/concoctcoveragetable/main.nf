@@ -25,9 +25,8 @@ process CONCOCT_CONCOCTCOVERAGETABLE {
     def prefix     = task.ext.prefix ?: "${meta.id}"
     """
     concoct_coverage_table.py \\
-        $args \\
         $bed \\
-        $bamfiles \\
+        $bamfiles $args \\
         > ${prefix}.tsv
 
     cat <<-END_VERSIONS > versions.yml

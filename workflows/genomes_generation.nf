@@ -96,10 +96,18 @@ workflow GGP {
     DECONTAMINATION( QC_AND_MERGE_READS.out.reads.map { it -> tuple( it[0], it[1] ) }, ref_genome, ref_genome_index )
 
     // --- align reads to assemblies ---- //
-    ALIGN( assemblies.combine( DECONTAMINATION.out.decontaminated_reads ) ) // tuple (meta, fasta, [reads])
+
+    // adjust the data structure  
+    assembly_and_reads = DECONTAMINATION.out.decontaminated_reads.combine( assemblies ).map { meta, reads, assemblies ->
+        [meta, assemblies, reads]
+    }
+
+    ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
+
+    ALIGN.out.assembly_bam.view()
 
     // ---- binning ---- //
-    BINNING( ALIGN.out.output, DECONTAMINATION.out.decontaminated_reads )
+    BINNING( ALIGN.out.assembly_bam )
 
     concoct_bins = BINNING.out.concoct_bins  // uncompressed folders bins
     maxbin_bins = BINNING.out.maxbin_bins

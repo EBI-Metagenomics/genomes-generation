@@ -10,9 +10,8 @@ process CONVERT_DEPTHS {
     tuple val(meta), path(fasta), path(depth)
 
     output:
-    // need to add empty val because representing reads as we dont want maxbin to calculate for us.
-    tuple val(meta), path(fasta), val([]), path("*_mb2_depth.txt"), emit: output
-    path "versions.yml"                                           , emit: versions
+    tuple val(meta), path(fasta), path("*_mb2_depth.txt"), emit: output
+    path "versions.yml"                                  , emit: versions
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

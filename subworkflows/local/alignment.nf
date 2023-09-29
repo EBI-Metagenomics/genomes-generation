@@ -15,16 +15,14 @@ workflow ALIGN {
 
     ch_versions = Channel.empty()
 
-    assembly_and_reads.view()
+    INDEX_FASTA( assembly_and_reads.map { meta, assembly, reads -> [meta, assembly]} )
 
-    INDEX_FASTA( assembly_and_reads.map { meta, assembly, reads -> [meta, reads]} )
-
-    to_align = assembly_and_reads \
+    reads_assembly_index = assembly_and_reads \
         .map { meta, assembly, reads -> [ meta, reads ] } \
-        .join( INDEX_FASTA.out.fasta_with_index ) 
+        .join( INDEX_FASTA.out.fasta_with_index )
 
     ALIGNMENT(
-        to_align,
+        reads_assembly_index,
         true,
     )
 
@@ -32,6 +30,6 @@ workflow ALIGN {
     ch_versions = ch_versions.mix(ALIGNMENT.out.versions.first())
 
     emit:
-    output = ALIGNMENT.out.bam   // [meta, assembly_fasta, bam, bai]
-    versions = ch_versions       // channel: [ versions.yml ]
+    assembly_bam = ALIGNMENT.out.bam   // [meta, assembly_fasta, bam, bai]
+    versions     = ch_versions        // channel: [ versions.yml ]
 }
