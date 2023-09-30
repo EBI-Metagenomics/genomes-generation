@@ -13,20 +13,20 @@ workflow PROCESS_INPUT {
 
     main:
 
-    reads = input_data.map(item -> tuple(item[0], item[2]))
-    contigs = input_data.map(item -> tuple(item[0], item[1]))
+    reads = input_data.map { meta, _, runs -> [meta, runs] }
+    contigs = input_data.map { meta, assembly, _ -> [meta, assembly] }
 
     // --- MODIFY CONTIGS
     // change . to _
-    CHANGE_DOT_TO_UNDERSCORE_CONTIGS(contigs) // tuple(meta, assembly)
+    CHANGE_DOT_TO_UNDERSCORE_CONTIGS( contigs ) // tuple(meta, assembly)
 
     // --- MODIFY READS
     // change ERR in reads to ERZ
     // TODO: make this process faster (biopython is slow)
     ERZ_TO_ERR( reads, erz_to_err_mapping_file ) // tuple(meta, [reads]])
 
-    result = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.combine(
-        ERZ_TO_ERR.out.modified_reads, by: 0
+    result = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.join(
+        ERZ_TO_ERR.out.modified_reads
     )
 
     emit:

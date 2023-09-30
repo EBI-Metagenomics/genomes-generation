@@ -90,7 +90,11 @@ process ERZ_TO_ERR {
     export to_accession=\$(cat help_file | cut -f2)
     echo "\${from_accession} --> \${to_accession}"
 
-    change_reads.py --reads ${reads} -f \${from_accession} -t \${to_accession} --change_dots_to_underscores
+    gunzip ${reads}
+
+    change_reads.py --reads *.fastq -f \${from_accession} -t \${to_accession} --change_dots_to_underscores
+
+    gzip changed*.fastq
     """
 }
 

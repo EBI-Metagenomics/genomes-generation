@@ -18,15 +18,12 @@ workflow QC_AND_MERGE_READS {
     ch_versions           = Channel.empty()
     ch_multiqc_files      = Channel.empty()
 
-    reads.branch{
+    reads.branch {
         single: it[0].single_end == true
         paired: it[0].single_end == false
-        other: true
     }.set {
         ch_input_for_fastp
     }
-
-    ch_input_for_fastp.single.view()
 
     // We don't provide the adapter sequences, which is the second parameter for fastp
 

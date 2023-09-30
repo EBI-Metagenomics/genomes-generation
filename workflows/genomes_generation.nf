@@ -19,7 +19,7 @@ log.info paramsSummaryLog(workflow)
 
 assemblies  = channel.fromPath("${params.assemblies}/*", checkIfExists: true)
 raw_reads   = channel.fromPath("${params.raw_reads}/*", checkIfExists: true)
-erz_to_err_mapping_file = channel.fromPath(params.erz_to_err_mapping_file, checkIfExists: true)
+erz_to_err_mapping_file = file(params.erz_to_err_mapping_file, checkIfExists: true)
 
 /*
     ~~~~~~~~~~~~~~~~~~
@@ -81,30 +81,34 @@ workflow GGP {
         return tuple(meta, fastq)
     }
 
-    tuple_assemblies = assemblies.map(groupAssemblies) // [ meta, assembly_file ]
-    tuple_reads = raw_reads.map(groupReads).groupTuple() // [ meta, [raw_reads] ]
-    data_by_run_accession = tuple_assemblies.combine(tuple_reads, by: [0, 0])  // [ meta, assembly_file, [raw_reads] ]
+    tuple_assemblies = assemblies.map( groupAssemblies ) // [ meta, assembly_file ]
+    tuple_reads = raw_reads.map( groupReads ).groupTuple() // [ meta, [raw_reads] ]
+
+    assembly_and_runs = tuple_assemblies.join( tuple_reads )  // [ meta, assembly_file, [raw_reads] ]
 
     // ---- pre-processing ---- //
-    PROCESS_INPUT( data_by_run_accession, erz_to_err_mapping_file ) // output: [ meta, assembly_file, [raw_reads] ]
+    PROCESS_INPUT( assembly_and_runs, erz_to_err_mapping_file ) // output: [ meta, assembly_file, [raw_reads] ]
 
     // --- trimming reads ---- //
-    QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { it -> [it[0], it[2]] } )
+    QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
 
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
-    DECONTAMINATION( QC_AND_MERGE_READS.out.reads.map { it -> tuple( it[0], it[1] ) }, ref_genome, ref_genome_index )
+    DECONTAMINATION( QC_AND_MERGE_READS.out.reads.map { meta, reads -> tuple( meta, reads ) }, ref_genome, ref_genome_index )
 
-    // --- align reads to assemblies ---- //
-
-    // adjust the data structure  
-    assembly_and_reads = DECONTAMINATION.out.decontaminated_reads.combine( assemblies ).map { meta, reads, assemblies ->
-        [meta, assemblies, reads]
+    // For paired end reads and with merge_paris in true, we need to
+    // switch the assembly single_end -> true to be in sync with how
+    // fastp works. 
+    if ( params.merge_pairs ) {
+        tuple_assemblies = tuple_assemblies.map { meta, assembly ->
+            [ meta + [single_end: true], assembly ]
+        }
     }
 
-    ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
+    // --- align reads to assemblies ---- //
+    assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
 
-    ALIGN.out.assembly_bam.view()
+    ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
 
     // ---- binning ---- //
     BINNING( ALIGN.out.assembly_bam )
@@ -116,11 +120,11 @@ workflow GGP {
     if ( !params.skip_euk ) {
         // ---- detect euk ---- //
         // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
-        euk_input = assemblies.combine(
+        euk_input = tuple_assemblies.join(
             DECONTAMINATION.out.decontaminated_reads
-        ).combine(
+        ).join(
             concoct_bins
-        ).combine(
+        ).join(
             metabat_bins
         )
 
@@ -129,14 +133,14 @@ workflow GGP {
 
     if ( !params.skip_prok ) {
         // ---- detect prok ---- //
-        concoct_list = concoct_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
-        maxbin_list = maxbin_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
-        metabat_list = metabat_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
+        // concoct_list = concoct_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
+        // maxbin_list = maxbin_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
+        // metabat_list = metabat_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
 
         // input: tuple( meta, concoct, metabat, maxbin, depth_file), dbs...
-        prok_input = concoct_list.combine( maxbin_list, by: [0] ) \
-            .combine( metabat_list, by: [0] ) \
-            .combine( BINNING.out.metabat2depths, by: [0] )
+        prok_input = concoct_bins.join( maxbin_bins ) \
+            .join( metabat_bins ) \
+            .join( BINNING.out.metabat2depths )
 
         PROK_MAGS_GENERATION(
             prok_input,

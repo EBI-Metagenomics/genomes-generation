@@ -110,19 +110,23 @@ workflow EUK_MAGS_GENERATION {
     ch_versions = Channel.empty()
 
     /* split the inputs */
-    align_input = assemblies_reads_bins.map(item -> tuple(item[0], item[1], item[2]))
-    reads = assemblies_reads_bins.map(item -> tuple(item[0], item[2]))
-    bins_concoct = assemblies_reads_bins.map(item -> tuple(item[0], item[3]))
-    bins_metabat = assemblies_reads_bins.map(item -> tuple(item[0], item[4]))
+    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_folder, metabat_folder -> 
+        assembly_and_reads: [ meta, assembly, reads ]
+        reads: [ meta, reads ]
+        bins_concoct: [ meta, concoct_folder ]
+        bins_metabat: [ meta, metabat_folder ]
+    }.set {
+        input
+    }
 
-    ALIGN( align_input )
+    ALIGN( input.assembly_and_reads )
 
     ch_versions.mix( ALIGN.out.versions.first() )
 
     // -- concoct
     binner1 = channel.value("concoct")
 
-    LINKTABLE_CONCOCT( ALIGN.out.assembly_bam.combine(bins_concoct, by: [0]), binner1 ) // output: tuple(meta, links.csv, bin_dir)
+    LINKTABLE_CONCOCT( ALIGN.out.assembly_bam.join( input.bins_concoct ), binner1 ) // output: tuple(meta, links.csv, bin_dir)
 
     EUKCC_CONCOCT( binner1, LINKTABLE_CONCOCT.out.links_table, eukcc_db )
 
@@ -132,7 +136,9 @@ workflow EUK_MAGS_GENERATION {
     // -- metabat2
     binner2 = channel.value("metabat2")
 
-    LINKTABLE_METABAT( ALIGN.out.assembly_bam.combine(bins_metabat, by: [0]), binner2 )
+    input.bins_metabat.view()
+
+    LINKTABLE_METABAT( ALIGN.out.assembly_bam.join( input.bins_metabat ), binner2 )
 
     EUKCC_METABAT( binner2, LINKTABLE_METABAT.out.links_table, eukcc_db )
 
@@ -140,28 +146,28 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( EUKCC_METABAT.out.versions.first() )
 
     // -- prepare quality file
-    combine_quality = EUKCC_CONCOCT.out.eukcc_csv.combine( EUKCC_METABAT.out.eukcc_csv, by: [0] )
+    combine_quality = EUKCC_CONCOCT.out.eukcc_csv.join( EUKCC_METABAT.out.eukcc_csv )
 
     // "genome,completeness,contamination" //
-    function_cat_csv = { item ->
+    functionCATCSV = { item ->
         def meta = item[0]
         def list_files = [item[1], item[2]]
         return tuple(meta, list_files)
     }
 
-    CONCATENATE_QUALITY_FILES( combine_quality.map(function_cat_csv), channel.value("quality_eukcc.csv") )
+    CONCATENATE_QUALITY_FILES( combine_quality.map( functionCATCSV ), channel.value("quality_eukcc.csv") )
 
     // ch_versions.mix( CONCATENATE_QUALITY_FILES.out.versions.first() )
 
     quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
     // -- qs50 -- //
-    collect_data = quality.combine(bins_concoct, by: 0) \
-        .combine(bins_metabat, by: [0]) \
-        .combine(EUKCC_CONCOCT.out.eukcc_results, by: [0]) \
-        .combine(EUKCC_METABAT.out.eukcc_results, by: [0])
+    collect_data = quality.join( input.bins_concoct ) \
+        .join( input.bins_metabat ) \
+        .join( EUKCC_CONCOCT.out.eukcc_results ) \
+        .join( EUKCC_METABAT.out.eukcc_results )
 
-    FILTER_QS50(collect_data)
+    FILTER_QS50( collect_data )
 
     // ch_versions.mix( FILTER_QS50.out.versions.first() )
 
@@ -173,7 +179,7 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( DREP.out.versions.first() )
 
     // -- aggregate by samples
-    quality_all_csv = quality.map{it->it[1]}.collectFile(name: "all.csv", newLine: false)
+    quality_all_csv = quality.map { it -> it[1] }.collectFile(name: "all.csv", newLine: false)
 
     MODIFY_QUALITY_FILE( quality_all_csv, channel.value("aggregated_euk_quality.csv"))
 
@@ -181,7 +187,7 @@ workflow EUK_MAGS_GENERATION {
 
     // MODIFY_QUALITY_FILE.out.modified_result.view()
 
-    aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map{ it ->
+    aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { it ->
                                                                         def meta = [:]
                                                                         meta.id = "aggregated"
                                                                         return tuple(meta, it)
@@ -189,7 +195,7 @@ workflow EUK_MAGS_GENERATION {
     // -- drep MAGs --//
     euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
 
-    combine_drep = DREP.out.dereplicated_genomes.map{item -> item[1] } \
+    combine_drep = DREP.out.dereplicated_genomes.map{ it -> it[1] } \
         .flatten() \
         .collect() \
         .map{ it ->
@@ -198,12 +204,12 @@ workflow EUK_MAGS_GENERATION {
                 return tuple(meta, it)
             }
 
-    DREP_MAGS( combine_drep.combine(aggregated_quality, by: [0]), euk_drep_args_mags, channel.value('euk_mags') )
+    DREP_MAGS( combine_drep.join( aggregated_quality ), euk_drep_args_mags, channel.value('euk_mags') )
 
     // ch_versions.mix( DREP_MAGS.out.versions.first() )
 
     // -- coverage -- //
-    bins_alignment = DREP.out.dereplicated_genomes.combine(reads, by: [0]) // tuple(meta, drep_genomes, [reads]),...
+    bins_alignment = DREP.out.dereplicated_genomes.join( input.reads ) // tuple(meta, drep_genomes, [reads]),...
 
     spreadBins = { record ->
         if (record[1] instanceof List) {
@@ -213,7 +219,7 @@ workflow EUK_MAGS_GENERATION {
         }
     }
 
-    bins_alignment_by_bins = bins_alignment.map(spreadBins).transpose(by: [1])  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
+    bins_alignment_by_bins = bins_alignment.map( spreadBins ).transpose(by: [1])  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
     
     // TODO: leave only DREP_MAGS instead of DREP
     ALIGN_BINS( bins_alignment_by_bins ) // out: [meta, fasta, bam, bai]
@@ -233,21 +239,20 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( BUSCO.out.versions.first() )
 
     // -- QC MAGs -- //
-    BUSCO_EUKCC_QC( aggregated_quality, BUSCO.out.busco_summary.collect(), DREP_MAGS.out.dereplicated_genomes_list.map{ it -> it[1] })
+    BUSCO_EUKCC_QC( aggregated_quality, BUSCO.out.busco_summary.collect(), DREP_MAGS.out.dereplicated_genomes_list.map { it -> it[1] })
 
     // ch_versions.mix( BUSCO.out.versions.first() )
 
     // -- BAT --//
     EUK_TAXONOMY( drep_result, cat_db, cat_taxonomy_db )
 
-    BAT_TAXONOMY_WRITER(EUK_TAXONOMY.out.bat_names.collect())
+    BAT_TAXONOMY_WRITER( EUK_TAXONOMY.out.bat_names.collect() )
 
     // ch_versions.mix( EUK_TAXONOMY.out.versions.first() )
     // ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
 
     emit:
-    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map(item -> tuple(item[0], item[2]))
+    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { it -> tuple(item[0], item[2]) }
     drep_output = DREP.out.dereplicated_genomes
     versions = ch_versions
 }
-

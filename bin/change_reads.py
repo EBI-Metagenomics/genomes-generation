@@ -4,7 +4,6 @@
 
 from Bio import SeqIO
 import argparse
-import gzip
 import os
 import sys
 
@@ -25,7 +24,7 @@ def main():
     args = parser.parse_args()
 
     for read_file in args.reads:
-        with gzip.open("changed_" + os.path.basename(read_file), "wt") as out_handle, gzip.open(read_file, "rt") as handle:
+        with open("changed_" + os.path.basename(read_file), "wt") as out_handle, open(read_file, "rt") as handle:
             for record in SeqIO.parse(handle, "fastq"):
                 new_name = record.id.replace(args.from_accession, args.to_accession)
                 if args.change_dots_to_underscores:

@@ -17,7 +17,11 @@ process LINKTABLE {
         echo "creating empty links file"
         touch ${meta.id}.${binner}.links.csv
     else
-        binlinks.py  --ANI 99 --within 1500 --out ${meta.id}.${binner}.links.csv --bindir ${bindir} --bam ${bam[0]} -d
+        binlinks.py --ANI 99 \
+        --within 1500 \
+        --out ${meta.id}.${binner}.links.csv \
+        --bindir ${bindir} \
+        --bam ${bam[0]} -d
     fi
     """
 }

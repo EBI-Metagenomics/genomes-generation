@@ -9,7 +9,7 @@ include { ALIGNMENT   } from '../../modules/local/align_bwa/main'
 workflow ALIGN {
 
     take:
-    assembly_and_reads  // tuple (meta, assembly_fasta, [reads])
+    assembly_and_reads // tuple (meta, assembly_fasta, [reads])
 
     main:
 

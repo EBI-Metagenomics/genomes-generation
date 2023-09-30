@@ -79,14 +79,14 @@ workflow BINNING {
 
     if ( !params.skip_concoct ){
 
-        ch_concoct_input = assemblies_bams.map { meta, assembly, bams, bais ->
+        assemblies_bams.map { meta, assembly, bams, bais ->
             [ meta + [binner: 'CONCOCT'], assembly, bams, bais ]
         }.multiMap { meta, assembly, bams, bais ->
             bins: [ meta, assembly ]
             bams: [ meta, bams, bais ]
-        }
+        }.set { ch_concoct_input }
 
-        FASTA_BINNING_CONCOCT ( ch_concoct_input )
+        FASTA_BINNING_CONCOCT( ch_concoct_input.bins, ch_concoct_input.bams )
 
         concoct_output = FASTA_BINNING_CONCOCT.out.bins.map { meta, bins ->
             [ meta.subMap('id', 'single_end'), bins ]
