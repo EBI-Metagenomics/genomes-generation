@@ -1,3 +1,4 @@
+// FIXME: remove this module and install -> bam2fq
 process SAMTOOLS_FASTQ {
     tag "$meta.id"
     label 'process_low'
@@ -8,15 +9,12 @@ process SAMTOOLS_FASTQ {
         'biocontainers/samtools:1.17--h00cdaf9_0' }"
 
     input:
-    tuple val(meta), path(bam)
-    val(interleave)
+    tuple val(meta), path(inputbam)
+    val split
 
     output:
-    tuple val(meta), path("*_{1,2}.fastq.gz")      , optional:true, emit: fastq
-    tuple val(meta), path("*_interleaved.fastq.gz"), optional:true, emit: interleaved
-    tuple val(meta), path("*_singleton.fastq.gz")  , optional:true, emit: singleton
-    tuple val(meta), path("*_other.fastq.gz")      , optional:true, emit: other
-    path  "versions.yml"                           , emit: versions
+    tuple val(meta), path("*.fastq.gz"), emit: reads
+    path "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,21 +22,36 @@ process SAMTOOLS_FASTQ {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def output = ( interleave && ! meta.single_end ) ? "> ${prefix}_interleaved.fastq.gz" :
-        meta.single_end ? "-1 ${prefix}_1.fastq.gz -s ${prefix}_singleton.fastq.gz" :
-        "-1 ${prefix}_1.fastq.gz -2 ${prefix}_2.fastq.gz -s ${prefix}_singleton.fastq.gz"
-    """
-    samtools \\
-        fastq \\
-        $args \\
-        --threads ${task.cpus-1} \\
-        -0 ${prefix}_other.fastq.gz \\
-        $bam \\
-        $output
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
-    """
+    if (split){
+        """
+        samtools \\
+            bam2fq \\
+            $args \\
+            -@ $task.cpus \\
+            -1 ${prefix}_1.fastq.gz \\
+            -2 ${prefix}_2.fastq.gz \\
+            -0 ${prefix}_other.fastq.gz \\
+            -s ${prefix}_singleton.fastq.gz \\
+            $inputbam
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        END_VERSIONS
+        """
+    } else {
+        """
+        samtools \\
+            bam2fq \\
+            $args \\
+            -@ $task.cpus \\
+            $inputbam | gzip --no-name > ${prefix}_interleaved.fastq.gz
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        END_VERSIONS
+        """
+    }
 }

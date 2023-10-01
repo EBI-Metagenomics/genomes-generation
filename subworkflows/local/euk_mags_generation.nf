@@ -64,7 +64,7 @@ process FILTER_QS50 {
     label 'process_light'
 
     input:
-    tuple val(meta), path(quality_file), path(concoct_bins), path(metabat_bins), path(concoct_bins_merged), path(metabat_bins_merged)
+    tuple val(meta), path(quality_file), path(concoct_bins, stageAs: "concoct_bins/*"), path(metabat_bins, stageAs: "metabat_bins/*"), path(concoct_bins_merged, stageAs: "concoct_bins_merged/*"), path(metabat_bins_merged, stageAs: "metabat_bins_merged/*")
 
     output:
     tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
@@ -81,14 +81,14 @@ process FILTER_QS50 {
     then
         touch quality_file.csv
     else
-        for i in \$(ls ${concoct_bins} | grep -w -f filtered_genomes.txt); do
-            cp ${concoct_bins}/\${i} output_genomes; done
-        for i in \$(ls ${metabat_bins} | grep -w -f filtered_genomes.txt); do
-            cp ${metabat_bins}/\${i} output_genomes; done
-        for i in \$(ls ${concoct_bins_merged} | grep -w -f filtered_genomes.txt); do
-            cp ${concoct_bins_merged}/\${i} output_genomes; done
-        for i in \$(ls ${metabat_bins_merged} | grep -w -f filtered_genomes.txt); do
-            cp ${metabat_bins_merged}/\${i} output_genomes; done
+        for i in \$(ls concoct_bins | grep -w -f filtered_genomes.txt); do
+            cp concoct_bins/\${i} output_genomes; done
+        for i in \$(ls metabat_bins | grep -w -f filtered_genomes.txt); do
+            cp metabat_bins/\${i} output_genomes; done
+        for i in \$(ls concoct_bins_merged | grep -w -f filtered_genomes.txt); do
+            cp concoct_bins_merged/\${i} output_genomes; done
+        for i in \$(ls metabat_bins_merged | grep -w -f filtered_genomes.txt); do
+            cp metabat_bins_merged/\${i} output_genomes; done
 
         echo "genome,completeness,contamination" > quality_file.csv
         grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
@@ -123,12 +123,12 @@ workflow EUK_MAGS_GENERATION {
 
     ch_versions.mix( ALIGN.out.versions.first() )
 
-    // -- concoct
+    // -- concoct -- //
     binner1 = channel.value("concoct")
 
-    LINKTABLE_CONCOCT( ALIGN.out.assembly_bam.join( input.bins_concoct ), binner1 ) // output: tuple(meta, links.csv, bin_dir)
+    LINKTABLE_CONCOCT( ALIGN.out.assembly_bam.join( input.bins_concoct ), binner1 ) // output: tuple(meta, links.csv)
 
-    EUKCC_CONCOCT( binner1, LINKTABLE_CONCOCT.out.links_table, eukcc_db )
+    EUKCC_CONCOCT( binner1, LINKTABLE_CONCOCT.out.links_table.join ( input.bins_concoct ), eukcc_db )
 
     // ch_versions.mix( LINKTABLE_CONCOCT.out.versions.first() )
     // ch_versions.mix( EUKCC_CONCOCT.out.versions.first() )
@@ -136,11 +136,11 @@ workflow EUK_MAGS_GENERATION {
     // -- metabat2
     binner2 = channel.value("metabat2")
 
-    input.bins_metabat.view()
-
     LINKTABLE_METABAT( ALIGN.out.assembly_bam.join( input.bins_metabat ), binner2 )
 
-    EUKCC_METABAT( binner2, LINKTABLE_METABAT.out.links_table, eukcc_db )
+    metabat_linktable_bins = LINKTABLE_METABAT.out.links_table.join( input.bins_metabat ).filter { meta, link, bins -> bins.size() > 0 }
+
+    EUKCC_METABAT( binner2, metabat_linktable_bins, eukcc_db )
 
     // ch_versions.mix( LINKTABLE_METABAT.out.versions.first() )
     // ch_versions.mix( EUKCC_METABAT.out.versions.first() )
@@ -252,7 +252,7 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
 
     emit:
-    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { it -> tuple(item[0], item[2]) }
+    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { it -> tuple(it[0], it[2]) }
     drep_output = DREP.out.dereplicated_genomes
     versions = ch_versions
 }

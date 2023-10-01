@@ -4,15 +4,15 @@ process LINKTABLE {
     container 'quay.io/microbiome-informatics/eukrecover.python3base:v1'
 
     input:
-    tuple val(meta), path(fasta), path(bam), path(bai), path(bindir)
+    tuple val(meta), path(fasta), path(bam), path(bai), path(bins, stageAs: "bins/*")
     val(binner)
 
     output:
-    tuple val(meta), path("*.links.csv"), path(bindir), emit: links_table
+    tuple val(meta), path("*.links.csv"), emit: links_table
 
     script:
     """
-    BINS=\$(ls ${bindir} | grep -v "unbinned" | wc -l)
+    BINS=\$(ls bins | grep -v "unbinned" | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "creating empty links file"
         touch ${meta.id}.${binner}.links.csv
@@ -20,7 +20,7 @@ process LINKTABLE {
         binlinks.py --ANI 99 \
         --within 1500 \
         --out ${meta.id}.${binner}.links.csv \
-        --bindir ${bindir} \
+        --bindir bins \
         --bam ${bam[0]} -d
     fi
     """
@@ -36,7 +36,7 @@ process EUKCC {
 
     input:
     val binner
-    tuple val(meta), path(links), path(bindir)
+    tuple val(meta), path(links), path(bins, stageAs: "bins/*")
     path eukcc_db
 
     output:
@@ -57,7 +57,7 @@ process EUKCC {
         --db ${eukcc_db} \
         --out ${binner}_${meta.id}_merged_bins \
         --prefix "${binner}_${meta.id}_merged." \
-        ${bindir}
+        bins
 
     cp *_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
     cp *_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv

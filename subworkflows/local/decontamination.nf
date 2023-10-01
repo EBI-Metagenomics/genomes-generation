@@ -22,12 +22,12 @@ workflow DECONTAMINATION {
 
     ALIGNMENT( to_align, false )
 
-    SAMTOOLS_FASTQ( ALIGNMENT.out.bam.map{ it -> tuple( it[0], it[2] ) }, false )
+    SAMTOOLS_FASTQ( ALIGNMENT.out.bam.map { meta, ref_fasta, bam, bai -> [ meta, bam ] }, false )
 
     ch_versions = ch_versions.mix(ALIGNMENT.out.versions.first())
     ch_versions = ch_versions.mix(SAMTOOLS_FASTQ.out.versions.first())
 
     emit:
-    decontaminated_reads = SAMTOOLS_FASTQ.out.fastq // TODO: update
+    decontaminated_reads = SAMTOOLS_FASTQ.out.reads // TODO: update
     versions = ch_versions                          // channel: [ versions.yml ]
 }

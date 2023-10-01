@@ -94,7 +94,7 @@ workflow GGP {
 
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
-    DECONTAMINATION( QC_AND_MERGE_READS.out.reads.map { meta, reads -> tuple( meta, reads ) }, ref_genome, ref_genome_index )
+    DECONTAMINATION( QC_AND_MERGE_READS.out.reads, ref_genome, ref_genome_index )
 
     // For paired end reads and with merge_paris in true, we need to
     // switch the assembly single_end -> true to be in sync with how
@@ -113,33 +113,33 @@ workflow GGP {
     // ---- binning ---- //
     BINNING( ALIGN.out.assembly_bam )
 
-    concoct_bins = BINNING.out.concoct_bins  // uncompressed folders bins
-    maxbin_bins = BINNING.out.maxbin_bins
-    metabat_bins = BINNING.out.metabat_bins
+    collectBinsFolder = { meta, bin_folder ->
+        [ meta, bin_folder.listFiles().flatten() ]
+    }
+    concoct_collected_bins = BINNING.out.concoct_bins.map( collectBinsFolder )
+    metabat_collected_bins = BINNING.out.metabat_bins.map( collectBinsFolder )
+    maxbin_collected_bins = BINNING.out.maxbin_bins.map( collectBinsFolder )
 
     if ( !params.skip_euk ) {
+
         // ---- detect euk ---- //
         // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
         euk_input = tuple_assemblies.join(
             DECONTAMINATION.out.decontaminated_reads
         ).join(
-            concoct_bins
+            concoct_collected_bins
         ).join(
-            metabat_bins
+            metabat_collected_bins
         )
 
         EUK_MAGS_GENERATION( euk_input, eukcc_db, busco_db, cat_diamond_db, cat_taxonomy_db )
     }
 
     if ( !params.skip_prok ) {
-        // ---- detect prok ---- //
-        // concoct_list = concoct_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
-        // maxbin_list = maxbin_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
-        // metabat_list = metabat_bins.map{ it -> [it[0], it[1].listFiles().flatten()] }
 
         // input: tuple( meta, concoct, metabat, maxbin, depth_file), dbs...
-        prok_input = concoct_bins.join( maxbin_bins ) \
-            .join( metabat_bins ) \
+        prok_input = concoct_collected_bins.join( maxbin_collected_bins ) \
+            .join( metabat_collected_bins ) \
             .join( BINNING.out.metabat2depths )
 
         PROK_MAGS_GENERATION(
