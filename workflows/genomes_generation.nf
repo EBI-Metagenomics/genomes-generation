@@ -1,15 +1,25 @@
 include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
 
+// Print help message, supply typical command line usage for the pipeline
 if (params.help) {
-   log.info paramsHelp("nextflow run ebi-metagenomics/genomes-generation --help")
+   log.info paramsHelp("nextflow run my_pipeline --input input_file.csv")
    exit 0
 }
 
 // Validate input parameters
-validateParameters()
+// validateParameters()
 
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
+
+// Create a new channel of metadata from a sample sheet
+// NB: `input` corresponds to `params.input` and associated sample sheet schema
+ch_input = Channel.fromSamplesheet("input")
+
+if (params.help) {
+   log.info paramsHelp("nextflow run ebi-metagenomics/genomes-generation --help")
+   exit 0
+}
 
 // /*
 //     ~~~~~~~
@@ -132,18 +142,25 @@ workflow GGP {
             metabat_collected_bins
         )
 
-        EUK_MAGS_GENERATION( euk_input, eukcc_db, busco_db, cat_diamond_db, cat_taxonomy_db )
+        EUK_MAGS_GENERATION( 
+            euk_input,
+            eukcc_db,
+            busco_db,
+            cat_db_folder,
+            cat_diamond_db,
+            cat_taxonomy_db
+        )
     }
 
     if ( !params.skip_prok ) {
 
-        // input: tuple( meta, concoct, metabat, maxbin, depth_file), dbs...
-        prok_input = concoct_collected_bins.join( maxbin_collected_bins ) \
+        // input: tuple( meta, concoct, metabat, maxbin, depth_file)
+        collected_binners_and_depth = concoct_collected_bins.join( maxbin_collected_bins ) \
             .join( metabat_collected_bins ) \
             .join( BINNING.out.metabat2depths )
 
         PROK_MAGS_GENERATION(
-            prok_input,
+            collected_binners_and_depth,
             cat_db_folder,
             cat_diamond_db,
             cat_taxonomy_db,

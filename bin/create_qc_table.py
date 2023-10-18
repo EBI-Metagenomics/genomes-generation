@@ -93,7 +93,7 @@ def eukcc_parser(eukcc_concat, genomes_list, output_file):
         logging.info("Processing eukcc stats")
         for line in file_in:
             if "completeness" not in line:
-                genome,completeness,contamination,lineage = line.strip().split("\t")
+                genome,completeness,contamination = line.strip().split(",")
                 eukcc_data[genome] = {
                         'bin_id' : genome,
                         'completeness': completeness,

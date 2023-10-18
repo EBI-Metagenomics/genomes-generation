@@ -51,7 +51,7 @@ workflow BINNING {
 
         ch_maxbin2_input = CONVERT_DEPTHS.out.output.map { meta, assembly, depth ->
             // we provide empty reads as we don't want maxbin2 to calculate for us.
-            [meta + [binner: 'MaxBin2'], assembly, [], depth ]
+            [meta.subMap('id', 'single_end') + [binner: 'MaxBin2'], assembly, [], depth ]
         }
 
         MAXBIN2 ( ch_maxbin2_input )
@@ -59,7 +59,7 @@ workflow BINNING {
         RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )
 
         maxbin_output = RENAME_MAXBIN.out.renamed_bins.map { meta, bins ->
-            [meta.subMap('id', 'single_end', 'binner'), bins]
+            [meta.subMap('id', 'single_end'), bins]
         }
 
         ch_versions = ch_versions.mix(CONVERT_DEPTHS.out.versions.first())
@@ -68,9 +68,10 @@ workflow BINNING {
     }
 
     if ( !params.skip_metabat2 ) {
+
         METABAT2_METABAT2 ( ch_metabat2_input )
 
-        metabat_output = METABAT2_METABAT2.out.fasta.map{ meta, bins ->
+        metabat_output = METABAT2_METABAT2.out.fasta.map { meta, bins ->
             [ meta.subMap('id', 'single_end'), bins ]
         }
 

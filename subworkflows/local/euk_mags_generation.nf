@@ -15,7 +15,7 @@ include { DREP                           } from '../../modules/local/drep/main'
 include { DREP as DREP_MAGS              } from '../../modules/local/drep/main'
 include { BREADTH_DEPTH                  } from '../../modules/local/breadth_depth/main'
 include { BUSCO_EUKCC_QC                 } from '../../modules/local/qc/main'
-include { BAT as EUK_TAXONOMY            } from '../../modules/local/CAT/BAT/main'
+include { BAT                            } from '../../modules/local/cat/bat/main'
 include { BAT_TAXONOMY_WRITER            } from '../../modules/local/bat_taxonomy_writer/main'
 
 
@@ -45,7 +45,7 @@ process CONCATENATE_QUALITY_FILES {
 process MODIFY_QUALITY_FILE {
 
     input:
-    tuple val(meta), path(input_files)
+    path(quality_table_csv)
     val output_name
 
     output:
@@ -54,7 +54,7 @@ process MODIFY_QUALITY_FILE {
     script:
     """
     echo "genome,completeness,contamination" > ${output_name}
-    cat ${input_files} | grep -v "completeness" | cut -f1-3 | tr '\t' ',' >> ${output_name}
+    cat ${quality_table_csv} | grep -v "completeness" | cut -f1-3 | tr '\t' ',' >> ${output_name}
     """
 }
 
@@ -102,7 +102,8 @@ workflow EUK_MAGS_GENERATION {
     assemblies_reads_bins  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder )
     eukcc_db
     busco_db
-    cat_db
+    cat_db_folder
+    cat_diamond_db
     cat_taxonomy_db
 
     main:
@@ -179,19 +180,17 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( DREP.out.versions.first() )
 
     // -- aggregate by samples
+    // TODO: this collectFile is incorrect
     quality_all_csv = quality.map { it -> it[1] }.collectFile(name: "all.csv", newLine: false)
 
     MODIFY_QUALITY_FILE( quality_all_csv, channel.value("aggregated_euk_quality.csv"))
 
     // ch_versions.mix( MODIFY_QUALITY_FILE.out.versions.first() )
 
-    // MODIFY_QUALITY_FILE.out.modified_result.view()
+    aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { modified_csv ->
+        return tuple([id: "aggregated"], modified_csv)
+    }
 
-    aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { it ->
-                                                                        def meta = [:]
-                                                                        meta.id = "aggregated"
-                                                                        return tuple(meta, it)
-                                                                    }
     // -- drep MAGs --//
     euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
 
@@ -199,10 +198,8 @@ workflow EUK_MAGS_GENERATION {
         .flatten() \
         .collect() \
         .map{ it ->
-                def meta = [:]
-                meta.id = "aggregated"
-                return tuple(meta, it)
-            }
+            return tuple([id: "aggregated"], it)
+        }
 
     DREP_MAGS( combine_drep.join( aggregated_quality ), euk_drep_args_mags, channel.value('euk_mags') )
 
@@ -239,16 +236,21 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( BUSCO.out.versions.first() )
 
     // -- QC MAGs -- //
-    BUSCO_EUKCC_QC( aggregated_quality, BUSCO.out.busco_summary.collect(), DREP_MAGS.out.dereplicated_genomes_list.map { it -> it[1] })
+    // TODO use names for the following .map (.map { meta, contigs -> xxx })
+    BUSCO_EUKCC_QC( 
+        aggregated_quality.map { it -> it[1] }, 
+        BUSCO.out.busco_summary.collect(), 
+        DREP_MAGS.out.dereplicated_genomes_list.map { it -> it[1] }
+    )
 
     // ch_versions.mix( BUSCO.out.versions.first() )
 
     // -- BAT --//
-    EUK_TAXONOMY( drep_result, cat_db, cat_taxonomy_db )
+    BAT( drep_result, cat_db_folder, cat_taxonomy_db )
 
-    BAT_TAXONOMY_WRITER( EUK_TAXONOMY.out.bat_names.collect() )
+    BAT_TAXONOMY_WRITER( BAT.out.bat_names.collect() )
 
-    // ch_versions.mix( EUK_TAXONOMY.out.versions.first() )
+    // ch_versions.mix( BAT.out.versions.first() )
     // ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
 
     emit:

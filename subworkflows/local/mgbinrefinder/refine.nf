@@ -12,16 +12,15 @@ workflow REFINE {
 
     main:
     refined = Channel.empty()
-    if (binner3) {
-        BINNING_REFINER3(name, binner1, binner2, binner3)
+    if ( binner3 ) {
+        BINNING_REFINER3( name, binner1.join( binner2 ).join( binner3 ) )
         refined = BINNING_REFINER3.out.refined_bins
-    }
-    else {
-        BINNING_REFINER(name, binner1, binner2)
+    } else {
+        BINNING_REFINER( name, binner1.join( binner2 ) )
         refined = BINNING_REFINER.out.refined_bins
     }
 
-    CHECKM2_REFINE(name, refined, checkm2_db.first())
+    CHECKM2_REFINE( name, refined, checkm2_db )
 
     emit:
     refined = refined

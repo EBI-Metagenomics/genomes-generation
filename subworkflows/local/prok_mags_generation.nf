@@ -31,8 +31,9 @@ process CHECKM_TABLE_FOR_DREP_GENOMES {
 
 
 workflow PROK_MAGS_GENERATION {
+
     take:
-    collected_binners_and_depth //
+    collected_binners_and_depth // tuple( meta, concoct, metabat, maxbin, depth_file)
     cat_db_folder
     cat_diamond_db
     cat_taxonomy_db
@@ -42,22 +43,35 @@ workflow PROK_MAGS_GENERATION {
     rfam_rrna_models
 
     main:
-    collected_binners = collected_binners_and_depth.map{ it -> [it[0], it[1], it[2], it[3]] }
-    metabat_depth = collected_binners_and_depth.map{ it -> it[4] }
+
+    collected_binners = collected_binners_and_depth.map { meta, concot_bins, maxbin_bins, metabat_bins, _ -> 
+        [ meta, concot_bins, maxbin_bins, metabat_bins ]
+    }
+
+    metabat_depth = collected_binners_and_depth.map { it -> it[4] }
 
     // -- bin refinement //
     BIN_REFINEMENT( collected_binners, checkm2_db )
 
     // -- clean bins
-    CLEAN_AND_FILTER_BINS( BIN_REFINEMENT.out.bin_ref_bins, cat_db_folder, cat_diamond_db, cat_taxonomy_db, gunc_db )
+    CLEAN_AND_FILTER_BINS( 
+        BIN_REFINEMENT.out.bin_ref_bins,
+        cat_db_folder,
+        cat_diamond_db,
+        cat_taxonomy_db,
+        gunc_db
+    )
 
     // -- aggregate bins by samples
     // -- checkm2 on ALL bins in all samples
-    all_bins = CLEAN_AND_FILTER_BINS.out.bins.collect().map{ it ->
-                                                                def meta = [:]
-                                                                meta.id = "aggregated"
-                                                                return tuple(meta, it)
-                                                            }
+    all_bins = CLEAN_AND_FILTER_BINS.out.bins.collect().map { it ->
+        def meta = [:]
+        meta.id = "aggregated"
+        return tuple( meta, it )
+    }
+
+    all_bins.view()
+    
     CHECKM2( channel.value("aggregated"), all_bins, checkm2_db )
 
     // -- drep
@@ -68,7 +82,7 @@ workflow PROK_MAGS_GENERATION {
     // -- coverage -- //
     COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )
 
-    CHANGE_UNDERSCORE_TO_DOT(DREP.out.dereplicated_genomes.map{ it -> it[1] }.flatten())
+    CHANGE_UNDERSCORE_TO_DOT( DREP.out.dereplicated_genomes.map{ it -> it[1] }.flatten() )
 
     // -- RNA -- //
     DETECT_RRNA( 

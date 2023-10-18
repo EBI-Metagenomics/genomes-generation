@@ -5,13 +5,14 @@ process BUSCO_EUKCC_QC {
         'quay.io/biocontainers/biopython:1.75' }"
 
     input:
-        path(eukcc_quality_combined)
-        path(busco_list)
-        path(genomes_list)
+    path(eukcc_quality_combined)
+    path(busco_list)
+    path(genomes_list)
+    
     output:
-        path("busco_eukcc.qc.csv")
-        path("eukcc_final_qc.csv")
-        path("busco_final_qc.csv")
+    path("busco_eukcc.qc.csv")
+    path("eukcc_final_qc.csv")
+    path("busco_final_qc.csv")
 
     script:
     """

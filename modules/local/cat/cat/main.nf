@@ -8,7 +8,7 @@ process CAT {
     tuple val(meta), path(bin_fa)
     path cat_db_folder
     path taxonomy_db
-    path diamond_db
+    path cat_diamond_db
 
     output:
     tuple val(meta), path(bin_fa), path('*.summary.txt'), path('*.contig2classification.official_names.txt'), emit: cat_results
