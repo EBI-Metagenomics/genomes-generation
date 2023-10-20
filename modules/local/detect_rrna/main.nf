@@ -8,8 +8,8 @@ process DETECT_RRNA {
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'
 
     input:
-    path(fasta)
-    path cm_models
+    path fasta
+    file cm_models
 
     output:
     path('results_folder/*'), emit: rrna_out_results

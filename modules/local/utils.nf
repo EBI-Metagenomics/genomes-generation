@@ -103,7 +103,7 @@ process ERZ_TO_ERR {
 */
 process CHANGE_UNDERSCORE_TO_DOT {
 
-    tag "${name} ${contigs}"
+    tag "${contigs}"
 
     input:
     path(contigs)

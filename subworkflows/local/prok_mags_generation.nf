@@ -70,23 +70,23 @@ workflow PROK_MAGS_GENERATION {
         return tuple( meta, it )
     }
 
-    all_bins.view()
-    
     CHECKM2( channel.value("aggregated"), all_bins, checkm2_db )
 
     // -- drep
     prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
 
-    DREP( CHECKM2.out.checkm2_results, prok_drep_args, channel.value('prok') )
+    DREP( CHECKM2.out.stats, prok_drep_args, channel.value('prok') )
 
     // -- coverage -- //
     COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )
 
-    CHANGE_UNDERSCORE_TO_DOT( DREP.out.dereplicated_genomes.map{ it -> it[1] }.flatten() )
+    dereplicated_genomes = DREP.out.dereplicated_genomes.map { it -> it[1] }.flatten()
+
+    CHANGE_UNDERSCORE_TO_DOT( dereplicated_genomes )
 
     // -- RNA -- //
     DETECT_RRNA( 
-        DREP.out.dereplicated_genomes.map{ it -> it[1] }.flatten(),
+        dereplicated_genomes,
         rfam_rrna_models
     )
 
@@ -94,8 +94,9 @@ workflow PROK_MAGS_GENERATION {
     GTDBTK( CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(), gtdbtk_db )
 
     // -- checkm_results_MAGs.txt -- //
+    // Both channels will have only one element
     CHECKM_TABLE_FOR_DREP_GENOMES(
-        CHECKM2.out.checkm2_results.map { it -> it[2] },
+        CHECKM2.out.filtered_genomes.map { it -> it[2] },
         DREP.out.dereplicated_genomes_list.map { it -> it[1] }
     )
 

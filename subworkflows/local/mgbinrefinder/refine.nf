@@ -24,8 +24,8 @@ workflow REFINE {
 
     emit:
     refined = refined
-    filtered_bins = CHECKM2_REFINE.out.checkm2_results_filtered
-    filtered_bins_stats = CHECKM2_REFINE.out.checkm2_results_filtered_stats
+    filtered_bins = CHECKM2_REFINE.out.filtered_genomes
+    filtered_bins_stats = CHECKM2_REFINE.out.filtered_stats
     // TODO: versions
 }
 

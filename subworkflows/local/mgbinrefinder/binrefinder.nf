@@ -47,17 +47,17 @@ workflow REFINEMENT {
     CHECKM2_BINNER2( "binner2", renamed_binner2, ref_checkm )
     CHECKM2_BINNER3( "binner3", renamed_binner3, ref_checkm )
 
-    binners = CHECKM2_BINNER1.out.checkm2_results_filtered
-        .join(CHECKM2_BINNER2.out.checkm2_results_filtered)
-        .join(CHECKM2_BINNER3.out.checkm2_results_filtered)
+    binners = CHECKM2_BINNER1.out.filtered_genomes
+        .join(CHECKM2_BINNER2.out.filtered_genomes)
+        .join(CHECKM2_BINNER3.out.filtered_genomes)
         .join(REFINE12.out.filtered_bins)
         .join(REFINE13.out.filtered_bins)
         .join(REFINE23.out.filtered_bins)
         .join(REFINE123.out.filtered_bins)
 
-    stats = CHECKM2_BINNER1.out.checkm2_results_filtered_stats
-        .join(CHECKM2_BINNER2.out.checkm2_results_filtered_stats)
-        .join(CHECKM2_BINNER3.out.checkm2_results_filtered_stats)
+    stats = CHECKM2_BINNER1.out.filtered_stats
+        .join(CHECKM2_BINNER2.out.filtered_stats)
+        .join(CHECKM2_BINNER3.out.filtered_stats)
         .join(REFINE12.out.filtered_bins_stats)
         .join(REFINE13.out.filtered_bins_stats)
         .join(REFINE23.out.filtered_bins_stats)
