@@ -11,8 +11,8 @@ process CHECKM2 {
 
     output:
     tuple val(meta), path(bins), path("all_stats.csv"), emit: stats
-    tuple val(meta), path("${name}_filtered_genomes"), optional: true, emit: filtered_genomes
-    tuple val(meta), path("${name}_filtered_genomes.tsv"), optional: true, emit: filtered_stats
+    tuple val(meta), path("${name}_filtered_genomes"), emit: filtered_genomes
+    tuple val(meta), path("${name}_filtered_genomes.tsv"), emit: filtered_stats
 
     script:
     """

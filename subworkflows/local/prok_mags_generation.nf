@@ -17,15 +17,15 @@ include { CHANGE_UNDERSCORE_TO_DOT           } from '../../modules/local/utils'
 process CHECKM_TABLE_FOR_DREP_GENOMES {
 
     input:
-    path(checkm)
-    path(genomes_list)
+    path(checkm_filtered_genomes_dir)
+    path(dereplicated_genomes_tsv)
 
     output:
-    path("checkm_results_MAGs.tab"), emit: checkm_results_MAGs
+    path("checkm_results_mags.tab"), emit: checkm_results_mags
 
     script:
     """
-    grep -f ${genomes_list} ${checkm} > checkm_results_MAGs.tab
+    grep -f ${dereplicated_genomes_tsv} ${checkm_filtered_genomes_dir} > checkm_results_mags.tab
     """
 }
 
@@ -93,11 +93,11 @@ workflow PROK_MAGS_GENERATION {
     // -- Taxonomy --//
     GTDBTK( CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(), gtdbtk_db )
 
-    // -- checkm_results_MAGs.txt -- //
+    // -- checkm_results_mags.txt -- //
     // Both channels will have only one element
     CHECKM_TABLE_FOR_DREP_GENOMES(
-        CHECKM2.out.filtered_genomes.map { it -> it[2] },
-        DREP.out.dereplicated_genomes_list.map { it -> it[1] }
+        CHECKM2.out.stats.map { map, bins, stats -> stats },
+        DREP.out.dereplicated_genomes_list.map { meta, genomes_list_tsv -> genomes_list_tsv }
     )
 
     emit:
