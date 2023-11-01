@@ -31,7 +31,7 @@ process MAXBIN2 {
                 return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
         }
         maxRetries 3  // Set the maximum number of retries
-        sleep 10       // Set the delay between retries in seconds
+        sleep 10      // Set the delay between retries in seconds
     }
 
     script:
