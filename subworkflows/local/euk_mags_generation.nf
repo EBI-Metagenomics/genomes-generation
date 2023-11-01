@@ -5,7 +5,6 @@
 */
 include { ALIGN                          } from './alignment'
 include { ALIGN as ALIGN_BINS            } from './alignment'
-
 include { BUSCO                          } from '../../modules/local/busco/main'
 include { EUKCC as EUKCC_CONCOCT         } from '../../modules/local/eukcc/main'
 include { EUKCC as EUKCC_METABAT         } from '../../modules/local/eukcc/main'
@@ -17,6 +16,7 @@ include { BREADTH_DEPTH                  } from '../../modules/local/breadth_dep
 include { BUSCO_EUKCC_QC                 } from '../../modules/local/qc/main'
 include { BAT                            } from '../../modules/local/cat/bat/main'
 include { BAT_TAXONOMY_WRITER            } from '../../modules/local/bat_taxonomy_writer/main'
+include { COVERAGE_RECYCLER_EUK          } from '../../modules/local/coverage_recycler/main'
 
 
 process CONCATENATE_QUALITY_FILES {
@@ -223,19 +223,22 @@ workflow EUK_MAGS_GENERATION {
 
     // ch_versions.mix( ALIGN_BINS.out.versions.first() )
 
+    // ---- coverage generation ----- //
     // input: tuple(meta, MAG, bam, bai)
     BREADTH_DEPTH( ALIGN_BINS.out.assembly_bam )
+    COVERAGE_RECYCLER_EUK( DREP_MAGS.out.dereplicated_genomes,
+                           BREADTH_DEPTH.out.coverage.map{ meta, coverage_file -> coverage_file }.collect() )
 
     // ch_versions.mix( BREADTH_DEPTH.out.versions.first() )
 
-    // -- busco MAGs -- //
+    // ---- QC generation----- //
+    // -- BUSCO MAG --//
     drep_result = DREP_MAGS.out.dereplicated_genomes.map { it -> it[1] }.flatten()
 
     BUSCO( drep_result, busco_db )
 
     // ch_versions.mix( BUSCO.out.versions.first() )
 
-    // -- QC MAGs -- //
     // TODO use names for the following .map (.map { meta, contigs -> xxx })
     BUSCO_EUKCC_QC( 
         aggregated_quality.map { it -> it[1] }, 
@@ -245,6 +248,7 @@ workflow EUK_MAGS_GENERATION {
 
     // ch_versions.mix( BUSCO.out.versions.first() )
 
+    // ---- Taxonomy generation ----- //
     // -- BAT --//
     BAT( drep_result, cat_db_folder, cat_taxonomy_db )
 
