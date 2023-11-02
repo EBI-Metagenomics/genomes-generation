@@ -31,8 +31,11 @@ Do not forget to add this config to main `.nextflow.config`
 - reference genome
 
 ## Input data
+
 We expect data being downloaded from ENA. `NAME` should be **ENA RUN** accession.
+
 Pipeline requires input data to be in the following format:
+
 - Raw reads:
    - located in one folder, ex. `reads_folder`
    - better being **compressed**
@@ -60,19 +63,24 @@ reads_folder/ERR2.fastq
 ```
 
 ## Run
+
 Clone repo:
-```commandline
-git clone https://github.com/EBI-Metagenomics/genomes-generation.git 
-cd genomes-generation
+
+```bash
+$ git clone https://github.com/EBI-Metagenomics/genomes-generation.git 
+$ cd genomes-generation
 ```
 Run pipeline
-```commandline
-nextflow run main.nf -config <config-file> -profile <profile> \
-            --assemblies assembly_folder \
-            --raw_reads reads_folder \
-            --rename_file rename.tsv
+
+```bash
+$ nextflow run main.nf \
+  -config <config-file> \
+  -profile <profile> \
+  --assemblies assembly_folder \
+  --raw_reads reads_folder \
+  --rename_file rename.tsv
 ```
 
-
 ## Citation
-If you use this pipeline please make sure to cite all used software. 
+
+If you use this pipeline please make sure to cite all used software.

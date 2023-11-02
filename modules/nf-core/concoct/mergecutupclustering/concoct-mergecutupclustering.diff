@@ -1,0 +1,21 @@
+Changes in module 'nf-core/concoct/mergecutupclustering'
+--- modules/nf-core/concoct/mergecutupclustering/main.nf
++++ modules/nf-core/concoct/mergecutupclustering/main.nf
+@@ -4,8 +4,8 @@
+ 
+     conda "bioconda::concoct=1.1.0"
+     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+-        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py311h245ed52_4':
+-        'biocontainers/concoct:1.1.0--py311h245ed52_4' }"
++        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py38h7be5676_2':
++        'quay.io/biocontainers/concoct:1.1.0--py38h7be5676_2' }"
+ 
+     input:
+     tuple val(meta), path(clustering_csv)
+@@ -32,4 +32,4 @@
+         concoct: \$(echo \$(concoct --version 2>&1) | sed 's/concoct //g' )
+     END_VERSIONS
+     """
+-}
++}
+************************************************************

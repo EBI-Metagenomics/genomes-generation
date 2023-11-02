@@ -1,0 +1,67 @@
+Changes in module 'nf-core/concoct/extractfastabins'
+--- modules/nf-core/concoct/extractfastabins/main.nf
++++ modules/nf-core/concoct/extractfastabins/main.nf
+@@ -4,18 +4,28 @@
+ 
+     conda "bioconda::concoct=1.1.0"
+     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+-        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py311h245ed52_4':
+-        'biocontainers/concoct:1.1.0--py311h245ed52_4' }"
++        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py38h7be5676_2':
++        'biocontainers/concoct:1.1.0--py38h7be5676_2' }"
+ 
+     input:
+     tuple val(meta), path(original_fasta), path(csv)
+ 
+     output:
+-    tuple val(meta), path("${prefix}/*.fa.gz"), emit: fasta
+-    path "versions.yml"                     , emit: versions
++    tuple val(meta), path("${meta.id}_concoct_bins"), emit: fasta
++    path "versions.yml"                             , emit: versions
+ 
+     when:
+     task.ext.when == null || task.ext.when
++
++    errorStrategy {
++        task.exitStatus {
++            exitVal ->
++                // Retry on non-zero exit codes
++                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
++        }
++        maxRetries 3  // Set the maximum number of retries
++        sleep 10      // Set the delay between retries in seconds
++    }
+ 
+     script:
+     def args   = task.ext.args ?: ''
+@@ -31,13 +41,26 @@
+ 
+     ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
+     for i in ${prefix}/*.fa; do
+-        mv \${i} \${i/\\///${prefix}_}
+-        gzip \${i/\\///${prefix}_}
++        mv \${i} \${i/\\///${prefix}_bin.}
+     done
++
++    version=\$(echo \$(concoct --version 2>&1) | sed 's/concoct //g')
++
++    mkdir -p ${meta.id}_concoct_bins
++    if [ -z "\$(ls -A ${prefix}/*.fa)" ]; then
++        echo "Folder is empty"
++    else
++        for i in ${prefix}/*.fa; do
++            original_name=\$(basename \${i})
++            new_filename=\${original_name#*-}
++            new_name="${meta.id}_concoct_bins/CONCOCT_v\${version}-\${new_filename}"
++            mv \${i} \${new_name}
++        done
++    fi
+ 
+     cat <<-END_VERSIONS > versions.yml
+     "${task.process}":
+         concoct: \$(echo \$(concoct --version 2>&1) | sed 's/concoct //g' )
+     END_VERSIONS
+     """
+-}
++}
+************************************************************

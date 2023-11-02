@@ -1,0 +1,28 @@
+Changes in module 'nf-core/concoct/concoctcoveragetable'
+--- modules/nf-core/concoct/concoctcoveragetable/main.nf
++++ modules/nf-core/concoct/concoctcoveragetable/main.nf
+@@ -1,12 +1,14 @@
+ 
+ process CONCOCT_CONCOCTCOVERAGETABLE {
+-    tag "$meta.id"
++    tag "${meta.id} ${bed} ${bamfiles}"
++
+     label 'process_single'
+ 
+     conda "bioconda::concoct=1.1.0"
++
+     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+-        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py311h245ed52_4':
+-        'biocontainers/concoct:1.1.0--py311h245ed52_4' }"
++        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py38h7be5676_2':
++        'biocontainers/concoct:1.1.0--py38h7be5676_2' }"
+ 
+     input:
+     tuple val(meta), path(bed), path(bamfiles), path(baifiles)
+@@ -33,4 +35,4 @@
+         concoct: \$(echo \$(concoct --version 2>&1) | sed 's/concoct //g' )
+     END_VERSIONS
+     """
+-}
++}
+************************************************************

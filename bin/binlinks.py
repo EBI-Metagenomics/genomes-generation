@@ -9,6 +9,8 @@ import logging
 import csv
 import gzip
 
+# FIXME: why is this script here and we are not using the one in eukcc?
+
 BIN_DEFAULT_SEPARATOR = '_'
 BAM_DEFAULT_SEPARATOR = '_'
 
@@ -246,10 +248,13 @@ def main():
     # results
     logging.info("Writing output")
     with open(args.out, "w") as fout:
-        cout = csv.DictWriter(fout, fieldnames=list(out_data[0].keys()))
-        cout.writeheader()
-        for row in out_data:
-            cout.writerow(row)
+        if len(out_data) > 0:
+            cout = csv.DictWriter(fout, fieldnames=list(out_data[0].keys()))
+            cout.writeheader()
+            for row in out_data:
+                cout.writerow(row)
+        else:
+            logging.warning("No rows to write")
 
 
 if __name__ == "__main__":

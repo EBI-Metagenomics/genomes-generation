@@ -1,0 +1,57 @@
+nextflow_process {
+
+    name "Test module QS 50 for euk"
+    script "subworkflows/euk_mags_generation.nf"
+    process "FILTER_QS50"
+
+    test("qs50 after eukcc") {
+
+        when {
+            process {
+                """
+                input[0] = channel.from([
+                    tuple(
+                        "ERZ857996",
+                        file("${baseDir}/tests/resources/eukcc/quality.eukcc.csv"),
+                        file("${baseDir}/tests/resources/binning/concoct_bins"),
+                        file("${baseDir}/tests/resources/binning/metabat2_bins"),
+                        file("${baseDir}/tests/resources/eukcc/concoct_bins_merged"),
+                        file("${baseDir}/tests/resources/eukcc/metabat2_bins_merged"),
+                        )
+                    ])
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+        }
+    }
+
+    test("qs50 after eukcc all bad quality") {
+
+        when {
+            process {
+                """
+                input[0] = channel.from([
+                    tuple(
+                        "ERZ857996",
+                        file("${baseDir}/tests/resources/eukcc/quality.eukcc_bad.csv"),
+                        file("${baseDir}/tests/resources/binning/concoct_bins"),
+                        file("${baseDir}/tests/resources/binning/metabat2_bins"),
+                        file("${baseDir}/tests/resources/eukcc/concoct_bins_merged"),
+                        file("${baseDir}/tests/resources/eukcc/metabat2_bins_merged"),
+                        )
+                    ])
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+        }
+    }
+
+}
