@@ -1,0 +1,29 @@
+{
+    "qs50 after eukcc": {
+        "content": [
+            {
+                "qs50_filtered_genomes": [
+                    [
+                        "ERZ857996",
+                        [
+                            "bin.3.fa:md5,94811fdbfec26a06005550125d3d149f",
+                            "merged_bin.3.fa:md5,94811fdbfec26a06005550125d3d149f"
+                        ],
+                        "quality_file.csv:md5,647ba5f6f72e1fbdcb1ec21da3521faf"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2023-06-16T09:08:41+0000"
+    },
+    "qs50 after eukcc all bad quality": {
+        "content": [
+            {
+                "qs50_filtered_genomes": [
+                    
+                ]
+            }
+        ],
+        "timestamp": "2023-06-16T09:08:41+0000"
+    }
+}

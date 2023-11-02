@@ -1,0 +1,2 @@
+study_name,assembly,bam,bai,fastq_1,fastq_2
+test_study,tests/resources/ERR.fasta,tests/resources/ERR.fasta.bam,tests/resources/ERR.fasta.bam.bai,tests/resources/ERR_1.fastq,tests/resources/ERR_2.fastq

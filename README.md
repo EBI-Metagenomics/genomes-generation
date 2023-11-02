@@ -1,49 +1,86 @@
-# EukRecover
-Pipeline to recover eukaryotic MAGs using CONCOCT, metaBAT2 and EukCC's merging algorythm.
+# MAGs generation pipeline
+MGnify nextflow pipeline to generate prokaryotic and eukaryotic MAGs from reads and assemblies. 
 
-Needs paired end shotgun metagenomic reads.
+<p align="center">
+    <img src="nextflow/schema.png" alt="Pipeline overview" width="90%">
+</p>
 
-## Quickstart
+This pipeline does not support co-binning
 
-Define your samples in the file `samples.csv`.
-This file needs to have the columns project and run to identify each metagenome. 
+Pipeline supports snakemake version to detect eukatyotic MAGs.
 
-This pipeline does not support co-binning, but feel free to change it. 
+## Install requirements
+- nf-core and nextflow
+- tools executor to run it locally or on cluster
+  - conda
+  - docker
+  - singularity
 
-Clone this repro wherever you want to run the pipeline:
+## Download databases
+You need to download mentioned databases and add them to `config/nf_dbs.config`.
+See example `config/nf_codon_dbs.config`.
+
+Do not forget to add this config to main `.nextflow.config`
+- busco
+- CAT
+- checkM2
+- eukCC
+- GUNC
+- GTDB-Tk
+- Rfams
+- reference genome
+
+## Input data
+
+We expect data being downloaded from ENA. `NAME` should be **ENA RUN** accession.
+
+Pipeline requires input data to be in the following format:
+
+- Raw reads:
+   - located in one folder, ex. `reads_folder`
+   - better being **compressed**
+   - header contains run accession: <NAME>
+   - have name `<NAME>.fastq` the same as corresponding assembly (pipeline will link them by name)
+   - example for paired end: `reads_folder/NAME1_1.fastq`, `reads_folder/NAME1_2.fastq`
+   - example for single end: `reads_folder/NAME1.fastq`
+- Assemblies:
+   - located in one folder, ex. `assembly_folder`
+   - should be **uncompressed** 
+   - have name `<NAME>.fasta`
+   - sequence headers contains assembly accession
+   - example: `assembly_folder/NAME1.fasta`
+- Rename file:
+   Tab-separated file : assembly_accession \t run_accession
+
+Example,
 ```
-git clone https://github.com/openpaul/eukrecover/
+assembly_folder/ERR1.fasta
+assembly_folder/ERR2.fasta
+
+reads_folder/ERR1_1.fastq
+reads_folder/ERR1_2.fastq
+reads_folder/ERR2.fastq
 ```
 
+## Run
 
-You can then run the snakemake like so
+Clone repo:
 
+```bash
+$ git clone https://github.com/EBI-Metagenomics/genomes-generation.git 
+$ cd genomes-generation
 ```
-snakemake --use-singularity
+Run pipeline
+
+```bash
+$ nextflow run main.nf \
+  -config <config-file> \
+  -profile <profile> \
+  --assemblies assembly_folder \
+  --raw_reads reads_folder \
+  --rename_file rename.tsv
 ```
 
-The pipeline used dockerhub to fetch all tools, so make sure you have singularity installed.
+## Citation
 
-
-
-## Prepare databases
-The pipeline will setup databases for you, but if you already have a EukCC or a BUSCO 5 database you can use them 
-by specifying the location in the file `config/config.yaml`
-
-
-## Output:
-In the folder results you will find a folder `MAGs` which will contain a folder
-`fa` containing the actual MAG fastas.
-In addition you will find stats for each MAG in the table `QC.csv`.
-
-This table contains the following columns:
-
-name,eukcc_compl,eukcc_cont,BUSCO_C,BUSCO_M,BUSCO_D,BUSCO_F,BUSCO_tax,N50,bp
-
-
-
-## Citation:
-
-If you use this pipeline please make sure to cite all used software. 
-
-For this please reffer to the used rules.
+If you use this pipeline please make sure to cite all used software.

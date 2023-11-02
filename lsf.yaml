@@ -1,5 +1,0 @@
-__default__:
-    - "-g /sn_recover"
-
-metaSPAdes:
-    - "-P bigmem -g /sn_recover"

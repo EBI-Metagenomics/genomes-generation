@@ -1,0 +1,29 @@
+nextflow_process {
+
+    name "Test module metawrap binning"
+    script "modules/metawrap.nf"
+    process "METAWRAP_BINNING"
+
+    test("metawrap binning PE") {
+
+        when {
+            params {
+                contigs = "${baseDir}/tests/resources/ERR.fasta"
+                reads = "${baseDir}/tests/resources/"
+            }
+            process {
+                """
+                input[0] = channel.value("paired")
+                input[1] = channel.value("ERR")
+                input[2] = channel.fromPath("${params.contigs}")
+                input[3] = channel.fromFilePairs("${params.reads}/ERR_{1,2}.fastq", checkIfExists: true).map { it[1] }
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+        }
+    }
+}
