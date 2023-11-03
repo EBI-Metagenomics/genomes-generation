@@ -16,7 +16,7 @@ include { BREADTH_DEPTH                  } from '../../modules/local/breadth_dep
 include { BUSCO_EUKCC_QC                 } from '../../modules/local/qc/main'
 include { BAT                            } from '../../modules/local/cat/bat/main'
 include { BAT_TAXONOMY_WRITER            } from '../../modules/local/bat_taxonomy_writer/main'
-include { COVERAGE_RECYCLER_EUK          } from '../../modules/local/coverage_recycler/main'
+include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK    } from '../../modules/local/coverage_recycler/main'
 
 
 process CONCATENATE_QUALITY_FILES {
