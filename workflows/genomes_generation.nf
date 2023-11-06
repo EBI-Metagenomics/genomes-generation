@@ -82,12 +82,12 @@ workflow GGP {
     // TODO: use a samplesheet instead of this grouping //
     groupAssemblies = { fasta_file ->
         id = fasta_file.toString().tokenize("/")[-1].tokenize(".")[0]
-        meta = [id:id, single_end: false]
+        meta = [id:id, paired_end: false]
         return tuple(meta, fasta_file)
     }
     groupReads = { fastq ->
         id = fastq.toString().tokenize("/")[-1].tokenize(".")[0].tokenize('_')[0]
-        meta = [id:id, single_end: false]
+        meta = [id:id, paired_end: false]
         return tuple(meta, fastq)
     }
 
@@ -95,7 +95,7 @@ workflow GGP {
     tuple_reads = raw_reads.map( groupReads ).groupTuple() // [ meta, [raw_reads] ]
 
     assembly_and_runs = tuple_assemblies.join( tuple_reads )  // [ meta, assembly_file, [raw_reads] ]
-
+    assembly_and_runs.view()
     // ---- pre-processing ---- //
     PROCESS_INPUT( assembly_and_runs, erz_to_err_mapping_file ) // output: [ meta, assembly_file, [raw_reads] ]
 
