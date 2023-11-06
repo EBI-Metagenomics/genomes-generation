@@ -10,8 +10,13 @@
       "type": "object",
       "fa_icon": "fas fa-terminal",
       "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["assemblies", "raw_reads", "erz_to_err_mapping_file", "outdir"],
+      "required": ["name", "assemblies", "raw_reads", "erz_to_err_mapping_file", "outdir"],
       "properties": {
+        "name": {
+          "type": "string",
+          "description": "The MAGs project name, used to create an isolated workdir",
+          "fa_icon": "fas fa-ad"
+        },
         "assemblies": {
           "type": "string",
           "description": "The directory with the contigs fasta files",
@@ -270,10 +275,10 @@
       "$ref": "#/definitions/reference_genome"
     },
     {
-      "$ref": "#/definitions/generic_options"
+      "$ref": "#/definitions/max_job_request_options"
     },
     {
-      "$ref": "#/definitions/max_job_request_options"
+      "$ref": "#/definitions/generic_options"
     }
   ]
 }
