@@ -9,7 +9,6 @@ workflow PROCESS_INPUT {
 
     take:
     input_data  // tuple( meta, assembly_file, [raw_reads] )
-    erz_to_err_mapping_file
 
     main:
 
@@ -23,7 +22,7 @@ workflow PROCESS_INPUT {
     // --- MODIFY READS
     // change ERR in reads to ERZ
     // TODO: make this process faster (biopython is slow)
-    ERZ_TO_ERR( reads, erz_to_err_mapping_file ) // tuple(meta, [reads]])
+    ERZ_TO_ERR( reads ) // input: tuple(meta, [reads]]); output: tuple(meta, [modified_reads]])
 
     result = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.join(
         ERZ_TO_ERR.out.modified_reads

@@ -1,4 +1,4 @@
-include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
+include { validateParameters; paramsHelp; paramsSummaryLog; fromSamplesheet } from 'plugin/nf-validation'
 
 // Print help message, supply typical command line usage for the pipeline
 if (params.help) {
@@ -12,10 +12,6 @@ if (params.help) {
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
 
-// Create a new channel of metadata from a sample sheet
-// NB: `input` corresponds to `params.input` and associated sample sheet schema
-ch_input = Channel.fromSamplesheet("input")
-
 if (params.help) {
    log.info paramsHelp("nextflow run ebi-metagenomics/genomes-generation --help")
    exit 0
@@ -26,10 +22,6 @@ if (params.help) {
 //      Input
 //     ~~~~~~~
 // */
-
-assemblies  = channel.fromPath("${params.assemblies}/*", checkIfExists: true)
-raw_reads   = channel.fromPath("${params.raw_reads}/*", checkIfExists: true)
-erz_to_err_mapping_file = file(params.erz_to_err_mapping_file, checkIfExists: true)
 
 /*
     ~~~~~~~~~~~~~~~~~~
@@ -78,26 +70,20 @@ include { BINNING              } from '../subworkflows/local/mag_binning'
 */
 workflow GGP {
     // ---- combine data for reads and contigs pre-processing ---- //
-
-    // TODO: use a samplesheet instead of this grouping //
-    groupAssemblies = { fasta_file ->
-        id = fasta_file.toString().tokenize("/")[-1].tokenize(".")[0]
-        meta = [id:id, paired_end: false]
-        return tuple(meta, fasta_file)
+    groupReads = { meta, assembly, fq1, fq2 ->
+        if (fq2 == []) {
+            return tuple(meta, assembly, [fq1])
+        }
+        else {
+            return tuple(meta, assembly, [fq1, fq2])
+        }
     }
-    groupReads = { fastq ->
-        id = fastq.toString().tokenize("/")[-1].tokenize(".")[0].tokenize('_')[0]
-        meta = [id:id, paired_end: false]
-        return tuple(meta, fastq)
-    }
-
-    tuple_assemblies = assemblies.map( groupAssemblies ) // [ meta, assembly_file ]
-    tuple_reads = raw_reads.map( groupReads ).groupTuple() // [ meta, [raw_reads] ]
-
-    assembly_and_runs = tuple_assemblies.join( tuple_reads )  // [ meta, assembly_file, [raw_reads] ]
+    assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
     assembly_and_runs.view()
+    tuple_assemblies = assembly_and_runs.map{ meta, assembly, _ -> tuple(meta, assembly)}
+
     // ---- pre-processing ---- //
-    PROCESS_INPUT( assembly_and_runs, erz_to_err_mapping_file ) // output: [ meta, assembly_file, [raw_reads] ]
+    PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly_file, [raw_reads] ]
 
     // --- trimming reads ---- //
     QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
