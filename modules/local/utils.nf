@@ -77,22 +77,15 @@ process ERZ_TO_ERR {
 
     input:
     tuple val(meta), path(reads)
-    path rename_file
 
     output:
     tuple val(meta), path("changed*.fastq.gz"), emit: modified_reads
 
     script:
     """
-    echo ${meta.id}
-    grep "${meta.id}" ${rename_file} > help_file
-    export from_accession=\$(cat help_file | cut -f1)
-    export to_accession=\$(cat help_file | cut -f2)
-    echo "\${from_accession} --> \${to_accession}"
-
     gunzip ${reads}
 
-    change_reads.py --reads *.fastq -f \${from_accession} -t \${to_accession} --change_dots_to_underscores
+    change_reads.py --reads *.fastq -f ${meta.erz} -t ${meta.id} --change_dots_to_underscores
 
     gzip changed*.fastq
     """

@@ -10,30 +10,23 @@
       "type": "object",
       "fa_icon": "fas fa-terminal",
       "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["name", "assemblies", "raw_reads", "erz_to_err_mapping_file", "outdir"],
+      "required": ["name", "samplesheet", "outdir"],
       "properties": {
         "name": {
           "type": "string",
           "description": "The MAGs project name, used to create an isolated workdir",
           "fa_icon": "fas fa-ad"
         },
-        "assemblies": {
+        "samplesheet": {
           "type": "string",
-          "description": "The directory with the contigs fasta files",
-          "format": "directory-path"
-        },
-        "raw_reads": {
-          "type": "string",
-          "description": "The fastq raw reads of the assemblies.",
-          "format": "directory-path"
-        },
-        "erz_to_err_mapping_file": {
-          "type": "string",
-          "description": "TSV file that contains the assemblies ERZ accessions mapping to the runs ERR files.",
-          "help_text": "This is required to keep the naming consistent during the MAGs generation",
-          "pattern": "^\\S+\\.tsv$",
           "format": "file-path",
-          "mimetype": "text/tsv"
+          "exists": true,
+          "mimetype": "text/csv",
+          "pattern": "^\\S+\\.csv$",
+          "schema": "assets/schema_input.json",
+          "description": "Path to comma-separated file containing information about the assemblies, raw reads with the prefix to be used.",
+          "help_text": "You will need to create a design file with information about the assemblies, raw reads running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row.",
+          "fa_icon": "fas fa-file-csv"
         },
         "outdir": {
           "type": "string",
