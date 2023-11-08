@@ -78,7 +78,7 @@ workflow PROK_MAGS_GENERATION {
     DREP( CHECKM2.out.stats, prok_drep_args, channel.value('prok') )
 
     // -- coverage -- //
-    COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )
+    COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect(), false )
 
     dereplicated_genomes = DREP.out.dereplicated_genomes.map { it -> it[1] }.flatten()
 

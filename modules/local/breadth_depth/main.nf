@@ -10,7 +10,7 @@ process BREADTH_DEPTH {
     tuple val(meta), path(mag), path(bam), path(bai)
 
     output:
-    tuple val(meta), path("${mag.baseName}.coverage.csv"), emit: coverage
+    tuple val(meta), path("${mag.baseName}.coverage.csv.gz"), emit: coverage
 
     script:
     """
@@ -18,6 +18,7 @@ process BREADTH_DEPTH {
           --combine \
           --mincov 1 \
           ${bam} > "${mag.baseName}.coverage.csv"
+    gzip ${mag.baseName}.coverage.csv
     """
 
     stub:
