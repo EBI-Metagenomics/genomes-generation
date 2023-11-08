@@ -12,7 +12,7 @@ process RENAME_AND_CHECK_SIZE_BINS {
     script:
     """
     mkdir -p out
-    for bin in \$(find bins_dir -type f); do
+    for bin in \$(ls bins_dir ); do
         SIZE=\$(stat -c "%s" \${bin})
         if (( \$SIZE > 50000)) && (( \$SIZE < 20000000)); then
             echo "\${SIZE}"
