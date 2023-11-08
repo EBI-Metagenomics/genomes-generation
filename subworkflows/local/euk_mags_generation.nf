@@ -214,8 +214,7 @@ workflow EUK_MAGS_GENERATION {
     }
 
     bins_alignment_by_bins = bins_alignment.map( spreadBins ).transpose(by: [1])  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
-    
-    // TODO: leave only DREP_MAGS instead of DREP
+
     ALIGN_BINS( bins_alignment_by_bins ) // out: [meta, fasta, bam, bai]
 
     // ch_versions.mix( ALIGN_BINS.out.versions.first() )
