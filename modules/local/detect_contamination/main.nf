@@ -10,9 +10,8 @@ process DETECT_CONTAMINATION {
     tuple val(meta), path(bin), path(summary), path(names)
 
     output:
-    // TODO: rename .cont-contigs. -> _contamination_contigs.
     tuple val(meta), path("${meta.id}_${bin.baseName}_clean.fa"), emit: cleaned_fasta
-    tuple val(meta), path("${meta.id}.cont-contigs.txt"), path("*.cont-contigs.tsv"), optional: true, emit: contamination_stats
+    tuple val(meta), path("${meta.id}.contamination_contigs.txt"), path("*.contamination_contigs.tsv"), optional: true, emit: contamination_stats
 
     // TODO: merge detect_decontamination and select_seqs_notin_ids into a single python script
     script:
@@ -20,20 +19,20 @@ process DETECT_CONTAMINATION {
     echo "detect contamination"
     detect_contamination.py -s ${summary} -n ${names} -i ${meta.id}
 
-    lines_count=\$(wc -l < "${meta.id}.cont-contigs.txt")
+    lines_count=\$(wc -l < "${meta.id}.contamination_contigs.txt")
     if [ "\$lines_count" -eq 0 ]; then
         echo "no contamination"
         cp ${bin} ${meta.id}_${bin.baseName}_clean.fa
     else
         echo "cleaning fasta"
-        select_seqs_notin_ids.py -i ${bin} -d ${meta.id}.cont-contigs.txt -o "${meta.id}_${bin.baseName}_clean.fa"
+        select_seqs_notin_ids.py -i ${bin} -d ${meta.id}.contamination_contigs.txt -o "${meta.id}_${bin.baseName}_clean.fa"
     fi
     """
 
     stub:
     """
     touch \
-        "${meta.id}.cont-contigs.txt" \
+        "${meta.id}.contamination_contigs.txt" \
         "${meta.id}.cont-stats.tsv" \
         "${meta.id}_${bin.baseName}_clean.fa"
     """
