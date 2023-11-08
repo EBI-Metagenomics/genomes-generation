@@ -20,8 +20,9 @@ process LINKTABLE {
         binlinks.py --ANI 99 \
         --within 1500 \
         --out ${meta.id}.${binner}.links.csv \
-        --bindir bins \
-        --bam ${bam[0]} -d
+        --debug \
+        bins \
+        ${bam[0]}
     fi
     """
 }
