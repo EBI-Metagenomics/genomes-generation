@@ -80,10 +80,10 @@ workflow GGP {
     }
     assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
     assembly_and_runs.view()
-    tuple_assemblies = assembly_and_runs.map{ meta, assembly, _ -> tuple(meta, assembly)}
 
     // ---- pre-processing ---- //
-    PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly_file, [raw_reads] ]
+    PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
+    tuple_assemblies = PROCESS_INPUT.out.assembly_and_reads.map{ meta, assembly, _ -> [meta, assembly] }
 
     // --- trimming reads ---- //
     QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
@@ -91,15 +91,6 @@ workflow GGP {
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
     DECONTAMINATION( QC_AND_MERGE_READS.out.reads, ref_genome, ref_genome_index )
-
-    // For paired end reads and with merge_paris in true, we need to
-    // switch the assembly single_end -> true to be in sync with how
-    // fastp works. 
-    if ( params.merge_pairs ) {
-        tuple_assemblies = tuple_assemblies.map { meta, assembly ->
-            [ meta + [single_end: true], assembly ]
-        }
-    }
 
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )

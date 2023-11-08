@@ -19,8 +19,8 @@ workflow QC_AND_MERGE_READS {
     ch_multiqc_files      = Channel.empty()
 
     reads.branch {
-        single: it[0].single_end == true
-        paired: it[0].single_end == false
+        single: it[1].collect().size() == 1
+        paired: it[1].collect().size() == 2
     }.set {
         ch_input_for_fastp
     }
@@ -33,27 +33,17 @@ workflow QC_AND_MERGE_READS {
     FASTP_PAIRED ( ch_input_for_fastp.paired, [], false, params.merge_pairs )
 
     if ( params.merge_pairs ) {
-
-        ch_fastp_reads_prepped_pe = FASTP_PAIRED.out.reads_merged.map {
-            meta, reads ->
-                def meta_new = meta.clone()
-                meta_new['single_end'] = true
-                [ meta_new, [ reads ].flatten() ]
-        }
-        ch_fastp_reads_prepped = ch_fastp_reads_prepped_pe.mix(
-            FASTP_SINGLE.out.reads
-        )
-
+        ch_fastp_paired = FASTP_PAIRED.out.reads_merged
     } else {
-        ch_fastp_reads_prepped = FASTP_PAIRED.out.reads.mix(
+        ch_fastp_paired = FASTP_PAIRED.out.reads
+    }
+
+    ch_processed_reads = ch_fastp_paired.mix(
             FASTP_SINGLE.out.reads
         )
-    }
 
     ch_versions = ch_versions.mix(FASTP_SINGLE.out.versions.first())
     ch_versions = ch_versions.mix(FASTP_PAIRED.out.versions.first())
-
-    ch_processed_reads = ch_fastp_reads_prepped
 
     ch_multiqc_files = ch_multiqc_files.mix( FASTP_SINGLE.out.json )
     ch_multiqc_files = ch_multiqc_files.mix( FASTP_PAIRED.out.json )
