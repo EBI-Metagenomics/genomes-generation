@@ -173,15 +173,13 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( FILTER_QS50.out.versions.first() )
 
     // input: tuple (meta, genomes/*, quality_file)
-    euk_drep_args = channel.value('-pa 0.80 -sa 0.99 -nc 0.40 -cm larger -comp 49 -con 21')
-
-    DREP( FILTER_QS50.out.qs50_filtered_genomes, euk_drep_args, channel.value('euk') )
+    DREP( FILTER_QS50.out.qs50_filtered_genomes, params.euk_drep_args, channel.value('euk') )
 
     // ch_versions.mix( DREP.out.versions.first() )
 
     // -- aggregate by samples
     // TODO: this collectFile is incorrect
-    quality_all_csv = quality.map { it -> it[1] }.collectFile(name: "all.csv", newLine: false)
+    quality_all_csv = quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false)
 
     MODIFY_QUALITY_FILE( quality_all_csv, channel.value("aggregated_euk_quality.csv"))
 
@@ -192,16 +190,15 @@ workflow EUK_MAGS_GENERATION {
     }
 
     // -- drep MAGs --//
-    euk_drep_args_mags = channel.value('-pa 0.80 -sa 0.95 -nc 0.40 -cm larger -comp 49 -con 21')
 
-    combine_drep = DREP.out.dereplicated_genomes.map{ it -> it[1] } \
+    combine_drep = DREP.out.dereplicated_genomes.map{ meta, drep_genomes -> drep_genomes } \
         .flatten() \
         .collect() \
-        .map{ it ->
-            return tuple([id: "aggregated"], it)
+        .map{ agg_genomes ->
+            return tuple([id: "aggregated"], agg_genomes)
         }
 
-    DREP_MAGS( combine_drep.join( aggregated_quality ), euk_drep_args_mags, channel.value('euk_mags') )
+    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, channel.value('euk_mags') )
 
     // ch_versions.mix( DREP_MAGS.out.versions.first() )
 
@@ -233,17 +230,16 @@ workflow EUK_MAGS_GENERATION {
 
     // ---- QC generation----- //
     // -- BUSCO MAG --//
-    drep_result = DREP_MAGS.out.dereplicated_genomes.map { it -> it[1] }.flatten()
+    drep_result = DREP_MAGS.out.dereplicated_genomes.map { meta, drep_genomes -> drep_genomes }.flatten()
 
     BUSCO( drep_result, busco_db )
 
     // ch_versions.mix( BUSCO.out.versions.first() )
 
-    // TODO use names for the following .map (.map { meta, contigs -> xxx })
     BUSCO_EUKCC_QC( 
-        aggregated_quality.map { it -> it[1] }, 
+        aggregated_quality.map { meta, agg_quality_file -> agg_quality_file },
         BUSCO.out.busco_summary.collect(), 
-        DREP_MAGS.out.dereplicated_genomes_list.map { it -> it[1] }
+        DREP_MAGS.out.dereplicated_genomes_list.map { meta, drep_genomes -> drep_genomes }
     )
 
     // ch_versions.mix( BUSCO.out.versions.first() )
@@ -258,7 +254,7 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
 
     emit:
-    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { it -> tuple(it[0], it[2]) }
+    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { meta, genomes, quality -> tuple(meta, quality) }
     drep_output = DREP.out.dereplicated_genomes
     versions = ch_versions
 }
