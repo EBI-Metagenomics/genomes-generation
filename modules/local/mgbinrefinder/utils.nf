@@ -14,7 +14,7 @@ process RENAME_AND_CHECK_SIZE_BINS {
     mkdir -p out
     cd bins_dir
     for bin in \$(ls . ); do
-        SIZE=\$(stat -c "%s" \${bin})
+        SIZE=\$(stat -L -c "%s" \${bin})
         if (( \$SIZE > 50000)) && (( \$SIZE < 20000000)); then
             echo "\${SIZE}"
             cp \${bin} ../out
