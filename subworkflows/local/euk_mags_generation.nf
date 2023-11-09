@@ -222,8 +222,9 @@ workflow EUK_MAGS_GENERATION {
     // ---- coverage generation ----- //
     // input: tuple(meta, MAG, bam, bai)
     BREADTH_DEPTH( ALIGN_BINS.out.assembly_bam )
-    COVERAGE_RECYCLER_EUK( DREP_MAGS.out.dereplicated_genomes,
-                           BREADTH_DEPTH.out.coverage.map{ meta, coverage_file -> coverage_file }.collect() )
+    // TODO finish coverage for uploader
+    //COVERAGE_RECYCLER_EUK( DREP_MAGS.out.dereplicated_genomes,
+    //                       BREADTH_DEPTH.out.coverage.map{ meta, coverage_file -> coverage_file }.collect() )
 
     // ch_versions.mix( BREADTH_DEPTH.out.versions.first() )
 
@@ -253,7 +254,8 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
 
     emit:
-    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { meta, genomes, quality -> tuple(meta, quality) }
-    drep_output = DREP.out.dereplicated_genomes
+    euk_quality = BUSCO_EUKCC_QC.out.busco_final_qc
+    taxonomy = BAT_TAXONOMY_WRITER.out.all_bin2classification
+    genomes = drep_result
     versions = ch_versions
 }

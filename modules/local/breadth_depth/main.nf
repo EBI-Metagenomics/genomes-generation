@@ -24,6 +24,6 @@ process BREADTH_DEPTH {
     stub:
     """
     touch \
-        "${mag.baseName}.coverage.csv"
+        "${mag.baseName}.coverage.csv.gz"
     """
 }
