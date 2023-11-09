@@ -3,20 +3,20 @@
      Eukaryotes subworkflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { ALIGN                          } from './alignment'
-include { ALIGN as ALIGN_BINS            } from './alignment'
-include { BUSCO                          } from '../../modules/local/busco/main'
-include { EUKCC as EUKCC_CONCOCT         } from '../../modules/local/eukcc/main'
-include { EUKCC as EUKCC_METABAT         } from '../../modules/local/eukcc/main'
-include { LINKTABLE as LINKTABLE_CONCOCT } from '../../modules/local/eukcc/main'
-include { LINKTABLE as LINKTABLE_METABAT } from '../../modules/local/eukcc/main'
-include { DREP                           } from '../../modules/local/drep/main'
-include { DREP as DREP_MAGS              } from '../../modules/local/drep/main'
-include { BREADTH_DEPTH                  } from '../../modules/local/breadth_depth/main'
-include { BUSCO_EUKCC_QC                 } from '../../modules/local/qc/main'
-include { BAT                            } from '../../modules/local/cat/bat/main'
-include { BAT_TAXONOMY_WRITER            } from '../../modules/local/bat_taxonomy_writer/main'
+include { ALIGN                                         } from './alignment'
+include { ALIGN as ALIGN_BINS                           } from './alignment'
+include { BUSCO                                         } from '../../modules/local/busco/main'
+include { EUKCC as EUKCC_CONCOCT                        } from '../../modules/local/eukcc/main'
+include { EUKCC as EUKCC_METABAT                        } from '../../modules/local/eukcc/main'
+include { LINKTABLE as LINKTABLE_CONCOCT                } from '../../modules/local/eukcc/main'
+include { LINKTABLE as LINKTABLE_METABAT                } from '../../modules/local/eukcc/main'
+include { DREP                                          } from '../../modules/local/drep/main'
+include { DREP as DREP_MAGS                             } from '../../modules/local/drep/main'
+include { BUSCO_EUKCC_QC                                } from '../../modules/local/qc/main'
+include { BAT                                           } from '../../modules/local/cat/bat/main'
+include { BAT_TAXONOMY_WRITER                           } from '../../modules/local/bat_taxonomy_writer/main'
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK    } from '../../modules/local/coverage_recycler/main'
+include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS          } from '../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
 
 
 process CONCATENATE_QUALITY_FILES {
@@ -220,13 +220,12 @@ workflow EUK_MAGS_GENERATION {
     // ch_versions.mix( ALIGN_BINS.out.versions.first() )
 
     // ---- coverage generation ----- //
-    // input: tuple(meta, MAG, bam, bai)
-    BREADTH_DEPTH( ALIGN_BINS.out.assembly_bam )
-    // TODO finish coverage for uploader
-    //COVERAGE_RECYCLER_EUK( DREP_MAGS.out.dereplicated_genomes,
-    //                       BREADTH_DEPTH.out.coverage.map{ meta, coverage_file -> coverage_file }.collect() )
-
-    // ch_versions.mix( BREADTH_DEPTH.out.versions.first() )
+    ch_summarizedepth_input = ALIGN_BINS.out.assembly_bam.map { meta, assembly, bams, bais ->
+        [ meta, bams, bais ]
+    }
+    METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS ( ch_summarizedepth_input )
+    COVERAGE_RECYCLER_EUK( DREP_MAGS.out.dereplicated_genomes,
+                           METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth.map{ meta, depth -> depth }.collect() )
 
     // ---- QC generation----- //
     // -- BUSCO MAG --//
