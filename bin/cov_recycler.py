@@ -29,7 +29,7 @@ def process_genomes(genomes, name):
     if len(bin_list) == 0:
         sys.exit("No genomes were found, please ensure that your assemblies are not compressed")
 
-    with open(os.path.join('coverage', name + "_contigs2bins.txt"), "w") as contigs2bins_out:
+    with open(os.path.join(COVERAGE_FOLDER_NAME, name + "_contigs2bins.txt"), "w") as contigs2bins_out:
         bin_contigs = {}
         for bin_file in bin_list:
             bin_prefix = bin_file.replace('.fa', '')

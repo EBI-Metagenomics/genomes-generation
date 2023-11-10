@@ -12,11 +12,11 @@ include { LINKTABLE as LINKTABLE_CONCOCT             } from '../../modules/local
 include { LINKTABLE as LINKTABLE_METABAT             } from '../../modules/local/eukcc/main'
 include { DREP                                       } from '../../modules/local/drep/main'
 include { DREP as DREP_MAGS                          } from '../../modules/local/drep/main'
-include { BREADTH_DEPTH                              } from '../../modules/local/breadth_depth/main'
 include { BUSCO_EUKCC_QC                             } from '../../modules/local/qc/main'
 include { BAT                                        } from '../../modules/local/cat/bat/main'
 include { BAT_TAXONOMY_WRITER                        } from '../../modules/local/bat_taxonomy_writer/main'
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../../modules/local/coverage_recycler/main'
+include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS       } from '../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
 
 
 process CONCATENATE_QUALITY_FILES {
@@ -174,7 +174,7 @@ workflow EUK_MAGS_GENERATION {
     ch_versions.mix( DREP.out.versions.first() )
 
     // -- aggregate by samples
-    // TODO: check @mbc comment: "this collectFile is incorrect"
+    // TODO: this collectFile is incorrect
     quality_all_csv = quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false)
 
     MODIFY_QUALITY_FILE( quality_all_csv, channel.value("aggregated_euk_quality.csv"))
@@ -216,12 +216,16 @@ workflow EUK_MAGS_GENERATION {
     ch_versions.mix( ALIGN_BINS.out.versions.first() )
 
     // ---- coverage generation ----- //
-    // input: tuple(meta, MAG, bam, bai)
-    BREADTH_DEPTH( ALIGN_BINS.out.assembly_bam )
-    COVERAGE_RECYCLER_EUK( DREP_MAGS.out.dereplicated_genomes,
-                           BREADTH_DEPTH.out.coverage.map{ meta, coverage_file -> coverage_file }.collect() )
+    ch_summarizedepth_input = ALIGN_BINS.out.assembly_bam.map { meta, assembly, bams, bais ->
+        [ meta, bams, bais ]
+    }
+    METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS ( ch_summarizedepth_input )
+    COVERAGE_RECYCLER_EUK(
+        DREP_MAGS.out.dereplicated_genomes,
+        METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth.map{ meta, depth -> depth }.collect()
+    )
 
-    ch_versions.mix( BREADTH_DEPTH.out.versions.first() )
+    ch_versions.mix( METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.versions.first() )
     ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions.first() )
 
     // ---- QC generation----- //
@@ -250,7 +254,8 @@ workflow EUK_MAGS_GENERATION {
     ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
 
     emit:
-    euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { meta, genomes, quality -> tuple(meta, quality) }
-    drep_output = DREP.out.dereplicated_genomes
+    euk_quality = BUSCO_EUKCC_QC.out.busco_final_qc
+    taxonomy = BAT_TAXONOMY_WRITER.out.all_bin2classification
+    genomes = drep_result
     versions = ch_versions
 }

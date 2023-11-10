@@ -5,10 +5,10 @@ process BAT_TAXONOMY_WRITER {
         'quay.io/biocontainers/biopython:1.75' }"
 
     input:
-    path(bat_names)
+    path bat_names
 
     output:
-    path "human_readable.taxonomy.csv", emit: human_readable_taxonomy_csv
+    path "human_readable.taxonomy.csv", emit: all_bin2classification_human_readable
     path "all_bin2classification.txt" , emit: all_bin2classification
     path "versions.yml"               , emit: versions
 

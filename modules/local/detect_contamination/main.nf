@@ -10,7 +10,7 @@ process DETECT_CONTAMINATION {
     tuple val(meta), path(bin), path(summary), path(names)
 
     output:
-    tuple val(meta), path("${meta.id}_${bin.baseName}_clean.fa"),                                                       emit: cleaned_fasta
+    tuple val(meta), path("${meta.id}_${bin.baseName}_clean.fa")                                                      , emit: cleaned_fasta
     tuple val(meta), path("${meta.id}.contamination_contigs.txt"), path("*.contamination_contigs.tsv"), optional: true, emit: contamination_stats
     path "versions.yml"                                                                                               , emit: versions
 

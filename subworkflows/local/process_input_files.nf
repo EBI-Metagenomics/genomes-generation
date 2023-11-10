@@ -2,8 +2,8 @@
 // Remove unwanted characters from the contigs
 //
 
-include { CHANGE_DOT_TO_UNDERSCORE_CONTIGS  } from '../../modules/local/utils'
-include { ERZ_TO_ERR                        } from '../../modules/local/utils'
+include { CHANGE_DOT_TO_UNDERSCORE_CONTIGS } from '../../modules/local/utils'
+include { ERZ_TO_ERR                       } from '../../modules/local/utils'
 
 workflow PROCESS_INPUT {
 

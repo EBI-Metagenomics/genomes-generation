@@ -10,10 +10,10 @@ process BUSCO_EUKCC_QC {
     path genomes_list
     
     output:
-    path "busco_eukcc.qc.csv" , emit: busco_eukcc 
-    path "eukcc_final_qc.csv" , emit: eukcc_final_qc 
-    path "busco_final_qc.csv" , emit: busco_final_qc 
-    path "versions.yml"       , emit: versions
+    path "busco_eukcc.qc.csv", emit: busco_eukcc
+    path "eukcc_final_qc.csv", emit: eukcc_final_qc
+    path "busco_final_qc.csv", emit: busco_final_qc
+    path "versions.yml"      , emit: versions
 
     script:
     """
