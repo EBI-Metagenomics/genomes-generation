@@ -19,24 +19,24 @@ workflow REFINEMENT {
     main:
     binner1 = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
         [ meta, concot_bins ]
-    }.transpose()
+    }
 
     binner2 = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins -> 
         [ meta, maxbin_bins ]
-    }.transpose()
+    }
 
     binner3 = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
         [ meta, metabat_bins ]
-    }.transpose()
+    }
 
     RENAME_AND_CHECK_SIZE_BINS_BINNER1( "binner1", binner1 )
     RENAME_AND_CHECK_SIZE_BINS_BINNER2( "binner2", binner2 )
     RENAME_AND_CHECK_SIZE_BINS_BINNER3( "binner3", binner3 )
 
     // collect by meta
-    renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed.groupTuple()
-    renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed.groupTuple()
-    renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed.groupTuple()
+    renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed
+    renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed
+    renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed
 
     REFINE12( "binner12", renamed_binner1, renamed_binner2, false, ref_checkm )
     REFINE13( "binner13", renamed_binner1, renamed_binner3, false, ref_checkm )

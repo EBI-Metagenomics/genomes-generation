@@ -1,4 +1,4 @@
-include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
+include { validateParameters; paramsHelp; paramsSummaryLog; fromSamplesheet } from 'plugin/nf-validation'
 
 // Print help message, supply typical command line usage for the pipeline
 if (params.help) {
@@ -12,10 +12,6 @@ if (params.help) {
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
 
-// Create a new channel of metadata from a sample sheet
-// NB: `input` corresponds to `params.input` and associated sample sheet schema
-ch_input = Channel.fromSamplesheet("input")
-
 if (params.help) {
    log.info paramsHelp("nextflow run ebi-metagenomics/genomes-generation --help")
    exit 0
@@ -26,10 +22,6 @@ if (params.help) {
 //      Input
 //     ~~~~~~~
 // */
-
-assemblies  = channel.fromPath("${params.assemblies}/*", checkIfExists: true)
-raw_reads   = channel.fromPath("${params.raw_reads}/*", checkIfExists: true)
-erz_to_err_mapping_file = file(params.erz_to_err_mapping_file, checkIfExists: true)
 
 /*
     ~~~~~~~~~~~~~~~~~~
@@ -78,26 +70,20 @@ include { BINNING              } from '../subworkflows/local/mag_binning'
 */
 workflow GGP {
     // ---- combine data for reads and contigs pre-processing ---- //
-
-    // TODO: use a samplesheet instead of this grouping //
-    groupAssemblies = { fasta_file ->
-        id = fasta_file.toString().tokenize("/")[-1].tokenize(".")[0]
-        meta = [id:id, single_end: false]
-        return tuple(meta, fasta_file)
+    groupReads = { meta, assembly, fq1, fq2 ->
+        if (fq2 == []) {
+            return tuple(meta, assembly, [fq1])
+        }
+        else {
+            return tuple(meta, assembly, [fq1, fq2])
+        }
     }
-    groupReads = { fastq ->
-        id = fastq.toString().tokenize("/")[-1].tokenize(".")[0].tokenize('_')[0]
-        meta = [id:id, single_end: false]
-        return tuple(meta, fastq)
-    }
-
-    tuple_assemblies = assemblies.map( groupAssemblies ) // [ meta, assembly_file ]
-    tuple_reads = raw_reads.map( groupReads ).groupTuple() // [ meta, [raw_reads] ]
-
-    assembly_and_runs = tuple_assemblies.join( tuple_reads )  // [ meta, assembly_file, [raw_reads] ]
+    assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
+    assembly_and_runs.view()
 
     // ---- pre-processing ---- //
-    PROCESS_INPUT( assembly_and_runs, erz_to_err_mapping_file ) // output: [ meta, assembly_file, [raw_reads] ]
+    PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
+    tuple_assemblies = PROCESS_INPUT.out.assembly_and_reads.map{ meta, assembly, _ -> [meta, assembly] }
 
     // --- trimming reads ---- //
     QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
@@ -105,15 +91,6 @@ workflow GGP {
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
     DECONTAMINATION( QC_AND_MERGE_READS.out.reads, ref_genome, ref_genome_index )
-
-    // For paired end reads and with merge_paris in true, we need to
-    // switch the assembly single_end -> true to be in sync with how
-    // fastp works. 
-    if ( params.merge_pairs ) {
-        tuple_assemblies = tuple_assemblies.map { meta, assembly ->
-            [ meta + [single_end: true], assembly ]
-        }
-    }
 
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )

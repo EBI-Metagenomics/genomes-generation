@@ -1,7 +1,7 @@
 process LINKTABLE {
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/microbiome-informatics/eukrecover.python3base:v1'
+    container 'quay.io/microbiome-informatics/eukcc:latest'
 
     input:
     tuple val(meta), path(fasta), path(bam), path(bai), path(bins, stageAs: "bins/*")
@@ -20,8 +20,9 @@ process LINKTABLE {
         binlinks.py --ANI 99 \
         --within 1500 \
         --out ${meta.id}.${binner}.links.csv \
-        --bindir bins \
-        --bam ${bam[0]} -d
+        --debug \
+        bins \
+        ${bam[0]}
     fi
     """
 }

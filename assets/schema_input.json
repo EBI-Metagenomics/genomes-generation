@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/ebi-metagenomics/genomes-generation/master/assets/schema_input.json",
+    "title": "ebi-metagenomics/genomes-generation pipeline - params.input schema",
+    "description": "Schema for the file provided with params.input",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "pattern": "[EDS]RR[0-9]{6,}",
+                "errorMessage": "Prefix, used for the file names (raw reads accession)",
+                "meta": [
+                    "id"
+                ]
+            },
+            "assembly": {
+                "type": "string",
+                "pattern": "^\\S+\\.(fa|fasta)$",
+                "errorMessage": "The assembly needs to be a fasta file."
+            },
+            "fastq_1": {
+                "type": "string",
+                "pattern": "^\\S+\\.(fastq|fq|fq.gz|fastq.gz)$",
+                "errorMessage": "The raw reads file needs to be a fastq file.",
+            },
+            "fastq_2": {
+                "type": "string",
+                "pattern": "^\\S+\\.(fastq|fq|fq.gz|fastq.gz)$",
+                "errorMessage": "The raw reads file needs to be a fastq file.",
+            },
+            "assembly_accession": {
+                "type": "string",
+                "pattern": "[EDS]RZ[0-9]{6,}",
+                "errorMessage": "Assembly accession (ERZ)",
+                "meta": [
+                    "erz"
+                ]
+              }
+        },
+        "required": [
+            "id",
+            "assembly",
+            "fastq_1",
+            "assembly_accession"
+        ]
+    }
+}

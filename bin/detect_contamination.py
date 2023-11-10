@@ -66,7 +66,7 @@ if __name__ == "__main__":
         outstats.write("Lineage\t%s\t%s\n" % (res_kingdom[0], res_phylum[0]))
         outstats.write("Contamination\t%.2f%% (%s)\t%.2f%% (%s)\n" % (res_kingdom[2], ",".join(res_kingdom[1]),
                                                                   res_phylum[2], ",".join(res_phylum[1])))
-    with open(args.sample_name+".cont-contigs.txt", "w") as outcontigs:
+    with open(args.sample_name+".contamination_contigs.txt", "w") as outcontigs:
         if res_kingdom[1] or res_phylum[1]:
             excl_tax = res_kingdom[1]+res_phylum[1]
             excl_contigs = get_contigs(args.names, excl_tax)

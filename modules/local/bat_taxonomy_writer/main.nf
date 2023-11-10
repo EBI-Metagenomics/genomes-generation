@@ -8,8 +8,8 @@ process BAT_TAXONOMY_WRITER {
         path(bat_names)
 
     output:
-        path("human_readable.taxonomy.csv")
-        path("all_bin2classification.txt")
+        path("human_readable.taxonomy.csv"), emit: all_bin2classification_human_readable
+        path("all_bin2classification.txt"), emit: all_bin2classification
 
     script:
     """

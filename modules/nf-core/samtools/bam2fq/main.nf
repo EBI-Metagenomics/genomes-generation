@@ -1,9 +1,8 @@
-// FIXME: remove this module and install -> bam2fq
-process SAMTOOLS_FASTQ {
+process SAMTOOLS_BAM2FQ {
     tag "$meta.id"
     label 'process_low'
 
-    conda "bioconda::samtools=1.17"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/samtools:1.17--h00cdaf9_0' :
         'biocontainers/samtools:1.17--h00cdaf9_0' }"
@@ -13,7 +12,7 @@ process SAMTOOLS_FASTQ {
     val split
 
     output:
-    tuple val(meta), path("*.fastq.gz"), emit: reads
+    tuple val(meta), path("*.fq.gz"), emit: reads
     path "versions.yml"             , emit: versions
 
     when:
@@ -29,10 +28,10 @@ process SAMTOOLS_FASTQ {
             bam2fq \\
             $args \\
             -@ $task.cpus \\
-            -1 ${prefix}_1.fastq.gz \\
-            -2 ${prefix}_2.fastq.gz \\
-            -0 ${prefix}_other.fastq.gz \\
-            -s ${prefix}_singleton.fastq.gz \\
+            -1 ${prefix}_1.fq.gz \\
+            -2 ${prefix}_2.fq.gz \\
+            -0 ${prefix}_other.fq.gz \\
+            -s ${prefix}_singleton.fq.gz \\
             $inputbam
 
         cat <<-END_VERSIONS > versions.yml
@@ -46,7 +45,7 @@ process SAMTOOLS_FASTQ {
             bam2fq \\
             $args \\
             -@ $task.cpus \\
-            $inputbam | gzip --no-name > ${prefix}_interleaved.fastq.gz
+            $inputbam | gzip --no-name > ${prefix}_interleaved.fq.gz
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
