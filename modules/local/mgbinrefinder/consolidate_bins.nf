@@ -24,12 +24,20 @@ process CONSOLIDATE_BINS {
           path(stats123, stageAs: "stats/*")
 
     output:
-    tuple val(meta), path("consolidated_bins"), emit: consolidated_bins
+    tuple val(meta), path("consolidated_bins")     , emit: consolidated_bins
     tuple val(meta), path("consolidated_stats.tsv"), emit: consolidated_stats
-    tuple val(meta), path("dereplicated_bins/*"), emit: dereplicated_bins
+    tuple val(meta), path("dereplicated_bins/*")   , emit: dereplicated_bins
+    path "versions.yml"                            , emit: versions
 
     script:
     """
     consolidate_bins.py -i binner1 binner2 binner3 binner12 binner13 binner23 binner123 -s stats -v
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+        numpy: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('numpy').version)")
+    END_VERSIONS
     """
 }

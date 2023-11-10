@@ -17,10 +17,17 @@ process BINNING_REFINER {
 
     output:
     tuple val(meta), path("${meta.id}_output_${name}/Refined/*"), emit: refined_bins
+    path "versions.yml"                                         , emit: versions
 
     script:
     """
     binning_refiner.py -1 binner1 -2 binner2 -o "${meta.id}_output_${name}" -n ${name}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+    END_VERSIONS
     """
 }
 
@@ -46,6 +53,7 @@ process BINNING_REFINER3 {
 
     output:
     tuple val(meta), path("${meta.id}_output_${name}/Refined/*"), emit: refined_bins
+    path "versions.yml"                                         , emit: versions
 
     script:
     """
@@ -55,5 +63,11 @@ process BINNING_REFINER3 {
     -3 binner3 \
     -o "${meta.id}_output_${name}" \
     -n ${name}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+    END_VERSIONS
     """
 }

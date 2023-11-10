@@ -10,6 +10,7 @@ include { RENAME_MAXBIN                         } from '../../modules/local/rena
 include { FASTA_BINNING_CONCOCT                 } from '../nf-core/fasta_binning_concoct/main'
 
 workflow BINNING {
+
     take:
     assemblies_bams  // channel: [ val(meta), path(assembly), path(bams), path(bais) ]
 
@@ -32,7 +33,7 @@ workflow BINNING {
             [ meta + [binner: 'MetaBAT2'], depths ]
         }
 
-    ch_versions = ch_versions.mix(METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.versions.first())
+    ch_versions = ch_versions.mix( METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.versions.first() )
 
     // combine depths back with assemblies
     ch_metabat2_input = assemblies_bams
@@ -62,9 +63,9 @@ workflow BINNING {
             [meta.subMap('id', 'erz'), bins]
         }
 
-        ch_versions = ch_versions.mix(CONVERT_DEPTHS.out.versions.first())
-        ch_versions = ch_versions.mix(MAXBIN2.out.versions.first())
-        // ch_versions = ch_versions.mix(RENAME_MAXBIN.out.versions.first())
+        ch_versions = ch_versions.mix( CONVERT_DEPTHS.out.versions.first() )
+        ch_versions = ch_versions.mix( MAXBIN2.out.versions.first() )
+        ch_versions = ch_versions.mix( RENAME_MAXBIN.out.versions.first() )
     }
 
     if ( !params.skip_metabat2 ) {
@@ -93,13 +94,13 @@ workflow BINNING {
             [ meta.subMap('id', 'erz'), bins ]
         }
 
-        ch_versions = ch_versions.mix(FASTA_BINNING_CONCOCT.out.versions.first())
+        ch_versions = ch_versions.mix( FASTA_BINNING_CONCOCT.out.versions.first() )
     }
 
     emit:
-        metabat2depths   = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
-        maxbin_bins      = maxbin_output
-        concoct_bins     = concoct_output
-        metabat_bins     = metabat_output
-        versions         = ch_versions
+    metabat2depths   = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
+    maxbin_bins      = maxbin_output
+    concoct_bins     = concoct_output
+    metabat_bins     = metabat_output
+    versions         = ch_versions
 }

@@ -9,6 +9,7 @@ process LINKTABLE {
 
     output:
     tuple val(meta), path("*.links.csv"), emit: links_table
+    path "versions.yml"                 , emit: versions
 
     script:
     """
@@ -24,6 +25,11 @@ process LINKTABLE {
         bins \
         ${bam[0]}
     fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        EukCC: \$( eukcc -v | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' )
+    END_VERSIONS
     """
 }
 
@@ -62,5 +68,10 @@ process EUKCC {
 
     cp *_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
     cp *_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        EukCC: \$( eukcc -v | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' )
+    END_VERSIONS
     """
 }

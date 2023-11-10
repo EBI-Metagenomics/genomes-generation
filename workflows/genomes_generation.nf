@@ -6,10 +6,8 @@ if (params.help) {
    exit 0
 }
 
-// Validate input parameters
-// validateParameters()
+validateParameters()
 
-// Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
 
 if (params.help) {
@@ -17,24 +15,21 @@ if (params.help) {
    exit 0
 }
 
-// /*
-//     ~~~~~~~
-//      Input
-//     ~~~~~~~
-// */
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CONFIG FILES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.fromPath("$projectDir/assets/mgnify_logo.png")
+ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
 /*
-    ~~~~~~~~~~~~~~~~~~
-     DBs
-    ~~~~~~~~~~~~~~~~~~process {
-
-    cpus   = { check_max( 1    * task.attempt, 'cpus'   ) }
-    memory = { check_max( 6.GB * task.attempt, 'memory' ) }
-    time   = { check_max( 4.h  * task.attempt, 'time'   ) }
-
-    errorStrategy = { task.exitStatus in ((130..145) + 104) ? 'retry' : 'finish' }
-    maxRetries    = 1
-    maxErrors     = '-1'
+~~~~~~~~~~~~~~~~~~
+    DBs
+~~~~~~~~~~~~~~~~~~
 */
 eukcc_db           = file(params.eukcc_db, checkIfExists: true)
 cat_db_folder      = file(params.cat_db_folder, checkIfExists: true)
@@ -49,10 +44,19 @@ rfam_rrna_models   = file(params.rfam_rrna_models, checkIfExists: true)
 ref_genome         = file(params.ref_genome)
 ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
 
+
 /*
-    ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    MODULES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+include { CUSTOM_DUMPSOFTWAREVERSIONS            } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { MULTIQC                                } from '../modules/nf-core/multiqc/main'
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      Subworkflows
-    ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { PROCESS_INPUT        } from '../subworkflows/local/process_input_files'
 include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
@@ -64,11 +68,18 @@ include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
 include { BINNING              } from '../subworkflows/local/mag_binning'
 
 /*
-    ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      Run workflow
-    ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+// Info required for completion summary
+def multiqc_report    = []
+
 workflow GGP {
+
+    ch_versions = Channel.empty()
+
     // ---- combine data for reads and contigs pre-processing ---- //
     groupReads = { meta, assembly, fq1, fq2 ->
         if (fq2 == []) {
@@ -83,22 +94,33 @@ workflow GGP {
 
     // ---- pre-processing ---- //
     PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
+
+    ch_versions.mix( PROCESS_INPUT.out.versions.first() )
+
     tuple_assemblies = PROCESS_INPUT.out.assembly_and_reads.map{ meta, assembly, _ -> [meta, assembly] }
 
     // --- trimming reads ---- //
     QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
 
+    ch_versions.mix( QC_AND_MERGE_READS.out.versions.first() )
+
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
     DECONTAMINATION( QC_AND_MERGE_READS.out.reads, ref_genome, ref_genome_index )
+
+    ch_versions.mix( DECONTAMINATION.out.versions.first() )
 
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
 
     ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
 
+    ch_versions.mix( ALIGN.out.versions.first() )
+
     // ---- binning ---- //
     BINNING( ALIGN.out.assembly_bam )
+
+    ch_versions.mix( BINNING.out.versions.first() )
 
     collectBinsFolder = { meta, bin_folder ->
         [ meta, bin_folder.listFiles().flatten() ]
@@ -127,6 +149,8 @@ workflow GGP {
             cat_diamond_db,
             cat_taxonomy_db
         )
+
+        ch_versions.mix( EUK_MAGS_GENERATION.out.versions.first() )
     }
 
     if ( !params.skip_prok ) {
@@ -146,7 +170,20 @@ workflow GGP {
             gtdbtk_db,
             rfam_rrna_models
         )
+
+        ch_versions.mix( PROK_MAGS_GENERATION.out.versions.first() )
     }
+
+    ch_multiqc_files = ch_multiqc_files.mix( QC_AND_MERGE_READS.out.multiqc.collect().ifEmpty([]) )
+
+    MULTIQC (
+        ch_multiqc_files.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList()
+    )
+
+    multiqc_report = MULTIQC.out.report.toList()
 
     // ---- compress results ---- //
     //GZIP(PROK_SUBWF.out.prok_mags, channel.value("dereplicated_genomes_prok"))

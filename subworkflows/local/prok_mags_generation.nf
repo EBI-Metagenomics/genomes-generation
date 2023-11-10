@@ -44,6 +44,8 @@ workflow PROK_MAGS_GENERATION {
 
     main:
 
+    ch_versions = Channel.empty()
+
     collected_binners = collected_binners_and_depth.map { meta, concot_bins, maxbin_bins, metabat_bins, _ -> 
         [ meta, concot_bins, maxbin_bins, metabat_bins ]
     }
@@ -52,6 +54,8 @@ workflow PROK_MAGS_GENERATION {
 
     // -- bin refinement //
     BIN_REFINEMENT( collected_binners, checkm2_db )
+
+    ch_versions.mix( BIN_REFINEMENT.out.versions.first() )
 
     // -- clean bins
     CLEAN_AND_FILTER_BINS( 

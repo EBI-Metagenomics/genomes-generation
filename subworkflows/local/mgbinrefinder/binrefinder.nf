@@ -1,7 +1,6 @@
 include { CHECKM2 as CHECKM2_BINNER1                                        } from '../../../modules/local/checkm2/main'
 include { CHECKM2 as CHECKM2_BINNER2                                        } from '../../../modules/local/checkm2/main'
 include { CHECKM2 as CHECKM2_BINNER3                                        } from '../../../modules/local/checkm2/main'
-include { CHECKM2 as CHECKM_FINAL                                           } from '../../../modules/local/checkm2/main'
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER1  } from '../../../modules/local/mgbinrefinder/utils'
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER2  } from '../../../modules/local/mgbinrefinder/utils'
 include { RENAME_AND_CHECK_SIZE_BINS as RENAME_AND_CHECK_SIZE_BINS_BINNER3  } from '../../../modules/local/mgbinrefinder/utils'
@@ -17,6 +16,9 @@ workflow REFINEMENT {
     ref_checkm
 
     main:
+
+    ch_versions = Channel.empty()
+
     binner1 = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
         [ meta, concot_bins ]
     }.transpose()
@@ -47,6 +49,10 @@ workflow REFINEMENT {
     CHECKM2_BINNER2( "binner2", renamed_binner2, ref_checkm )
     CHECKM2_BINNER3( "binner3", renamed_binner3, ref_checkm )
 
+    ch_versions.mix( CHECKM2_BINNER1.out.versions.first() )
+    ch_versions.mix( CHECKM2_BINNER2.out.versions.first() )
+    ch_versions.mix( CHECKM2_BINNER3.out.versions.first() )
+
     binners = CHECKM2_BINNER1.out.filtered_genomes
         .join(CHECKM2_BINNER2.out.filtered_genomes)
         .join(CHECKM2_BINNER3.out.filtered_genomes)
@@ -65,10 +71,9 @@ workflow REFINEMENT {
 
     CONSOLIDATE_BINS( binners, stats )
 
-    // CHECKM_FINAL(channel.value("final"), CONSOLIDATE_BINS.out.dereplicated_bins, ref_checkm)
+    ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
 
     emit:
-    //checkm_stats = CHECKM_FINAL.out.checkm_results
     bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins
-    // TODO: versions.
+    versions     = ch_versions
 }

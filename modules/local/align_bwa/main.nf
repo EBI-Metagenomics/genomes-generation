@@ -38,7 +38,7 @@ process ALIGNMENT {
 
     output:
     tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bam
-    path("versions.yml"), emit: versions
+    path "versions.yml"                                                                                             , emit: versions
 
     script:
     def input_reads = "";

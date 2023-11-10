@@ -3,20 +3,20 @@
      Eukaryotes subworkflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { ALIGN                          } from './alignment'
-include { ALIGN as ALIGN_BINS            } from './alignment'
-include { BUSCO                          } from '../../modules/local/busco/main'
-include { EUKCC as EUKCC_CONCOCT         } from '../../modules/local/eukcc/main'
-include { EUKCC as EUKCC_METABAT         } from '../../modules/local/eukcc/main'
-include { LINKTABLE as LINKTABLE_CONCOCT } from '../../modules/local/eukcc/main'
-include { LINKTABLE as LINKTABLE_METABAT } from '../../modules/local/eukcc/main'
-include { DREP                           } from '../../modules/local/drep/main'
-include { DREP as DREP_MAGS              } from '../../modules/local/drep/main'
-include { BREADTH_DEPTH                  } from '../../modules/local/breadth_depth/main'
-include { BUSCO_EUKCC_QC                 } from '../../modules/local/qc/main'
-include { BAT                            } from '../../modules/local/cat/bat/main'
-include { BAT_TAXONOMY_WRITER            } from '../../modules/local/bat_taxonomy_writer/main'
-include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK    } from '../../modules/local/coverage_recycler/main'
+include { ALIGN                                      } from './alignment'
+include { ALIGN as ALIGN_BINS                        } from './alignment'
+include { BUSCO                                      } from '../../modules/local/busco/main'
+include { EUKCC as EUKCC_CONCOCT                     } from '../../modules/local/eukcc/main'
+include { EUKCC as EUKCC_METABAT                     } from '../../modules/local/eukcc/main'
+include { LINKTABLE as LINKTABLE_CONCOCT             } from '../../modules/local/eukcc/main'
+include { LINKTABLE as LINKTABLE_METABAT             } from '../../modules/local/eukcc/main'
+include { DREP                                       } from '../../modules/local/drep/main'
+include { DREP as DREP_MAGS                          } from '../../modules/local/drep/main'
+include { BREADTH_DEPTH                              } from '../../modules/local/breadth_depth/main'
+include { BUSCO_EUKCC_QC                             } from '../../modules/local/qc/main'
+include { BAT                                        } from '../../modules/local/cat/bat/main'
+include { BAT_TAXONOMY_WRITER                        } from '../../modules/local/bat_taxonomy_writer/main'
+include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../../modules/local/coverage_recycler/main'
 
 
 process CONCATENATE_QUALITY_FILES {
@@ -131,8 +131,8 @@ workflow EUK_MAGS_GENERATION {
 
     EUKCC_CONCOCT( binner1, LINKTABLE_CONCOCT.out.links_table.join ( input.bins_concoct ), eukcc_db )
 
-    // ch_versions.mix( LINKTABLE_CONCOCT.out.versions.first() )
-    // ch_versions.mix( EUKCC_CONCOCT.out.versions.first() )
+    ch_versions.mix( LINKTABLE_CONCOCT.out.versions.first() )
+    ch_versions.mix( EUKCC_CONCOCT.out.versions.first() )
 
     // -- metabat2
     binner2 = channel.value("metabat2")
@@ -143,8 +143,8 @@ workflow EUK_MAGS_GENERATION {
 
     EUKCC_METABAT( binner2, metabat_linktable_bins, eukcc_db )
 
-    // ch_versions.mix( LINKTABLE_METABAT.out.versions.first() )
-    // ch_versions.mix( EUKCC_METABAT.out.versions.first() )
+    ch_versions.mix( LINKTABLE_METABAT.out.versions.first() )
+    ch_versions.mix( EUKCC_METABAT.out.versions.first() )
 
     // -- prepare quality file
     combine_quality = EUKCC_CONCOCT.out.eukcc_csv.join( EUKCC_METABAT.out.eukcc_csv )
@@ -158,8 +158,6 @@ workflow EUK_MAGS_GENERATION {
 
     CONCATENATE_QUALITY_FILES( combine_quality.map( functionCATCSV ), channel.value("quality_eukcc.csv") )
 
-    // ch_versions.mix( CONCATENATE_QUALITY_FILES.out.versions.first() )
-
     quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
     // -- qs50 -- //
@@ -170,15 +168,13 @@ workflow EUK_MAGS_GENERATION {
 
     FILTER_QS50( collect_data )
 
-    // ch_versions.mix( FILTER_QS50.out.versions.first() )
-
     // input: tuple (meta, genomes/*, quality_file)
     DREP( FILTER_QS50.out.qs50_filtered_genomes, params.euk_drep_args, channel.value('euk') )
 
-    // ch_versions.mix( DREP.out.versions.first() )
+    ch_versions.mix( DREP.out.versions.first() )
 
     // -- aggregate by samples
-    // TODO: this collectFile is incorrect
+    // TODO: check @mbc comment: "this collectFile is incorrect"
     quality_all_csv = quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false)
 
     MODIFY_QUALITY_FILE( quality_all_csv, channel.value("aggregated_euk_quality.csv"))
@@ -200,7 +196,7 @@ workflow EUK_MAGS_GENERATION {
 
     DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, channel.value('euk_mags') )
 
-    // ch_versions.mix( DREP_MAGS.out.versions.first() )
+    ch_versions.mix( DREP_MAGS.out.versions.first() )
 
     // -- coverage -- //
     bins_alignment = DREP.out.dereplicated_genomes.join( input.reads ) // tuple(meta, drep_genomes, [reads]),...
@@ -217,7 +213,7 @@ workflow EUK_MAGS_GENERATION {
 
     ALIGN_BINS( bins_alignment_by_bins ) // out: [meta, fasta, bam, bai]
 
-    // ch_versions.mix( ALIGN_BINS.out.versions.first() )
+    ch_versions.mix( ALIGN_BINS.out.versions.first() )
 
     // ---- coverage generation ----- //
     // input: tuple(meta, MAG, bam, bai)
@@ -225,7 +221,8 @@ workflow EUK_MAGS_GENERATION {
     COVERAGE_RECYCLER_EUK( DREP_MAGS.out.dereplicated_genomes,
                            BREADTH_DEPTH.out.coverage.map{ meta, coverage_file -> coverage_file }.collect() )
 
-    // ch_versions.mix( BREADTH_DEPTH.out.versions.first() )
+    ch_versions.mix( BREADTH_DEPTH.out.versions.first() )
+    ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions.first() )
 
     // ---- QC generation----- //
     // -- BUSCO MAG --//
@@ -233,7 +230,7 @@ workflow EUK_MAGS_GENERATION {
 
     BUSCO( drep_result, busco_db )
 
-    // ch_versions.mix( BUSCO.out.versions.first() )
+    ch_versions.mix( BUSCO.out.versions.first() )
 
     BUSCO_EUKCC_QC( 
         aggregated_quality.map { meta, agg_quality_file -> agg_quality_file },
@@ -241,7 +238,7 @@ workflow EUK_MAGS_GENERATION {
         DREP_MAGS.out.dereplicated_genomes_list.map { meta, drep_genomes -> drep_genomes }
     )
 
-    // ch_versions.mix( BUSCO.out.versions.first() )
+    ch_versions.mix( BUSCO_EUKCC_QC.out.versions.first() )
 
     // ---- Taxonomy generation ----- //
     // -- BAT --//
@@ -249,8 +246,8 @@ workflow EUK_MAGS_GENERATION {
 
     BAT_TAXONOMY_WRITER( BAT.out.bat_names.collect() )
 
-    // ch_versions.mix( BAT.out.versions.first() )
-    // ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
+    ch_versions.mix( BAT.out.versions.first() )
+    ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
 
     emit:
     euk_quality = FILTER_QS50.out.qs50_filtered_genomes.map { meta, genomes, quality -> tuple(meta, quality) }

@@ -12,7 +12,9 @@ process RENAME_MAXBIN {
 
     output:
     tuple val(meta), path("${meta.id}_maxbin_bins"), emit: renamed_bins
+    path "versions.yml"                            , emit: versions
 
+    // TODO: move to modules
     errorStrategy {
         task.exitStatus {
             exitVal ->
@@ -20,7 +22,7 @@ process RENAME_MAXBIN {
                 return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
         }
         maxRetries 3  // Set the maximum number of retries
-        sleep 10       // Set the delay between retries in seconds
+        sleep 10      // Set the delay between retries in seconds
     }
 
     script:
@@ -28,5 +30,10 @@ process RENAME_MAXBIN {
     version=\$( run_MaxBin.pl -v | head -n 1 | sed 's/MaxBin //' )
 
     rename_maxbin.py -o ${meta.id}_maxbin_bins -v \${version} -a ${meta.id} --bins ${bins}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+    END_VERSIONS
     """
 }

@@ -26,10 +26,10 @@ workflow ALIGN {
         true,
     )
 
-    ch_versions = ch_versions.mix(INDEX_FASTA.out.versions.first())
-    ch_versions = ch_versions.mix(ALIGNMENT.out.versions.first())
+    ch_versions = ch_versions.mix( INDEX_FASTA.out.versions.first() )
+    ch_versions = ch_versions.mix( ALIGNMENT.out.versions.first() )
 
     emit:
-    assembly_bam = ALIGNMENT.out.bam   // [meta, assembly_fasta, bam, bai]
-    versions     = ch_versions        // channel: [ versions.yml ]
+    assembly_bam = ALIGNMENT.out.bam // [meta, assembly_fasta, bam, bai]
+    versions     = ch_versions       // channel: [ versions.yml ]
 }

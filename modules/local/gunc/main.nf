@@ -1,6 +1,7 @@
 process GUNC {
 
     tag "${meta.id} ${fasta}"
+
     container 'quay.io/microbiome-informatics/genomes-pipeline.gunc:v4'
 
     input:
@@ -9,7 +10,8 @@ process GUNC {
 
     output:
     tuple val(meta), path("${fasta.baseName.replaceAll('_clean', '')}.${fasta.extension}"), path('*_gunc_*'), emit: tuple_gunc_result
-    path('gunc_contaminated.txt'), emit: gunc_result
+    path 'gunc_contaminated.txt'                                                                            , emit: gunc_result
+    path "versions.yml"                                                                                     , emit: versions
 
     script:
     """
@@ -30,11 +32,21 @@ process GUNC {
     fi
 
     mv "$fasta" "${fasta.baseName.replaceAll('_clean', '')}.${fasta.extension}"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        gunc: \$( gunc --version )
+    END_VERSIONS
     """
 
     stub:
     """
     touch gunc_contaminated.txt
     touch ${fasta.baseName}_gunc_empty.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        gunc: \$( gunc --version )
+    END_VERSIONS
     """
 }

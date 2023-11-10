@@ -11,6 +11,7 @@ process BREADTH_DEPTH {
 
     output:
     tuple val(meta), path("${mag.baseName}.coverage.csv"), emit: coverage
+    path "versions.yml"                                  , emit: versions
 
     script:
     """
@@ -18,6 +19,12 @@ process BREADTH_DEPTH {
           --combine \
           --mincov 1 \
           ${bam} > "${mag.baseName}.coverage.csv"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+    END_VERSIONS
     """
 
     stub:
