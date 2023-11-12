@@ -1,7 +1,8 @@
 process LINKTABLE {
+
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/microbiome-informatics/eukcc:latest'
+    container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'
 
     input:
     tuple val(meta), path(fasta), path(bam), path(bai), path(bins, stageAs: "bins/*")
@@ -37,9 +38,10 @@ process LINKTABLE {
  * EukCC
 */
 process EUKCC {
+
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/microbiome-informatics/eukcc:latest'
+    container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'
 
     input:
     val binner
