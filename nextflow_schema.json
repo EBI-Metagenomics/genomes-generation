@@ -260,15 +260,15 @@
           "hidden": true
         },
         "multiqc_logo": {
-            "type": "string",
-            "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
-            "fa_icon": "fas fa-image",
-            "hidden": true
+          "type": "string",
+          "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
+          "fa_icon": "fas fa-image",
+          "hidden": true
         },
         "multiqc_methods_description": {
-            "type": "string",
-            "description": "Custom MultiQC yaml file containing HTML including a methods description.",
-            "fa_icon": "fas fa-cog"
+          "type": "string",
+          "description": "Custom MultiQC yaml file containing HTML including a methods description.",
+          "fa_icon": "fas fa-cog"
         }
       }
     }

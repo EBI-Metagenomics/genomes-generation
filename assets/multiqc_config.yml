@@ -30,7 +30,6 @@ custom_logo: "mgnify_light.png"
 custom_logo_url: https://github.com/ebi-metagenomics/genomes-generation/
 custom_logo_title: "ebi-metagenomics/genomes-generation"
 
-
 ## General Stats customisation
 table_columns_visible:
   "fastp":
