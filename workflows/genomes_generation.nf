@@ -1,4 +1,6 @@
-include { validateParameters; paramsHelp; paramsSummaryLog; fromSamplesheet } from 'plugin/nf-validation'
+include { validateParameters; paramsHelp; paramsSummaryLog; fromSamplesheet; paramsSummaryMap } from 'plugin/nf-validation'
+
+def summary_params = paramsSummaryMap(workflow)
 
 // Print help message, supply typical command line usage for the pipeline
 if (params.help) {
@@ -7,6 +9,7 @@ if (params.help) {
 }
 
 validateParameters()
+
 
 log.info paramsSummaryLog(workflow)
 
@@ -50,8 +53,8 @@ ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
     MODULES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { CUSTOM_DUMPSOFTWAREVERSIONS            } from '../modules/nf-core/custom/dumpsoftwareversions/main'
-include { MULTIQC                                } from '../modules/nf-core/multiqc/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,7 +93,6 @@ workflow GGP {
         }
     }
     assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
-    assembly_and_runs.view()
 
     // ---- pre-processing ---- //
     PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
@@ -174,7 +176,6 @@ workflow GGP {
         ch_versions.mix( PROK_MAGS_GENERATION.out.versions.first() )
     }
 
-    ch_multiqc_files = ch_multiqc_files.mix( QC_AND_MERGE_READS.out.multiqc.collect().ifEmpty([]) )
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -194,16 +195,18 @@ workflow GGP {
     ch_multiqc_files = Channel.empty()
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+    ch_multiqc_files = ch_multiqc_files.mix( CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect() )
+    // TODO: MultiQC 1.17 doesn't support how we are running fastp
+    //       should be fixed in the next release -> https://github.com/ewels/MultiQC/issues/2162
+    // ch_multiqc_files = ch_multiqc_files.mix( QC_AND_MERGE_READS.out.mqc.map { map, json -> json }.collect().ifEmpty([]) )
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
-    multiqc_report = MULTIQC.out.report.toList()
-}
+    // MULTIQC(
+    //     ch_multiqc_files.collect(),
+    //     ch_multiqc_config.toList(),
+    //     ch_multiqc_custom_config.toList(),
+    //     ch_multiqc_logo.toList()
+    // )
+    // multiqc_report = MULTIQC.out.report.toList()
 
     // ---- compress results ---- //
     //GZIP(PROK_SUBWF.out.prok_mags, channel.value("dereplicated_genomes_prok"))

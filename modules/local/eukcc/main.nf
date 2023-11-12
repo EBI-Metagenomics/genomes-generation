@@ -28,7 +28,7 @@ process LINKTABLE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        EukCC: \$( eukcc -v | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' )
+        EukCC: \$( eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' )
     END_VERSIONS
     """
 }
@@ -47,9 +47,10 @@ process EUKCC {
     path eukcc_db
 
     output:
-    tuple val(meta), path("*_merged_bins"), emit: eukcc_results
-    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"), emit: eukcc_csv
+    tuple val(meta), path("*_merged_bins")                       , emit: eukcc_results
+    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv")      , emit: eukcc_csv
     tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"), emit: eukcc_merged_csv
+    path "versions.yml"                                          , emit: versions
 
     script:
     """
@@ -71,7 +72,7 @@ process EUKCC {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        EukCC: \$( eukcc -v | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' )
+        EukCC: \$( eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' )
     END_VERSIONS
     """
 }

@@ -12,6 +12,7 @@ process CAT {
 
     output:
     tuple val(meta), path(bin_fa), path('*.summary.txt'), path('*.contig2classification.official_names.txt'), emit: cat_results
+    path "versions.yml"                                                                                     , emit: versions
 
     script:
     """
@@ -32,6 +33,11 @@ process CAT {
     echo "[MAG clean-up] Summarizing output"
     CAT summarise -c ${bin_fa} \
     -i ${meta.id}.contig2classification.official_names.txt -o ${meta.id}.summary.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        CAT: \$(CAT --version | sed "s/CAT v//; s/(.*//")
+    END_VERSIONS
     """
 
     stub:

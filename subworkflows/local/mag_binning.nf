@@ -79,13 +79,13 @@ workflow BINNING {
         ch_versions.mix(METABAT2_METABAT2.out.versions.first())
     }
 
-    if ( !params.skip_concoct ){
+    if ( !params.skip_concoct ) {
 
         assemblies_bams.map { meta, assembly, bams, bais ->
             [ meta + [binner: 'CONCOCT'], assembly, bams, bais ]
-        }.multiMap { meta, assembly, bams, bais ->
-            bins: [ meta, assembly ]
-            bams: [ meta, bams, bais ]
+        }.multiMap { meta_extended, assembly, bams, bais ->
+            bins: [ meta_extended, assembly ]
+            bams: [ meta_extended, bams, bais ]
         }.set { ch_concoct_input }
 
         FASTA_BINNING_CONCOCT( ch_concoct_input.bins, ch_concoct_input.bams )

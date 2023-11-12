@@ -106,4 +106,5 @@ workflow PROK_MAGS_GENERATION {
 
     emit:
     prok_mags = CHANGE_UNDERSCORE_TO_DOT.out.return_files
+    versions = ch_versions
 }
