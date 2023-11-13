@@ -169,7 +169,7 @@ workflow EUK_MAGS_GENERATION {
     FILTER_QS50( collect_data )
 
     // input: tuple (meta, genomes/*, quality_file)
-    DREP( FILTER_QS50.out.qs50_filtered_genomes, params.euk_drep_args, channel.value('euk') )
+    DREP( FILTER_QS50.out.qs50_filtered_genomes, params.euk_drep_args, channel.value('eukaryotes') )
 
     ch_versions.mix( DREP.out.versions.first() )
 
@@ -194,7 +194,7 @@ workflow EUK_MAGS_GENERATION {
             return tuple([id: "aggregated"], agg_genomes)
         }
 
-    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, channel.value('euk_mags') )
+    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, channel.value('aggregated_eukaryotes') )
 
     ch_versions.mix( DREP_MAGS.out.versions.first() )
 

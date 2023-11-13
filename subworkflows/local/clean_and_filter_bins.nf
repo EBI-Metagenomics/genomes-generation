@@ -1,6 +1,8 @@
 include { CAT as MAG_CLEANUP_CAT    } from '../../modules/local/cat/cat/main'
 include { DETECT_CONTAMINATION      } from '../../modules/local/detect_contamination/main'
 include { GUNC                      } from '../../modules/local/gunc/main'
+include { PUBLISH_CLEANED_PROK_BINS } from '../../modules/local/utils'
+
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      Run subworkflow cleaning and filtering with GUNC
@@ -41,6 +43,7 @@ workflow CLEAN_AND_FILTER_BINS {
     }).map({ name, cluster_fasta, cluster_gunc ->
         return cluster_fasta
     })
+    PUBLISH_CLEANED_PROK_BINS(filtered_bins)
 
     emit:
     bins        = filtered_bins
