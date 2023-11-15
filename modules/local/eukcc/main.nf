@@ -2,7 +2,10 @@ process LINKTABLE {
 
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'
+    // Multi-Package BioContainer
+    // TODO: this is using old version of biopython and pysam
+    // FIXME: EukCC include biopython and pysam in the EukCC conda package
+    container 'quay.io/biocontainers/mulled-v2-3a59640f3fe1ed11819984087d31d68600200c3f:185a25ca79923df85b58f42deb48f5ac4481e91f-0'
 
     input:
     tuple val(meta), path(fasta), path(bam), path(bai), path(bins, stageAs: "bins/*")
@@ -29,7 +32,9 @@ process LINKTABLE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        EukCC: \$( eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' )
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+        pysam: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
     END_VERSIONS
     """
 }
