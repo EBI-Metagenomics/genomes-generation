@@ -30,7 +30,7 @@ workflow PROCESS_INPUT {
         ERZ_TO_ERR.out.modified_reads
     )
 
-    ch_versions.mix( ERZ_TO_ERR.out.versions.first() )
+    ch_versions = ch_versions.mix( ERZ_TO_ERR.out.versions.first() )
 
     emit:
     assembly_and_reads = result // tuple( meta, assembly_file, [raw_reads] )

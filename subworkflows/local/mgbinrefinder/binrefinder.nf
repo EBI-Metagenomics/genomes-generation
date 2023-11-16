@@ -49,9 +49,9 @@ workflow REFINEMENT {
     CHECKM2_BINNER2( "binner2", renamed_binner2, ref_checkm )
     CHECKM2_BINNER3( "binner3", renamed_binner3, ref_checkm )
 
-    ch_versions.mix( CHECKM2_BINNER1.out.versions.first() )
-    ch_versions.mix( CHECKM2_BINNER2.out.versions.first() )
-    ch_versions.mix( CHECKM2_BINNER3.out.versions.first() )
+    ch_versions = ch_versions.mix( CHECKM2_BINNER1.out.versions.first() )
+    ch_versions = ch_versions.mix( CHECKM2_BINNER2.out.versions.first() )
+    ch_versions = ch_versions.mix( CHECKM2_BINNER3.out.versions.first() )
 
     binners = CHECKM2_BINNER1.out.filtered_genomes
         .join(CHECKM2_BINNER2.out.filtered_genomes)
@@ -71,7 +71,7 @@ workflow REFINEMENT {
 
     CONSOLIDATE_BINS( binners, stats )
 
-    ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
+    ch_versions = ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
 
     emit:
     bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins
