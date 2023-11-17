@@ -79,7 +79,7 @@ workflow PROK_MAGS_GENERATION {
     // -- drep
     prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
 
-    DREP( CHECKM2.out.stats, prok_drep_args, channel.value('prokaryotes') )
+    DREP( CHECKM2.out.stats, prok_drep_args, "prokaryotes" )
 
     // -- coverage -- //
     COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )

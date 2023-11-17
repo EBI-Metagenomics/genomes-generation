@@ -156,7 +156,7 @@ workflow EUK_MAGS_GENERATION {
         return tuple(meta, list_files)
     }
 
-    CONCATENATE_QUALITY_FILES( combine_quality.map( functionCATCSV ), channel.value("quality_eukcc.csv") )
+    CONCATENATE_QUALITY_FILES( combine_quality.map( functionCATCSV ), "quality_eukcc.csv" )
 
     quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
@@ -169,7 +169,7 @@ workflow EUK_MAGS_GENERATION {
     FILTER_QS50( collect_data )
 
     // input: tuple (meta, genomes/*, quality_file)
-    DREP( FILTER_QS50.out.qs50_filtered_genomes, params.euk_drep_args, channel.value('eukaryotes') )
+    DREP( FILTER_QS50.out.qs50_filtered_genomes, params.euk_drep_args, "eukaryotes" )
 
     ch_versions.mix( DREP.out.versions.first() )
 
@@ -177,7 +177,7 @@ workflow EUK_MAGS_GENERATION {
     // TODO: this collectFile is incorrect
     quality_all_csv = quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false)
 
-    MODIFY_QUALITY_FILE( quality_all_csv, channel.value("aggregated_euk_quality.csv"))
+    MODIFY_QUALITY_FILE( quality_all_csv, "aggregated_euk_quality.csv")
 
     // ch_versions.mix( MODIFY_QUALITY_FILE.out.versions.first() )
 
@@ -194,7 +194,7 @@ workflow EUK_MAGS_GENERATION {
             return tuple([id: "aggregated"], agg_genomes)
         }
 
-    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, channel.value('aggregated_eukaryotes') )
+    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, 'aggregated_eukaryotes' )
 
     ch_versions.mix( DREP_MAGS.out.versions.first() )
 
