@@ -19,17 +19,17 @@ workflow REFINE {
         BINNING_REFINER3( name, binner1.join( binner2 ).join( binner3 ) )
         refined = BINNING_REFINER3.out.refined_bins
 
-        ch_versions.mix( BINNING_REFINER3.out.versions.first() )
+        ch_versions = ch_versions.mix( BINNING_REFINER3.out.versions.first() )
     } else {
         BINNING_REFINER( name, binner1.join( binner2 ) )
         refined = BINNING_REFINER.out.refined_bins
 
-        ch_versions.mix( BINNING_REFINER.out.versions.first() )
+        ch_versions = ch_versions.mix( BINNING_REFINER.out.versions.first() )
     }
 
     CHECKM2_REFINE( name, refined, checkm2_db )
 
-    ch_versions.mix( CHECKM2_REFINE.out.versions.first() )
+    ch_versions = ch_versions.mix( CHECKM2_REFINE.out.versions.first() )
 
     emit:
     refined = refined

@@ -97,32 +97,32 @@ workflow GGP {
     // ---- pre-processing ---- //
     PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
 
-    ch_versions.mix( PROCESS_INPUT.out.versions.first() )
+    ch_versions = ch_versions.mix( PROCESS_INPUT.out.versions )
 
     tuple_assemblies = PROCESS_INPUT.out.assembly_and_reads.map{ meta, assembly, _ -> [meta, assembly] }
 
     // --- trimming reads ---- //
     QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
 
-    ch_versions.mix( QC_AND_MERGE_READS.out.versions.first() )
+    ch_versions = ch_versions.mix( QC_AND_MERGE_READS.out.versions )
 
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
     DECONTAMINATION( QC_AND_MERGE_READS.out.reads, ref_genome, ref_genome_index )
 
-    ch_versions.mix( DECONTAMINATION.out.versions.first() )
+    ch_versions = ch_versions.mix( DECONTAMINATION.out.versions )
 
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
 
     ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
 
-    ch_versions.mix( ALIGN.out.versions.first() )
+    ch_versions = ch_versions.mix( ALIGN.out.versions )
 
     // ---- binning ---- //
     BINNING( ALIGN.out.assembly_bam )
 
-    ch_versions.mix( BINNING.out.versions.first() )
+    ch_versions = ch_versions.mix( BINNING.out.versions )
 
     collectBinsFolder = { meta, bin_folder ->
         [ meta, bin_folder.listFiles().flatten() ]
@@ -152,7 +152,7 @@ workflow GGP {
             cat_taxonomy_db
         )
 
-        ch_versions.mix( EUK_MAGS_GENERATION.out.versions.first() )
+        ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
     }
 
     if ( !params.skip_prok ) {
@@ -173,7 +173,7 @@ workflow GGP {
             rfam_rrna_models
         )
 
-        ch_versions.mix( PROK_MAGS_GENERATION.out.versions.first() )
+        ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
     }
 
 

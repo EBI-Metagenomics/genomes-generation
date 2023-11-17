@@ -55,7 +55,7 @@ workflow PROK_MAGS_GENERATION {
     // -- bin refinement //
     BIN_REFINEMENT( collected_binners, checkm2_db )
 
-    ch_versions.mix( BIN_REFINEMENT.out.versions.first() )
+    ch_versions = ch_versions.mix( BIN_REFINEMENT.out.versions )
 
     // -- clean bins
     CLEAN_AND_FILTER_BINS( 
@@ -65,6 +65,8 @@ workflow PROK_MAGS_GENERATION {
         cat_taxonomy_db,
         gunc_db
     )
+
+    ch_versions = ch_versions.mix( CLEAN_AND_FILTER_BINS.out.versions.first() )
 
     // -- aggregate bins by samples
     // -- checkm2 on ALL bins in all samples
@@ -76,13 +78,19 @@ workflow PROK_MAGS_GENERATION {
 
     CHECKM2( channel.value("aggregated"), all_bins, checkm2_db )
 
+    ch_versions = ch_versions.mix( CHECKM2.out.versions.first() )
+
     // -- drep
     prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
 
     DREP( CHECKM2.out.stats, prok_drep_args, "prokaryotes" )
 
+    ch_versions = ch_versions.mix( DREP.out.versions.first() )
+
     // -- coverage -- //
     COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )
+
+    ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
     dereplicated_genomes = DREP.out.dereplicated_genomes.map { it -> it[1] }.flatten()
 
@@ -94,8 +102,12 @@ workflow PROK_MAGS_GENERATION {
         rfam_rrna_models
     )
 
+    ch_versions = ch_versions.mix( DETECT_RRNA.out.versions.first() )
+
     // -- Taxonomy --//
     GTDBTK( CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(), gtdbtk_db )
+
+    ch_versions = ch_versions.mix( GTDBTK.out.versions.first() )
 
     // -- checkm_results_mags.txt -- //
     // Both channels will have only one element

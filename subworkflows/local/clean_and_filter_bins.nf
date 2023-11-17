@@ -26,17 +26,17 @@ workflow CLEAN_AND_FILTER_BINS {
 
     MAG_CLEANUP_CAT( bins, cat_db_folder, cat_taxonomy_db, cat_diamond_db )
 
-    ch_versions.mix( MAG_CLEANUP_CAT.out.versions.first() )
+    ch_versions = ch_versions.mix( MAG_CLEANUP_CAT.out.versions.first() )
 
     // input: tuple(meta, bin, summary, names)
     // output: tuple(meta, clean.fa)
     DETECT_CONTAMINATION( MAG_CLEANUP_CAT.out.cat_results )
 
-    ch_versions.mix( DETECT_CONTAMINATION.out.versions.first() )
+    ch_versions = ch_versions.mix( DETECT_CONTAMINATION.out.versions.first() )
 
     GUNC( DETECT_CONTAMINATION.out.cleaned_fasta, gunc_db )
 
-    ch_versions.mix( GUNC.out.versions.first() )
+    ch_versions = ch_versions.mix( GUNC.out.versions.first() )
 
     filtered_bins = GUNC.out.tuple_gunc_result.filter({
         it[2].name.contains('_complete.txt')

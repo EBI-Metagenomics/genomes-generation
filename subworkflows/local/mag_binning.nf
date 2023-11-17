@@ -76,7 +76,7 @@ workflow BINNING {
             [ meta.subMap('id', 'erz'), bins ]
         }
 
-        ch_versions.mix(METABAT2_METABAT2.out.versions.first())
+        ch_versions = ch_versions.mix(METABAT2_METABAT2.out.versions.first())
     }
 
     if ( !params.skip_concoct ) {

@@ -54,7 +54,7 @@ process DREP {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        dRep: \$( dRep grep -o 'dRep v[0-9.]\+' | sed 's/dRep v//' )
+        dRep: \$(echo \$(dRep -h 2>&1) | grep -o "dRep v[0-9.]\\+" | sed "s/dRep v//" )
     END_VERSIONS
     """
 }
