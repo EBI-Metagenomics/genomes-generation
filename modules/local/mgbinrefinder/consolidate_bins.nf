@@ -27,6 +27,7 @@ process CONSOLIDATE_BINS {
     tuple val(meta), path("consolidated_bins")     , emit: consolidated_bins
     tuple val(meta), path("consolidated_stats.tsv"), emit: consolidated_stats
     tuple val(meta), path("dereplicated_bins/*")   , emit: dereplicated_bins
+    tuple val(meta), path("dereplicated_list.tsv") , emit: dereplicated_list
     path "versions.yml"                            , emit: versions
 
     script:

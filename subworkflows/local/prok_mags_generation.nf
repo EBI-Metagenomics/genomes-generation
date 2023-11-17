@@ -14,7 +14,7 @@ include { GTDBTK                             } from '../../modules/local/gtdbtk/
 include { CHANGE_UNDERSCORE_TO_DOT           } from '../../modules/local/utils'
 
 
-process CHECKM_TABLE_FOR_DREP_GENOMES {
+process CHECKM2_TABLE_FOR_DREP_GENOMES {
 
     input:
     path(checkm_filtered_genomes_dir)
@@ -83,7 +83,7 @@ workflow PROK_MAGS_GENERATION {
     // -- drep
     prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
 
-    DREP( CHECKM2.out.stats, prok_drep_args, channel.value('prok') )
+    DREP( CHECKM2.out.stats, prok_drep_args, "prokaryotes" )
 
     ch_versions = ch_versions.mix( DREP.out.versions.first() )
 
@@ -111,7 +111,7 @@ workflow PROK_MAGS_GENERATION {
 
     // -- checkm_results_mags.txt -- //
     // Both channels will have only one element
-    CHECKM_TABLE_FOR_DREP_GENOMES(
+    CHECKM2_TABLE_FOR_DREP_GENOMES(
         CHECKM2.out.stats.map { map, bins, stats -> stats },
         DREP.out.dereplicated_genomes_list.map { meta, genomes_list_tsv -> genomes_list_tsv }
     )
