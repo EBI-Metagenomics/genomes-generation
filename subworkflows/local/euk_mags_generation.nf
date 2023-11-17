@@ -122,7 +122,7 @@ workflow EUK_MAGS_GENERATION {
 
     ALIGN( input.assembly_and_reads )
 
-    ch_versions = ch_versions.mix( ALIGN.out.versions.first() )
+    ch_versions = ch_versions.mix( ALIGN.out.versions )
 
     // -- concoct -- //
     binner1 = channel.value("concoct")
@@ -214,7 +214,7 @@ workflow EUK_MAGS_GENERATION {
 
     ALIGN_BINS( bins_alignment_by_bins ) // out: [meta, fasta, bam, bai]
 
-    ch_versions = ch_versions.mix( ALIGN_BINS.out.versions.first() )
+    ch_versions = ch_versions.mix( ALIGN_BINS.out.versions )
 
     // ---- coverage generation ----- //
     ch_summarizedepth_input = ALIGN_BINS.out.assembly_bam.map { meta, assembly, bams, bais ->

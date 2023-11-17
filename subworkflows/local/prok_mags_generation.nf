@@ -55,7 +55,7 @@ workflow PROK_MAGS_GENERATION {
     // -- bin refinement //
     BIN_REFINEMENT( collected_binners, checkm2_db )
 
-    ch_versions = ch_versions.mix( BIN_REFINEMENT.out.versions.first() )
+    ch_versions = ch_versions.mix( BIN_REFINEMENT.out.versions )
 
     // -- clean bins
     CLEAN_AND_FILTER_BINS( 
@@ -102,7 +102,7 @@ workflow PROK_MAGS_GENERATION {
         rfam_rrna_models
     )
 
-    ch_versions = ch_versions.mix(DETECT_RRNA.out.versions.first() )
+    ch_versions = ch_versions.mix( DETECT_RRNA.out.versions.first() )
 
     // -- Taxonomy --//
     GTDBTK( CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(), gtdbtk_db )
