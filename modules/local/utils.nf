@@ -116,20 +116,3 @@ process CHANGE_UNDERSCORE_TO_DOT {
     """
 }
 
-/*
- * clean reads, change . to _ from contigs
-*/
-process PUBLISH_CLEANED_PROK_BINS {
-
-    tag "${bins}"
-
-    input:
-    path bins
-
-    output:
-    path "*.fa"
-
-    script:
-    """
-    """
-}

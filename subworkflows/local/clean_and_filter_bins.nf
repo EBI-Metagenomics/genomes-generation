@@ -1,7 +1,6 @@
 include { CAT as MAG_CLEANUP_CAT    } from '../../modules/local/cat/cat/main'
 include { DETECT_CONTAMINATION      } from '../../modules/local/detect_contamination/main'
 include { GUNC                      } from '../../modules/local/gunc/main'
-include { PUBLISH_CLEANED_PROK_BINS } from '../../modules/local/utils'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +42,12 @@ workflow CLEAN_AND_FILTER_BINS {
     }).map({ name, cluster_fasta, cluster_gunc ->
         return cluster_fasta
     })
-    PUBLISH_CLEANED_PROK_BINS(filtered_bins)
+
+    // The subscribe / copyTo is a hack to publish the bins
+    // https://github.com/nextflow-io/nextflow/discussions/1933    
+    filtered_bins.subscribe({ cluster_fasta ->
+        cluster_fasta.copyTo("${params.outdir}/bins/prokaryotes/${cluster_fasta.name}")    
+    })
 
     emit:
     bins        = filtered_bins
