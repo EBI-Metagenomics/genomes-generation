@@ -1,15 +1,16 @@
 process BAT {
     tag "${bin}"
 
-    container 'quay.io/microbiome-informatics/cat:5.2.3'
+    container 'quay.io/biocontainers/cat:5.2.3--hdfd78af_1'
 
     input:
-    path(bin)
-    path(cat_db_folder)
-    path(cat_taxonomy_db)
+    path bin
+    path cat_db_folder
+    path cat_taxonomy_db
 
     output:
-    path('*.BAT_run.bin2classification.names.txt'), emit: bat_names
+    path '*.BAT_run.bin2classification.names.txt', emit: bat_names
+    path "versions.yml"                          , emit: versions
 
     script:
     """
@@ -25,5 +26,10 @@ process BAT {
       -o ${bin.baseName}.BAT_run.bin2classification.names.txt \
       -t ${cat_taxonomy_db} \
       --only_official
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        CAT: \$(CAT --version | sed "s/CAT v//; s/(.*//")
+    END_VERSIONS
     """
 }

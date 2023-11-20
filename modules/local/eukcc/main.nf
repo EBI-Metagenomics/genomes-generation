@@ -1,7 +1,11 @@
 process LINKTABLE {
+
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/microbiome-informatics/eukcc:latest'
+    // Multi-Package BioContainer
+    // TODO: this is using old version of biopython and pysam
+    // FIXME: EukCC include biopython and pysam in the EukCC conda package
+    container 'quay.io/biocontainers/mulled-v2-3a59640f3fe1ed11819984087d31d68600200c3f:185a25ca79923df85b58f42deb48f5ac4481e91f-0'
 
     input:
     tuple val(meta), path(fasta), path(bam), path(bai), path(bins, stageAs: "bins/*")
@@ -9,6 +13,7 @@ process LINKTABLE {
 
     output:
     tuple val(meta), path("*.links.csv"), emit: links_table
+    path "versions.yml"                 , emit: versions
 
     script:
     """
@@ -24,6 +29,13 @@ process LINKTABLE {
         bins \
         ${bam[0]}
     fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+        pysam: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+    END_VERSIONS
     """
 }
 
@@ -31,9 +43,10 @@ process LINKTABLE {
  * EukCC
 */
 process EUKCC {
+
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/microbiome-informatics/eukcc:latest'
+    container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'
 
     input:
     val binner
@@ -41,9 +54,10 @@ process EUKCC {
     path eukcc_db
 
     output:
-    tuple val(meta), path("*_merged_bins"), emit: eukcc_results
-    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"), emit: eukcc_csv
+    tuple val(meta), path("*_merged_bins")                       , emit: eukcc_results
+    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv")      , emit: eukcc_csv
     tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"), emit: eukcc_merged_csv
+    path "versions.yml"                                          , emit: versions
 
     script:
     """
@@ -62,5 +76,10 @@ process EUKCC {
 
     cp *_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
     cp *_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        EukCC: \$( eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' )
+    END_VERSIONS
     """
 }

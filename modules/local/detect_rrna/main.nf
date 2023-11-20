@@ -13,6 +13,8 @@ process DETECT_RRNA {
 
     output:
     path('results_folder/*'), emit: rrna_out_results
+    path("versions.yml")    , emit: versions
+
 
     script:
     """
@@ -67,6 +69,13 @@ process DETECT_RRNA {
     parse_tRNA.py -i "\${RESULTS_FOLDER}/\${FILENAME}_stats.out" 1> "\${RESULTS_FOLDER}/\${FILENAME}_tRNA_20aa.out"
 
     echo "Completed"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        tRNAscan-SE: \$(echo \$(tRNAscan-SE -h 2>&1) | grep -o "tRNAscan-SE [0-9].[0-9].[0-9]" | sed 's/tRNAscan-SE //')
+        cmsearch: \$(cmsearch -h | grep -o '^# INFERNAL [0-9.]*' | sed 's/^# INFERNAL *//')
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+    END_VERSIONS
     """
 
     stub:

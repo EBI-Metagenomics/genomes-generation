@@ -11,7 +11,7 @@ process DREP {
         'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0' }"
 
     publishDir(
-        path: "${params.outdir}/intermediate_steps/dRep/${type}/${meta.id}/",
+        path: "${params.outdir}/drep/${type}/${meta.id}/",
         mode: params.publish_dir_mode,
         failOnError: true
     )
@@ -23,7 +23,8 @@ process DREP {
 
     output:
     tuple val(meta), path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
-    tuple val(meta), path("dereplicated_genomes.txt"), optional: true, emit: dereplicated_genomes_list
+    tuple val(meta), path("dereplicated_genomes.txt")          , optional: true, emit: dereplicated_genomes_list
+    path "versions.yml"                                                        , emit: versions
 
     script:
     """
@@ -50,5 +51,10 @@ process DREP {
 
         ls drep_output/dereplicated_genomes > dereplicated_genomes.txt
     fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        dRep: \$(echo \$(dRep -h 2>&1) | grep -o "dRep v[0-9.]\\+" | sed "s/dRep v//" )
+    END_VERSIONS
     """
 }

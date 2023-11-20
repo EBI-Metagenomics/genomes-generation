@@ -14,7 +14,7 @@ include { GTDBTK                             } from '../../modules/local/gtdbtk/
 include { CHANGE_UNDERSCORE_TO_DOT           } from '../../modules/local/utils'
 
 
-process CHECKM_TABLE_FOR_DREP_GENOMES {
+process CHECKM2_TABLE_FOR_DREP_GENOMES {
 
     input:
     path(checkm_filtered_genomes_dir)
@@ -44,6 +44,8 @@ workflow PROK_MAGS_GENERATION {
 
     main:
 
+    ch_versions = Channel.empty()
+
     collected_binners = collected_binners_and_depth.map { meta, concot_bins, maxbin_bins, metabat_bins, _ -> 
         [ meta, concot_bins, maxbin_bins, metabat_bins ]
     }
@@ -53,6 +55,8 @@ workflow PROK_MAGS_GENERATION {
     // -- bin refinement //
     BIN_REFINEMENT( collected_binners, checkm2_db )
 
+    ch_versions = ch_versions.mix( BIN_REFINEMENT.out.versions )
+
     // -- clean bins
     CLEAN_AND_FILTER_BINS( 
         BIN_REFINEMENT.out.bin_ref_bins,
@@ -61,6 +65,8 @@ workflow PROK_MAGS_GENERATION {
         cat_taxonomy_db,
         gunc_db
     )
+
+    ch_versions = ch_versions.mix( CLEAN_AND_FILTER_BINS.out.versions.first() )
 
     // -- aggregate bins by samples
     // -- checkm2 on ALL bins in all samples
@@ -72,13 +78,19 @@ workflow PROK_MAGS_GENERATION {
 
     CHECKM2( channel.value("aggregated"), all_bins, checkm2_db )
 
+    ch_versions = ch_versions.mix( CHECKM2.out.versions.first() )
+
     // -- drep
     prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
 
-    DREP( CHECKM2.out.stats, prok_drep_args, channel.value('prok') )
+    DREP( CHECKM2.out.stats, prok_drep_args, "prokaryotes" )
+
+    ch_versions = ch_versions.mix( DREP.out.versions.first() )
 
     // -- coverage -- //
     COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )
+
+    ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
     dereplicated_genomes = DREP.out.dereplicated_genomes.map { it -> it[1] }.flatten()
 
@@ -90,16 +102,21 @@ workflow PROK_MAGS_GENERATION {
         rfam_rrna_models
     )
 
+    ch_versions = ch_versions.mix( DETECT_RRNA.out.versions.first() )
+
     // -- Taxonomy --//
     GTDBTK( CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(), gtdbtk_db )
 
+    ch_versions = ch_versions.mix( GTDBTK.out.versions.first() )
+
     // -- checkm_results_mags.txt -- //
     // Both channels will have only one element
-    CHECKM_TABLE_FOR_DREP_GENOMES(
+    CHECKM2_TABLE_FOR_DREP_GENOMES(
         CHECKM2.out.stats.map { map, bins, stats -> stats },
         DREP.out.dereplicated_genomes_list.map { meta, genomes_list_tsv -> genomes_list_tsv }
     )
 
     emit:
     prok_mags = CHANGE_UNDERSCORE_TO_DOT.out.return_files
+    versions = ch_versions
 }

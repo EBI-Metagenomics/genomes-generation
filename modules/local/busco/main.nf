@@ -4,11 +4,12 @@ process BUSCO {
     container 'quay.io/biocontainers/busco:5.4.7--pyhdfd78af_0'
 
     input:
-    path(bin)
+    path bin
     path busco_db
 
     output:
-    path("*.short_summary.specific.txt"), emit: busco_summary
+    path "*.short_summary.specific.txt", emit: busco_summary
+    path "versions.yml"                , emit: versions
 
     script:
     """
@@ -21,5 +22,10 @@ process BUSCO {
             -c ${task.cpus}
 
     cp out/short_summary.specific*.out.txt "${bin.baseName}.short_summary.specific.txt"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        busco: \$( busco --version 2>&1 | sed 's/^BUSCO //' )
+    END_VERSIONS
     """
 }

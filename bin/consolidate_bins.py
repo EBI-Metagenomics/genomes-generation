@@ -233,6 +233,10 @@ def main(args):
         if not os.stat(os.path.join(dereplicated_bins, item)).st_size:
             os.remove(os.path.join(dereplicated_bins, item))
 
+    # write dereplicated_list.tsv
+    with open("dereplicated_list.tsv", 'w') as file_out:
+        drep_bins = os.listdir(dereplicated_bins)
+        file_out.write('\n'.join(drep_bins))
 
 if __name__ == '__main__':
     args = parse_args()

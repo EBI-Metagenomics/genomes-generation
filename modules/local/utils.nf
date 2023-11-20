@@ -53,7 +53,6 @@ process GZIP {
 process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
 
     tag "${meta.id}"
-    container 'quay.io/microbiome-informatics/genomes-pipeline.python3base:v1.1'
 
     input:
     tuple val(meta), path(contigs)
@@ -80,6 +79,7 @@ process ERZ_TO_ERR {
 
     output:
     tuple val(meta), path("changed*.fastq.gz"), emit: modified_reads
+    path "versions.yml"                       , emit: versions
 
     script:
     """
@@ -88,6 +88,12 @@ process ERZ_TO_ERR {
     change_reads.py --reads *.fastq -f ${meta.erz} -t ${meta.id} --change_dots_to_underscores
 
     gzip changed*.fastq
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+    END_VERSIONS
     """
 }
 

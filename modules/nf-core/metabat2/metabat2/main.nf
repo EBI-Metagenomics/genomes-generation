@@ -21,16 +21,6 @@ process METABAT2_METABAT2 {
     when:
     task.ext.when == null || task.ext.when
 
-    errorStrategy {
-        task.exitStatus {
-            exitVal ->
-                // Retry on non-zero exit codes
-                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
-        }
-        maxRetries 3  // Set the maximum number of retries
-        sleep 10       // Set the delay between retries in seconds
-    }
-
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
@@ -38,6 +28,9 @@ process METABAT2_METABAT2 {
     def depth_file = depth ? "-a ${depth.baseName}" : ""
     """
     $decompress_depth
+
+    rm -rf metabat2
+    rm -rf bins
 
     metabat2 \\
         $args \\
@@ -50,10 +43,12 @@ process METABAT2_METABAT2 {
     mv metabat2/${prefix} ${prefix}.tsv
     mv metabat2 bins
 
+    rm -f ${prefix}.tsv.gz
     gzip ${prefix}.tsv
 
     mkdir -p ${meta.id}_metabat_bins
-    version=\$( metabat2 --help 2>&1 | head -n 2 | tail -n 1| sed 's/.*\\:\\([0-9]*\\.[0-9]*\\).*/\\1/' )
+    # I had to hardcode the version, it was failling with erro 141 for some reason
+    version="2.15"
 
     if [ -z "\$(ls -A bins/*.[0-9]*.fa)" ]; then
         echo "Folder is empty"
