@@ -43,9 +43,7 @@ For eukaryotes:
 
 ## Usage
 
-:::note
 If this the first time running nextflow please refer to [this page](https://www.nextflow.io/index.html#GetStarted)
-:::
 
 ### Required reference databases
 
@@ -80,6 +78,8 @@ Each row corresponds to a specific dataset with information such as an identifie
 |------------|-------------------------------------------|-------------------------------------|-------------------------------------|--------------------|
 | SRR1631112 | /path/to/SRR1631112.fasta                | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
 
+
+There is example [here](assets/samplesheet_example.csv)
 
 ## Pipeline output
 
