@@ -10,11 +10,22 @@ process DREP {
         'https://depot.galaxyproject.org/singularity/drep:3.2.2--pyhdfd78af_0':
         'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0' }"
 
-    publishDir(
-        path: "${params.outdir}/drep/${type}/${meta.id}/",
-        mode: params.publish_dir_mode,
-        failOnError: true
-    )
+    publishDir = [
+        [
+            path: "${params.outdir}/genomes/drep/${type}",
+            mode: params.publish_dir_mode,
+            failOnError: true,
+            pattern: "dereplicated_genomes.txt",
+            when: { ${meta.id} == "aggregated" }
+        ],
+        [
+            path: "${params.outdir}/genomes/drep/${type}/dereplicated_genomes",
+            mode: params.publish_dir_mode,
+            failOnError: true,
+            pattern: "drep_output/dereplicated_genomes/*.fa"
+            when: { ${meta.id} == "aggregated" }
+        ]
+    ]
 
     input:
     tuple val(meta), path(genomes_list, stageAs: "genomes_dir/*"), path(quality_csv)

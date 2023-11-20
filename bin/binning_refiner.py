@@ -240,7 +240,7 @@ for each in contig_assignments_sorted:
     elif current_match != matched_bins:
         refined_bin_name = 'refined_bin%s' % n
         if current_length_total >= bin_size_cutoff:
-            contig_assignments_sorted_one_line.write('Refined_%s\t%s\t%sbp\t%s\n' % (n, current_match, current_length_total,'\t'.join(current_match_contigs)))
+            contig_assignments_sorted_one_line.write('refined_%s\t%s\t%sbp\t%s\n' % (n, current_match, current_length_total,'\t'.join(current_match_contigs)))
             n += 1
         current_match = matched_bins
         current_match_contigs = []
@@ -248,7 +248,7 @@ for each in contig_assignments_sorted:
         current_length_total = 0
         current_length_total += current_length
 if current_length_total >= bin_size_cutoff:
-    contig_assignments_sorted_one_line.write('Refined_%s\t%s\t%sbp\t%s\n' % (n, current_match, current_length_total,'\t'.join(current_match_contigs)))
+    contig_assignments_sorted_one_line.write('refined_%s\t%s\t%sbp\t%s\n' % (n, current_match, current_length_total,'\t'.join(current_match_contigs)))
 else:
     n -= 1
 contig_assignments_sorted_one_line.close()
@@ -257,7 +257,7 @@ refined_bin_number = n
 sleep(1)
 print('The number of refined bins: %s' % refined_bin_number)
 
-os.mkdir(os.path.join(wd, output_folder, 'Refined'))
+os.mkdir(os.path.join(wd, output_folder, 'refined'))
 
 refined_bins = open(contig_assignments_file_sorted_one_line)
 
@@ -277,7 +277,7 @@ for each_refined_bin in refined_bins:
         each_refined_bin_contig = each_refined_bin_split[5:]
 
     stdout.write('\rExtracting refined bin: %s.fa' % each_refined_bin_name)
-    refined_bin_file = '%s/%s/Refined/%s.fa' % (wd, output_folder, each_refined_bin_name)
+    refined_bin_file = '%s/%s/refined/%s.fa' % (wd, output_folder, each_refined_bin_name)
     refined_bin_handle = open(refined_bin_file, 'w')
     input_contigs_file = '%s/%s/combined_%s_bins.fa' % (wd, output_folder, input_bin_folder_1)
     input_contigs = SeqIO.parse(input_contigs_file, 'fasta')

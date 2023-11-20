@@ -195,7 +195,7 @@ workflow EUK_MAGS_GENERATION {
             return tuple([id: "aggregated"], agg_genomes)
         }
 
-    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, 'aggregated_eukaryotes' )
+    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, 'eukaryotes' )
 
     ch_versions = ch_versions.mix( DREP_MAGS.out.versions.first() )
 

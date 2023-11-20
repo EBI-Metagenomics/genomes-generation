@@ -40,6 +40,7 @@ process CONCOCT_EXTRACTFASTABINS {
         --output_path ${prefix}
 
     ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
+    ## renames 1.fa to accession_bin.1.fa
     for i in ${prefix}/*.fa; do
         mv \${i} \${i/\\///${prefix}_bin.}
     done
@@ -52,8 +53,8 @@ process CONCOCT_EXTRACTFASTABINS {
     else
         for i in ${prefix}/*.fa; do
             original_name=\$(basename \${i})
-            new_filename=\${original_name#*-}
-            new_name="${meta.id}_concoct_bins/CONCOCT_v\${version}-\${new_filename}"
+            original_name_without_extension=\${original_name%.*}
+            new_name="${meta.id}_concoct_bins/\${original_name_without_extension}-concoct_v\${version}.fa"
             mv \${i} \${new_name}
         done
     fi

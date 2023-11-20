@@ -4,19 +4,12 @@ process BINNING_REFINER {
 
     container 'quay.io/biocontainers/biopython:1.75'
 
-    publishDir(
-        path: "${params.outdir}/intermediate_steps/refinement/${meta.id}_binref_${name}",
-        mode: params.publish_dir_mode,
-        failOnError: true,
-        pattern: "{meta.id}_output_${name}/Refined/*"
-    )
-
     input:
     val(name)
     tuple val(meta), path(bin1, stageAs: "binner1/*"), path(bin2, stageAs: "binner2/*")
 
     output:
-    tuple val(meta), path("${meta.id}_output_${name}/Refined/*"), emit: refined_bins
+    tuple val(meta), path("${meta.id}_output_${name}/refined/*"), emit: refined_bins
     path "versions.yml"                                         , emit: versions
 
     script:
@@ -37,13 +30,6 @@ process BINNING_REFINER3 {
 
     container 'quay.io/biocontainers/biopython:1.75'
 
-    publishDir(
-        path: "${params.outdir}/intermediate_steps/refinement/${meta.id}_binref_${name}",
-        mode: 'copy',
-        failOnError: true,
-        pattern: "{meta.id}_output_${name}/Refined/*"
-    )
-
     input:
     val(name)
     tuple val(meta), 
@@ -52,7 +38,7 @@ process BINNING_REFINER3 {
           path(bin3, stageAs: "binner3/*")
 
     output:
-    tuple val(meta), path("${meta.id}_output_${name}/Refined/*"), emit: refined_bins
+    tuple val(meta), path("${meta.id}_output_${name}/refined/*"), emit: refined_bins
     path "versions.yml"                                         , emit: versions
 
     script:

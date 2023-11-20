@@ -75,7 +75,9 @@ process EUKCC {
         bins
 
     cp *_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-    cp *_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+    lines=\$(wc -l < *_merged_bins/merged_bins.csv)
+    if [ \${lines} -gt 1 ]; then
+        cp *_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
