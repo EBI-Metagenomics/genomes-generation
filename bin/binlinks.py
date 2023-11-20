@@ -11,7 +11,12 @@ import os
 import argparse
 import logging
 import csv
+import gzip
 
+# FIXME: why is this script here and we are not using the one in eukcc?
+
+BIN_DEFAULT_SEPARATOR = '_'
+BAM_DEFAULT_SEPARATOR = '_'
 
 def is_in(read, contig_map, within=1000):
     if read.reference_name not in contig_map.keys():
@@ -33,38 +38,65 @@ def keep_read(read, contig_map, within=1000, min_ANI=98, min_cov=0):
         * 100
     )
     cov = read.query_alignment_length / float(read.query_length) * 100
-
     if ani >= min_ANI and cov >= min_cov and is_in(read, contig_map, within) is True:
         return True
     else:
         return False
 
 
-def contig_map(bindir, suffix=".fa"):
+def open_fasta_file(filename):
+    if filename.endswith('.gz'):
+        f = gzip.open(filename, "rt")
+    else:
+        f = open(filename, "rt")
+    return f
+
+
+def contig_map(bindir, bin_sep, suffix=".fa"):
+    logging.debug("Map contigs")
     m = {}
-    for f in os.listdir(bindir):
-        if f.endswith(suffix) is False:
+    bins = [item for item in os.listdir(bindir) if 'unbinned' not in item]
+    for f in bins:
+        logging.debug(f"Processing {f}")
+        if not (f.endswith(suffix) or f.endswith(suffix + '.gz')):
             continue
         path = os.path.join(bindir, f)
-        with open(path, "r") as handle:
-            for record in SeqIO.parse(handle, "fasta"):
+        handle = open_fasta_file(path)
+        for record in SeqIO.parse(handle, "fasta"):
+            if bin_sep != BIN_DEFAULT_SEPARATOR:
+                m[record.name.replace(bin_sep, BIN_DEFAULT_SEPARATOR)] = len(record.seq)
+            else:
                 m[record.name] = len(record.seq)
+        handle.close()
+    logging.debug(f"Map contigs {len(m)}")
     return m
 
 
-def bin_map(bindir, suffix=".fa"):
+def bin_map(bindir, bin_sep, suffix=".fa"):
+    logging.debug("Bin map")
     contigs = defaultdict(str)
     contigs_per_bin = defaultdict(int)
-    for f in os.listdir(bindir):
-        if f.endswith(suffix) is False:
+    bins = [item for item in os.listdir(bindir) if 'unbinned' not in item]
+    for f in bins:
+        if not f.endswith(suffix) or f.endswith(suffix + '.gz'):
             continue
+        logging.debug(f"Processing {f}")
         path = os.path.join(bindir, f)
         binname = os.path.basename(f)
-        with open(path, "r") as handle:
-            for record in SeqIO.parse(handle, "fasta"):
-                contigs[record.name] = binname
-                contigs_per_bin[binname] += 1
-    return contigs, contigs_per_bin
+        handle = open_fasta_file(path)
+        for record in SeqIO.parse(handle, "fasta"):
+            contigs[record.name] = binname
+            contigs_per_bin[binname] += 1
+        handle.close()
+    logging.debug(f"Bin map contigs:{len(contigs)}, contigs_per_bin:{len(contigs_per_bin)}")
+    logging.debug(f'Change separator in bin dictionary if {bin_sep} != {BIN_DEFAULT_SEPARATOR}')
+    return_contigs = defaultdict(str)
+    if bin_sep != BIN_DEFAULT_SEPARATOR:
+        for i in contigs:
+            return_contigs[i.replace(bin_sep, BIN_DEFAULT_SEPARATOR)] = contigs[i]
+        return return_contigs, contigs_per_bin
+    else:
+        return contigs, contigs_per_bin
 
 
 def read_pair_generator(bam):
@@ -97,11 +129,23 @@ def main():
     parser = argparse.ArgumentParser(
         description="Evaluate completeness and contamination of a MAG."
     )
-    parser.add_argument("bindir", type=str, help="Run script on these bins")
-    parser.add_argument(
-        "bam",
+    parser.add_argument("--bindir", dest="bindir", type=str, help="Run script on these bins")
+    parser.add_argument("--bam",
+        dest="bam",
         type=str,
-        help="Bam with allr eads aligned against all contigs making up the bins",
+        help="Bam with all reads aligned against all contigs making up the bins",
+    )
+    parser.add_argument("--bam-separator",
+        dest="bam_sep",
+        type=str,
+        help="Separator in BAM names, ex ERZ.1 (sep = .) or ERZ_1 (sep = _)",
+        default=BAM_DEFAULT_SEPARATOR,
+    )
+    parser.add_argument("--bin-separator",
+        dest="bin_sep",
+        type=str,
+        help="Separator in BINS.fa names, ex ERZ.1 (sep = .) or ERZ_1 (sep = _)",
+        default=BIN_DEFAULT_SEPARATOR,
     )
     parser.add_argument(
         "--out",
@@ -157,12 +201,10 @@ def main():
         level=logLevel,
     )
 
-    bindir = args.bindir
     samfile = pysam.AlignmentFile(args.bam, "rb")
 
-    cm = contig_map(bindir)
-    bm, contigs_per_bin = bin_map(bindir)
-    logging.debug("Found {} contigs".format(len(cm)))
+    cm = contig_map(args.bindir, args.bin_sep)
+    bm, contigs_per_bin = bin_map(args.bindir, args.bin_sep)
 
     link_table = defaultdict(lambda: defaultdict(int))
     bin_table = defaultdict(lambda: defaultdict(int))
@@ -177,17 +219,17 @@ def main():
             link_table[read.reference_name][mate.reference_name] += 1
             if read.reference_name != mate.reference_name:
                 link_table[mate.reference_name][read.reference_name] += 1
+    logging.debug(f"Link table has {len(link_table)} records")
 
-    logging.debug("Created link table with {} entries".format(len(link_table)))
     # generate bin table
     for contig_1, dic in link_table.items():
         for contig_2, links in dic.items():
             bin_table[bm[contig_1]][bm[contig_2]] += 1
-
-    logging.debug("Created bin table with {} entries".format(len(bin_table)))
     out_data = []
     logging.debug("Constructing output dict")
     if args.contigs:
+        logging.debug("contig mode")
+        logging.debug(f"Link table has {len(link_table)} records")
         for contig_1, linked in link_table.items():
             for contig_2, links in linked.items():
                 out_data.append(
@@ -202,10 +244,11 @@ def main():
                     }
                 )
     else:
+        logging.debug("bins mode")
+        logging.debug(f"Bin table has {len(bin_table)} records")
         for bin_1, dic in bin_table.items():
             for bin_2, links in dic.items():
                 out_data.append({"bin_1": bin_1, "bin_2": bin_2, "links": links})
-    logging.debug("Out data has {} rows".format(len(out_data)))
     # results
     logging.info("Writing output")
     with open(args.out, "w") as fout:

@@ -26,8 +26,8 @@ process LINKTABLE {
         --within 1500 \
         --out ${meta.id}.${binner}.links.csv \
         --debug \
-        bins \
-        ${bam[0]}
+        --bindir bins \
+        --bam ${bam[0]}
     fi
 
     cat <<-END_VERSIONS > versions.yml
