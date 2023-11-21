@@ -26,10 +26,10 @@ def main():
     for read_file in args.reads:
         with open("changed_" + os.path.basename(read_file), "wt") as out_handle, open(read_file, "rt") as handle:
             for record in SeqIO.parse(handle, "fastq"):
-                new_name = record.id.replace(args.from_accession, args.to_accession)
+                new_name = record.description.replace(args.from_accession, args.to_accession)
                 if args.change_dots_to_underscores:
                     new_name = new_name.replace('.', '_')
-                record.id = new_name
+                record.description = new_name
                 SeqIO.write(record, out_handle, "fastq")
 
 
