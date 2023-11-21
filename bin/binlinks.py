@@ -38,7 +38,8 @@ def keep_read(read, contig_map, within=1000, min_ANI=98, min_cov=0):
         * 100
     )
     cov = read.query_alignment_length / float(read.query_length) * 100
-    if ani >= min_ANI and cov >= min_cov and is_in(read, contig_map, within) is True:
+    is_in_read = is_in(read, contig_map, within)
+    if ani >= min_ANI and cov >= min_cov and is_in_read:
         return True
     else:
         return False
@@ -68,7 +69,7 @@ def contig_map(bindir, bin_sep, suffix=".fa"):
             else:
                 m[record.name] = len(record.seq)
         handle.close()
-    logging.debug(f"Map contigs {len(m)}")
+    logging.debug(f"Map contigs {len(m)}, keys: {list(m.keys())[0:2]}")
     return m
 
 
@@ -89,6 +90,8 @@ def bin_map(bindir, bin_sep, suffix=".fa"):
             contigs_per_bin[binname] += 1
         handle.close()
     logging.debug(f"Bin map contigs:{len(contigs)}, contigs_per_bin:{len(contigs_per_bin)}")
+    logging.debug(f"contigs: {list(contigs.keys())[:2]}")
+    logging.debug(f"contigs_per_bin: {list(contigs_per_bin.keys())[:2]}")
     logging.debug(f'Change separator in bin dictionary if {bin_sep} != {BIN_DEFAULT_SEPARATOR}')
     return_contigs = defaultdict(str)
     if bin_sep != BIN_DEFAULT_SEPARATOR:
