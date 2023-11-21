@@ -12,17 +12,17 @@ process DREP {
 
     // that publishDir needs to be a function because of type parameter
     publishDir(
-            path: "${params.outdir}/genomes/drep/${type}",
+            path: "${params.outdir}/genomes_drep/${type}",
             mode: params.publish_dir_mode,
             failOnError: true,
             pattern: "dereplicated_genomes.txt",
             when: { ${meta.id} == "aggregated" },
     )
     publishDir(
-            path: "${params.outdir}/genomes/drep/${type}/dereplicated_genomes",
+            path: "${params.outdir}/genomes_drep/${type}",
             mode: params.publish_dir_mode,
             failOnError: true,
-            pattern: "drep_output/dereplicated_genomes/*.fa",
+            pattern: "dereplicated_genomes/*.fa",
             when: { ${meta.id} == "aggregated" },
     )
 

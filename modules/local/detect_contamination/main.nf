@@ -10,7 +10,7 @@ process DETECT_CONTAMINATION {
     tuple val(meta), path(bin), path(summary), path(names)
 
     output:
-    tuple val(meta), path("${meta.id}_${bin.baseName}_clean.fa")                                                      , emit: cleaned_fasta
+    tuple val(meta), path("${bin.baseName}_clean.fa")                                                      , emit: cleaned_fasta
     tuple val(meta), path("${meta.id}.contamination_contigs.txt"), path("*.contamination_contigs.tsv"), optional: true, emit: contamination_stats
     path "versions.yml"                                                                                               , emit: versions
 
@@ -23,10 +23,10 @@ process DETECT_CONTAMINATION {
     lines_count=\$(wc -l < "${meta.id}.contamination_contigs.txt")
     if [ "\$lines_count" -eq 0 ]; then
         echo "no contamination"
-        cp ${bin} ${meta.id}_${bin.baseName}_clean.fa
+        cp ${bin} ${bin.baseName}_clean.fa
     else
         echo "cleaning fasta"
-        select_seqs_notin_ids.py -i ${bin} -d ${meta.id}.contamination_contigs.txt -o "${meta.id}_${bin.baseName}_clean.fa"
+        select_seqs_notin_ids.py -i ${bin} -d ${meta.id}.contamination_contigs.txt -o "${bin.baseName}_clean.fa"
     fi
 
     cat <<-END_VERSIONS > versions.yml
