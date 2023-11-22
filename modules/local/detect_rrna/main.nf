@@ -7,6 +7,16 @@ process DETECT_RRNA {
 
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'
 
+    errorStrategy {
+        task.exitStatus {
+            exitVal ->
+                // Retry on non-zero exit codes
+                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
+        }
+        maxRetries 3  // Set the maximum number of retries
+        sleep 10      // Set the delay between retries in seconds
+    }
+
     input:
     path fasta
     file cm_models
