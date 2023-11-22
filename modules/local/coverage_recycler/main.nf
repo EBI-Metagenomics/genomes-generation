@@ -11,7 +11,7 @@ process COVERAGE_RECYCLER {
     path metabat_depth
 
     output:
-    tuple val(meta), path("coverage/*_coverage")        , emit: coverage_dir
+    tuple val(meta), path("coverage/*_coverage/*")        , emit: coverage_dir
     tuple val(meta), path("coverage/*_contigs2bins.txt"), emit: coverage_contigs2bins
     path "versions.yml"                                 , emit: versions
 

@@ -19,11 +19,16 @@ process DREP {
             when: { ${meta.id} == "aggregated" },
     )
     publishDir(
-            path: "${params.outdir}/genomes_drep/${type}",
+            path: "${params.outdir}/genomes_drep",
             mode: params.publish_dir_mode,
             failOnError: true,
-            pattern: "dereplicated_genomes/*.fa",
+            pattern: "drep_output/dereplicated_genomes/*.fa",
             when: { ${meta.id} == "aggregated" },
+            saveAs: { filename -> {
+                        def output_file = new File(filename);
+                        return "${type}/genomes/${output_file.name}";
+                        }
+            }
     )
 
     input:

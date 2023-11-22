@@ -14,7 +14,7 @@ process BINNING_REFINER {
 
     script:
     """
-    binning_refiner.py -1 binner1 -2 binner2 -o "${meta.id}_output_${name}" -n ${name}
+    binning_refiner.py -1 binner1 -2 binner2 -o "${meta.id}_output_${name}" -n "${meta.id}_${name}"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -48,7 +48,7 @@ process BINNING_REFINER3 {
     -2 binner2 \
     -3 binner3 \
     -o "${meta.id}_output_${name}" \
-    -n ${name}
+    -n "${meta.id}_${name}"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

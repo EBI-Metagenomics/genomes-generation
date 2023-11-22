@@ -46,7 +46,7 @@ workflow CLEAN_AND_FILTER_BINS {
     // The subscribe / copyTo is a hack to publish the bins
     // https://github.com/nextflow-io/nextflow/discussions/1933    
     filtered_bins.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/bins/prokaryotes/${cluster_fasta.name}")    
+        cluster_fasta.copyTo("${params.outdir}/bins/prokaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
     })
 
     emit:
