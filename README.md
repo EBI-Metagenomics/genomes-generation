@@ -1,91 +1,89 @@
 # MAGs generation pipeline
 
-MGnify nextflow pipeline to generate prokaryotic and eukaryotic MAGs from reads and assemblies.
+MGnify genomes generation pipeline to generate prokaryotic and eukaryotic MAGs from reads and assemblies.
 
 <p align="center">
-    <img src="nextflow/schema.png" alt="Pipeline overview" width="90%">
+    <img src="assets/GGP_schema.png" alt="Pipeline overview" width="90%">
 </p>
 
-This pipeline does not support co-binning
+This pipeline does not support co-binning.
 
 Pipeline supports snakemake version to detect eukatyotic MAGs.
 
-## Install requirements
+## Pipeline summary
 
-- nf-core and nextflow
-- tools executor to run it locally or on cluster
-  - conda
-  - docker
-  - singularity
+The pipeline performs the following tasks:
 
-## Download databases
+- Supports short reads.
+- Renames the reads to their corresponding assembly accessions (in the ERZ namespace).
+- Quality trims the reads, removes adapters, and merges paired-end reads using [fastp](https://github.com/OpenGene/fastp).
 
-You need to download mentioned databases and add them to `config/nf_dbs.config`.
-See example `config/nf_codon_dbs.config`.
+Afterward, the pipeline:
 
-Do not forget to add this config to main `.nextflow.config`
+- Runs a decontamination step using BWA to remove any host reads. By default, it uses the [hg39.fna](https://example.com/hg39.fna).
+- Bins the contigs using [Concoct](https://github.com/BinPro/CONCOCT).
+- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) bin_refinement compatible subworkflow.
 
-- busco
-- CAT
-- checkM2
-- eukCC
-- GUNC
-- GTDB-Tk
-- Rfams
-- reference genome
+For prokaryotes:
+
+- Conducts bin quality control with [CAT](https://github.com/dutilh/CAT), [GUNC](https://github.com/CK7/GUNC), and [CheckM](https://github.com/Ecogenomics/CheckM).
+- Performs dereplication with [dRep](https://github.com/MrOlm/drep).
+- Calculates coverage.
+- Detects rRNA using [cmsearch](https://www.rfam.org/cmsearch).
+- Assigns taxonomy with [GTDBtk](https://github.com/Ecogenomics/GTDBTk).
+
+For eukaryotes:
+
+- Merges bins using [EukCC](https://github.com/algbio/EukCC).
+- Dereplicates MAGs using [dRep](https://github.com/MrOlm/drep).
+- Calculates coverage.
+- Assesses quality with [BUSCO](https://busco.ezlab.org/) and EukCC.
+- Assigns taxonomy with [BAT](https://github.com/DRL/BAT).
+
+
+## Usage
+
+If this the first time running nextflow please refer to [this page](https://www.nextflow.io/index.html#GetStarted)
+
+### Required reference databases
+
+You need to download the mentioned databases and add them to `config/nf_dbs.config`. 
+See the example `config/nf_codon_dbs.config`.
+
+Don't forget to add this configuration to the main `.nextflow.config`.
+
+- [BUSCO](https://busco.ezlab.org/)
+- [CAT](https://github.com/dutilh/CAT)
+- [CheckM](https://github.com/Ecogenomics/CheckM)
+- [EukCC](https://github.com/algbio/EukCC)
+- [GUNC](https://github.com/CK7/GUNC)
+- [GTDB-Tk](https://github.com/Ecogenomics/GTDBTk)
+- [Rfam](https://www.rfam.org/)
+- The reference genome of your choice for decontamination, as a .fasta.
 
 ## Input data
 
-We expect data being downloaded from ENA. `NAME` should be **ENA RUN** accession.
-
-Pipeline requires input data to be in the following format:
-
-- Raw reads:
-  - located in one folder, ex. `reads_folder`
-  - better being **compressed**
-  - header contains run accession: <NAME>
-  - have name `<NAME>.fastq` the same as corresponding assembly (pipeline will link them by name)
-  - example for paired end: `reads_folder/NAME1_1.fastq`, `reads_folder/NAME1_2.fastq`
-  - example for single end: `reads_folder/NAME1.fastq`
-- Assemblies:
-  - located in one folder, ex. `assembly_folder`
-  - should be **uncompressed**
-  - have name `<NAME>.fasta`
-  - sequence headers contains assembly accession
-  - example: `assembly_folder/NAME1.fasta`
-- Rename file:
-  Tab-separated file : assembly_accession \t run_accession
-
-Example,
-
-```
-assembly_folder/ERR1.fasta
-assembly_folder/ERR2.fasta
-
-reads_folder/ERR1_1.fastq
-reads_folder/ERR1_2.fastq
-reads_folder/ERR2.fastq
-```
-
-## Run
-
-Clone repo:
-
 ```bash
-$ git clone https://github.com/EBI-Metagenomics/genomes-generation.git
-$ cd genomes-generation
+nextflow run ebi-metagenomics/genomes-generation \
+-profile <complete_with_profile> \
+--input samplesheet.csv \
+--outdir <OUTDIR>
 ```
 
-Run pipeline
+### Sample sheet example
 
-```bash
-$ nextflow run main.nf \
-  -config <config-file> \
-  -profile <profile> \
-  --assemblies assembly_folder \
-  --raw_reads reads_folder \
-  --rename_file rename.tsv
-```
+Each row corresponds to a specific dataset with information such as an identifier for the row, the file path to the assembly, and paths to the raw reads files (fastq_1 and fastq_2). Additionally, the assembly_accession column contains ERZ-specific accessions associated with the assembly. 
+
+| id         | assembly                                  | fastq_1                             | fastq_2                             | assembly_accession |
+|------------|-------------------------------------------|-------------------------------------|-------------------------------------|--------------------|
+| SRR1631112 | /path/to/SRR1631112.fasta                | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
+
+
+There is example [here](assets/samplesheet_example.csv)
+
+## Pipeline output
+
+WIP
 
 ## Citation
 
