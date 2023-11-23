@@ -1,6 +1,7 @@
 include { CAT as MAG_CLEANUP_CAT    } from '../../modules/local/cat/cat/main'
 include { DETECT_CONTAMINATION      } from '../../modules/local/detect_contamination/main'
 include { GUNC                      } from '../../modules/local/gunc/main'
+include { GZIP as GZIP_BINS         } from '../../modules/local/utils'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,9 +44,12 @@ workflow CLEAN_AND_FILTER_BINS {
         return cluster_fasta
     })
 
+    // --- compress prok bins
+    GZIP_BINS(filtered_bins)
+    compressed_output = GZIP_BINS.out.compressed
     // The subscribe / copyTo is a hack to publish the bins
     // https://github.com/nextflow-io/nextflow/discussions/1933    
-    filtered_bins.subscribe({ cluster_fasta ->
+    compressed_output.subscribe({ cluster_fasta ->
         cluster_fasta.copyTo("${params.outdir}/bins/prokaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
     })
 

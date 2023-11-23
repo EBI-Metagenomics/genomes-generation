@@ -12,6 +12,7 @@ include { COVERAGE_RECYCLER                  } from '../../modules/local/coverag
 include { DETECT_RRNA                        } from '../../modules/local/detect_rrna/main'
 include { GTDBTK                             } from '../../modules/local/gtdbtk/main'
 include { CHANGE_UNDERSCORE_TO_DOT           } from '../../modules/local/utils'
+include { GZIP as GZIP_MAGS                  } from '../../modules/local/utils'
 
 
 process CHECKM2_TABLE_FOR_DREP_GENOMES {
@@ -115,6 +116,12 @@ workflow PROK_MAGS_GENERATION {
         CHECKM2.out.stats.map { map, bins, stats -> stats },
         DREP.out.dereplicated_genomes_list.map { meta, genomes_list_tsv -> genomes_list_tsv }
     )
+    // compress prok genomes
+    GZIP_MAGS(CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect().flatten())
+    compressed_bins = GZIP_MAGS.out.compressed.subscribe({ cluster_fasta ->
+        cluster_fasta.copyTo("${params.outdir}/genomes_drep/prokaryotes/genomes/${cluster_fasta.name}")
+    })
+
 
     emit:
     prok_mags = CHANGE_UNDERSCORE_TO_DOT.out.return_files
