@@ -83,7 +83,78 @@ There is example [here](assets/samplesheet_example.csv)
 
 ## Pipeline output
 
-WIP
+```
+bins
+--- eukaryotes
+------- run_accession
+----------- bins.fa
+--- prokaryotes
+------- run_accession
+----------- bins.fa
+
+coverage
+--- eukaryotes
+------- coverage
+----------- aggregated_contigs2bins.txt
+------- run_accession_***_coverage
+----------- coverage.tab
+----------- ***_MAGcoverage.txt
+--- prokaryotes
+------- coverage
+----------- aggregated_contigs2bins.txt
+------- run_accession_***_coverage
+----------- coverage.tab
+----------- ***_MAGcoverage.txt
+
+genomes_drep
+--- eukaryotes
+------- dereplicated_genomes.txt
+------- genomes
+----------- genomes.fa
+--- prokaryotes
+------- dereplicated_genomes.txt
+------- genomes
+----------- genomes.fa
+
+intermediate_steps
+--- binning
+--- eukaryotes
+------- eukcc
+------- qs50
+--- fastp
+--- prokaryotes
+------- gunc
+------- refinement
+
+rna
+--- cluster_name
+------- cluster_name_fasta
+-----------  ***_rRNAs.fasta
+------- cluster_name_out
+----------- ***_rRNAs.out
+----------- ***_tRNA_20aa.out
+
+stats
+--- eukaryotes
+------- busco_final_qc.csv
+------- combined_busco_eukcc.qc.csv
+------- eukcc_final_qc.csv
+--- prokaryotes
+------- checkm2
+----------- aggregated_all_stats.csv
+----------- aggregated_filtered_genomes.tsv
+------- checkm_results_mags.tab
+
+taxonomy
+--- eukaryotes
+------- all_bin2classification.txt
+------- human_readable.taxonomy.csv
+--- prokaryotes
+------- gtdbtk_results.tar.gz
+
+pipeline_info
+--- versions.yml
+```
 
 ## Citation
 
