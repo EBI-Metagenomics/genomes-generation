@@ -23,6 +23,8 @@ process DETECT_RRNA {
 
     output:
     path('results_folder/*'), emit: rrna_out_results
+    path('results_folder/*_rRNAs.out'), optional: true, emit: rrna_out_files
+    path('results_folder/*_tRNA_20aa.out'), optional: true, emit: trna_out_files
     path("versions.yml")    , emit: versions
 
 

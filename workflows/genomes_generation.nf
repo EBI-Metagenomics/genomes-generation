@@ -47,6 +47,8 @@ rfam_rrna_models   = file(params.rfam_rrna_models, checkIfExists: true)
 ref_genome         = file(params.ref_genome)
 ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
 
+assembly_software  = file(params.assembly_software_file)
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,6 +57,7 @@ ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
 */
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { PREPARE_TSV_FOR_UPLOADER    } from '../modules/local/genome_uploader/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,6 +85,15 @@ def multiqc_report    = []
 workflow GGP {
 
     ch_versions = Channel.empty()
+
+    euk_genomes = Channel.empty()
+    stats_euks = Channel.empty()
+    coverage_euks = Channel.empty()
+
+    prok_genomes = Channel.empty()
+    stats_proks = Channel.empty()
+    coverage_proks = Channel.empty()
+    rna = Channel.empty()
 
     // ---- combine data for reads and contigs pre-processing ---- //
     groupReads = { meta, assembly, fq1, fq2 ->
@@ -152,6 +164,10 @@ workflow GGP {
             cat_taxonomy_db
         )
 
+        euk_genomes = euk_genomes.mix( EUK_MAGS_GENERATION.out.genomes )
+        stats_euks = stats_euks.mix( EUK_MAGS_GENERATION.out.stats )
+        coverage_euks = coverage_euks.mix( EUK_MAGS_GENERATION.out.coverage )
+
         ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
     }
 
@@ -173,8 +189,23 @@ workflow GGP {
             rfam_rrna_models
         )
 
+        prok_genomes = prok_genomes.mix( PROK_MAGS_GENERATION.out.genomes )
+        stats_proks = stats_proks.mix( PROK_MAGS_GENERATION.out.stats )
+        coverage_proks = coverage_proks.mix( PROK_MAGS_GENERATION.out.coverage )
+        rna = rna.mix( PROK_MAGS_GENERATION.out.rna )
         ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
     }
+
+    PREPARE_TSV_FOR_UPLOADER(
+        euk_genomes,
+        prok_genomes,
+        assembly_software,
+        stats_euks,
+        stats_proks,
+        coverage_euks,
+        coverage_proks,
+        rna
+    )
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (

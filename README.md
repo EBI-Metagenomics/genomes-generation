@@ -67,6 +67,9 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 nextflow run ebi-metagenomics/genomes-generation \
 -profile <complete_with_profile> \
 --input samplesheet.csv \
+--assembly_software_file software.tsv \
+--metagenome "metagenome" \
+--biomes "biome,feature,material" \
 --outdir <OUTDIR>
 ```
 
@@ -80,6 +83,23 @@ Each row corresponds to a specific dataset with information such as an identifie
 
 
 There is example [here](assets/samplesheet_example.csv)
+
+### Assembly software
+
+Id column is RUN accession \
+Assembly software is a tool that was used to assemble RUN into assembly (ERZ).
+
+| id         | assembly_software  |
+|------------|--------------------|
+| SRR1631112 | Assembler_vVersion |
+
+### Metagenome
+Manually choose the most appropriate metagenome from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree.
+
+### Biomes
+Comma-separated environment parameters in format: 
+`"environment_biome,environment_feature,environment_material"`
+
 
 ## Pipeline output
 

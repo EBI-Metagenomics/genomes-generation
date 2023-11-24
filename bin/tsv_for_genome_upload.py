@@ -7,8 +7,14 @@ import sys
 import pandas as pd
 import logging
 
+LIMIT_RRNA = 80
+LIMIT_TRNA = 18
+
 DEFAULT_BINNING_SOFTWARE = "mgbinrefinder_v1.0.0"
 DEFAULT_BINNING_SOFTWARE_PARAMS = "default"
+
+EUK_PATH = os.path.join("genomes_drep", "eukaryotes", "genomes")
+PROK_PATH = os.path.join("genomes_drep", "prokaryotes", "genomes")
 
 STATS_SOFTWARE = {
     "eukaryotes": "EukCC_v2.1.0",
@@ -24,6 +30,16 @@ COLUMNS = {
     "stats_generation_software": "stats_generation_software",
     "completeness": "completeness",
     "contamination": "contamination",
+    "metagenome": "metagenome",
+    "co-assembly": "co-assembly",
+    "rRNA_presence": "rRNA_presence",
+    "taxonomy_lineage": "taxonomy_lineage",
+    "taxonomy_tool": "taxonomy_tool",
+    "genome_coverage": "genome_coverage",
+    "genome_path": "genome_path",
+    "environment_biome": "broad_environment",
+    "environment_feature": "local_environment",
+    "environment_material": "environmental_medium"
 }
 
 metagenomes = ["activated carbon metagenome", "activated sludge metagenome",
@@ -129,9 +145,11 @@ def parse_args():
         description="Allows to create a tsv of metadata for MAG upload to ENA.")
 
     parser.add_argument('--debug', action='store_true', help="logging.DEBUG output")
-    parser.add_argument('-o', '--output', type=str, required=False, help="Script output folder", default="for_uploader")
+    parser.add_argument('-o', '--output', type=str, required=False, help="Output files", default="for_uploader.tsv")
 
-    parser.add_argument('-m', '--mag-folder', type=str, required=True, help="MAGs storage folder")
+    parser.add_argument('-mp', '--mags-proks', type=str, required=False, help="Prokaryotic MAGs list of files", nargs='*')
+    parser.add_argument('-me', '--mags-euks', type=str, required=False, help="Eukaryotic MAGs list of files",
+                        nargs='*')
     parser.add_argument('-a', '--assembly-software-file', type=str, required=True,
                         help="File with assembler for each assembly")
     parser.add_argument('--coassemblies', type=str, default=None,
@@ -143,13 +161,25 @@ def parse_args():
     parser.add_argument('-p', '--binning-params', type=str, required=False, default=DEFAULT_BINNING_SOFTWARE_PARAMS,
                         help="Binning parameters that were used")
     parser.add_argument('-se', '--stats-euks', type=str, required=True, help="path to eukaryotic stats output")
-    parser.add_argument('-sp', '--stats-proks', type=str, required=True, help="path to prokaryotic output")
+    parser.add_argument('-sp', '--stats-proks', type=str, required=True, help="path to prokaryotic stats output")
+    parser.add_argument('--metagenome', type=str, required=True, choices=metagenomes,
+                        help="choose the most appropriate metagenome "
+                             "from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree")
+    parser.add_argument('-ce', '--coverage-euks', type=str, required=False,
+                        help="path to eukaryotic coverage files", nargs="*")
+    parser.add_argument('-cp', '--coverage-proks', type=str, required=False, help="path to prokaryotic coverage files",
+                        nargs="*")
+    parser.add_argument('-rna', '--rna-outs', type=str, required=False, help="path to tRNA and rRNA .out files",
+                        nargs="*")
+    parser.add_argument('-te', '--tax-euks', type=str, required=False, help="path to eukaryotic taxonomy",
+                        nargs="*")
+    parser.add_argument('-tp', '--tax-proks', type=str, required=False, help="path to prokaryotic taxonomy",
+                        nargs="*")
+    parser.add_argument('--biomes', type=str, required=True, help="comma-separated environment parameters "
+                                                                             "(biome,feature,material)")
+    parser.add_argument('--absolute-path', type=str, required=True, help="Absolute path to result folder of pipeline")
 
     args = parser.parse_args()
-
-    if not os.path.exists(args.mag_folder):
-        print(f'MAG folder {args.mag_folder} does not exist')
-        sys.exit(1)
 
     if args.coassemblies is not None and not os.path.exists(args.coassemblies):
         print("Co-assembly description file does not exist")
@@ -157,6 +187,10 @@ def parse_args():
 
     if not os.path.exists(args.assembly_software_file):
         print(f'Assembly software file {args.assembly_software_file} does not exist')
+        sys.exit(1)
+
+    if len(args.biomes.split(',')) != 3:
+        print(f'Environment variables must be 3: biome, feature, and material. Got {args.biomes}')
         sys.exit(1)
 
     return args
@@ -175,10 +209,8 @@ class MAGupload:
             level=logLevel,
         )
 
-        self.mag_folder = args.mag_folder
-        self.mag_output_dir = args.output
-        if not os.path.exists(self.mag_output_dir):
-            os.makedirs(self.mag_output_dir)
+        self.euk_mag = args.mags_euks
+        self.prok_mag = args.mags_proks
 
         self.coassembly = args.coassemblies
         if self.coassembly:
@@ -187,22 +219,30 @@ class MAGupload:
         self.assembly_software_file = args.assembly_software_file
         self.binning_software = args.binning_software
         self.binning_params = args.binning_params
-        self.stats_euks = args.stats_euks
-        self.stats_proks = args.stats_proks
+        self.stats_euks = args.stats_euks if args.stats_euks else None
+        self.stats_proks = args.stats_proks if args.stats_proks else None
+        self.metagenome = args.metagenome
+        self.biomes = args.biomes.split(',')
+        self.coverage_euks = args.coverage_euks if args.coverage_euks else None
+        self.coverage_proks = args.coverage_proks if args.coverage_proks else None
+        self.rna = args.rna_outs if args.rna_outs else None
+        self.tax_euks = args.tax_euks if args.tax_euks else None
+        self.tax_proks = args.tax_proks if args.tax_proks else None
+        self.absolute_path = args.absolute_path
+        self.output_file = args.output
 
     def process_mags(self):
-        # names
-        genomes_list, stats_software = self.get_genomes_info()
+        # genomes
+        genomes_list, stats_software, genome_paths = self.get_genomes_info()
         self.output_table = pd.DataFrame({COLUMNS["genome_name"]: genomes_list})
         self.output_table.set_index(COLUMNS["genome_name"], inplace=True)
-
+        self.output_table[COLUMNS["genome_path"]] = genome_paths
         # run accessions
         accessions = [item.split('_')[0] for item in genomes_list]
         self.output_table[COLUMNS["accessions"]] = accessions
 
         # assembly software
-        software = self.get_assembly_software()
-        self.output_table[COLUMNS["assembly_software"]] = [software[item] for item in genomes_list]
+        self.output_table[COLUMNS["assembly_software"]] = self.get_assembly_software(genomes_list)
 
         # binning
         self.output_table[COLUMNS["binning_software"]] = [self.binning_software for _ in range(len(genomes_list))]
@@ -215,28 +255,50 @@ class MAGupload:
         self.output_table[COLUMNS["completeness"]] = [stats[item][0] for item in genomes_list]
         self.output_table[COLUMNS["contamination"]] = [stats[item][1] for item in genomes_list]
 
+        # coverage
+        coverage = self.get_coverage(self.coverage_proks)
+        coverage.update(self.get_coverage(self.coverage_euks))
+
+        self.output_table[COLUMNS["genome_coverage"]] = [coverage[item] for item in genomes_list]
+
+        # study info
+        self.output_table[COLUMNS["metagenome"]] = [self.metagenome for _ in range(len(genomes_list))]
+        self.output_table[COLUMNS["co-assembly"]] = ["False" for _ in range(len(genomes_list))]
+        self.output_table[COLUMNS["environment_biome"]] = [self.biomes[0] for _ in range(len(genomes_list))]
+        self.output_table[COLUMNS["environment_feature"]] = [self.biomes[1] for _ in range(len(genomes_list))]
+        self.output_table[COLUMNS["environment_material"]] = [self.biomes[2] for _ in range(len(genomes_list))]
+        self.output_table[COLUMNS["rRNA_presence"]] = self.get_rna(genomes_list)
         print(self.output_table)
-        #self.output_table.to_csv("output", sep='\t', index=True, header=True)
+        self.output_table.to_csv(self.output_file, sep='\t', index=True, header=True)
 
     def get_genomes_info(self):
-        genomes = []
-        stats_software = []
-        for subfolder in os.listdir(self.mag_folder):
-            cur_genomes = os.listdir(os.path.join(self.mag_folder, subfolder))
-            genomes.extend(cur_genomes)
-            stats_software.extend([STATS_SOFTWARE[subfolder] for _ in range(len(cur_genomes))])
-        return genomes, stats_software
+        genomes, stats_software, paths = [[] for _ in range(3)]
+        if self.euk_mag:
+            genomes.extend([os.path.basename(i).replace('.gz', '') for i in self.euk_mag])
+            stats_software.extend([STATS_SOFTWARE["eukaryotes"] for _ in range(len(self.euk_mag))])
+            paths.extend([os.path.join(self.absolute_path, EUK_PATH, os.path.basename(i)) for i in self.euk_mag])
+        if self.prok_mag:
+            genomes.extend([os.path.basename(i).replace('.gz', '') for i in self.prok_mag])
+            stats_software.extend([STATS_SOFTWARE["prokaryotes"] for _ in range(len(self.prok_mag))])
+            paths.extend([os.path.join(self.absolute_path, PROK_PATH, os.path.basename(i)) for i in self.prok_mag])
+        return genomes, stats_software, paths
 
-    def get_assembly_software(self):
+    def get_assembly_software(self, genomes):
         assembly_software = {}
+        software_list = []
         with open(self.assembly_software_file, 'r') as file_in:
             for line in file_in:
                 line = line.strip().split('\t')
                 assembly_software[line[0]] = line[1]
-        return assembly_software
+        for genome in genomes:
+            name = genome.split('_')[0]
+            software_list.append(assembly_software[name])
+        return software_list
 
     def get_stats(self, input_file):
         stats = {}
+        if not input_file:
+            return stats
         with open(input_file, 'r') as file_in:
             for line in file_in:
                 if "completeness" in line:
@@ -248,19 +310,49 @@ class MAGupload:
                 cont = round(float(line[2]), 2)
                 stats[line[0]] = [comp, cont]
         return stats
-"""
 
-        self.euks = True if self.args.euks else False
-        self.rnaDir = self.args.RNA_folder
-        self.taxInfo = self.args.taxInfo
-        self.binningSW = self.args.binning_sw.replace('_', ' ')
-        self.binningParams = self.args.binning_pars
-        self.completenessSW = self.args.completeness_sw
-        self.metagenome = self.args.metagenome
-        self.envVars = self.args.biomes
-        self.stats = self.args.stats
-        self.force = True if self.args.force else False
-        self.covDir = self.args.cov_folder
+    def get_coverage(self, files):
+        coverage = {}
+        if not files:
+            return coverage
+        for coverage_file in files:
+            with open(coverage_file, 'r') as file_in:
+                for line in file_in:
+                    line = line.strip().split('\t')
+                    coverage[line[0]] = round(float(line[1]), 2)
+        return coverage
+
+    def get_rna(self, genomes):
+        rrna, trna = {}, {}
+        if not self.rna:
+            return ['False' for _ in genomes]
+        for filename in self.rna:
+            if filename.endswith('_rRNAs.out'):
+                genome = filename.split('_rRNAs.out')[0] + '.fa'
+                rrna[genome] = self.check_rna(filename, LIMIT_RRNA)
+            if filename.endswith('_tRNA_20aa.out'):
+                genome = filename.split('_tRNA_20aa.out')[0] + '.fa'
+                trna[genome] = self.check_rna(filename, LIMIT_TRNA)
+        final_decision = []
+        for genome in genomes:
+            if genome not in trna or genome not in rrna:
+                final_decision.append('False')
+            else:
+                if rrna[genome] and trna[genome]:
+                    final_decision.append('True')
+                else:
+                    final_decision.append('False')
+        return final_decision
+
+    def check_rna(self, filename, limit):
+        with open(filename, 'r') as file_in:
+            for line in file_in:
+                cur_rna_count = float(line.strip().split('\t')[1])
+                if cur_rna_count < limit:
+                    return False
+        return True
+
+"""
 
         self.taxNCBI = "PATH/TO/NCBI_TAXDUMP_PREFERENTIALLY_"
         self.ar53_metadata = "PATH/TO/ar53_metadata_r214.tsv"
