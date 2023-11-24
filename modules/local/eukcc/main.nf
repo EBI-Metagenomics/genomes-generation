@@ -26,8 +26,8 @@ process LINKTABLE {
         --within 1500 \
         --out ${meta.id}.${binner}.links.csv \
         --debug \
-        bins \
-        ${bam[0]}
+        --bindir bins \
+        --bam ${bam[0]}
     fi
 
     cat <<-END_VERSIONS > versions.yml
@@ -56,7 +56,7 @@ process EUKCC {
     output:
     tuple val(meta), path("*_merged_bins")                       , emit: eukcc_results
     tuple val(meta), path("${meta.id}_${binner}.eukcc.csv")      , emit: eukcc_csv
-    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"), emit: eukcc_merged_csv
+    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"), optional: true, emit: eukcc_merged_csv
     path "versions.yml"                                          , emit: versions
 
     script:
@@ -73,9 +73,13 @@ process EUKCC {
         --out ${binner}_${meta.id}_merged_bins \
         --prefix "${binner}_${meta.id}_merged." \
         bins
+    echo "EukCC finished"
 
-    cp *_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-    cp *_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+    cp ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
+    lines=\$(wc -l < ${binner}_${meta.id}_merged_bins/merged_bins.csv)
+    if [ \${lines} -gt 1 ]; then
+        cp ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

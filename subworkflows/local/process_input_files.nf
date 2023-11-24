@@ -3,7 +3,7 @@
 //
 
 include { CHANGE_DOT_TO_UNDERSCORE_CONTIGS } from '../../modules/local/utils'
-include { ERZ_TO_ERR                       } from '../../modules/local/utils'
+include { ERR_TO_ERZ                       } from '../../modules/local/utils'
 
 workflow PROCESS_INPUT {
 
@@ -24,13 +24,13 @@ workflow PROCESS_INPUT {
     // --- MODIFY READS
     // change ERR in reads to ERZ
     // TODO: make this process faster (biopython is slow)
-    ERZ_TO_ERR( reads ) // input: tuple(meta, [reads]]); output: tuple(meta, [modified_reads]])
+    ERR_TO_ERZ( reads ) // input: tuple(meta, [reads]]); output: tuple(meta, [modified_reads]])
 
     result = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.join(
-        ERZ_TO_ERR.out.modified_reads
+        ERR_TO_ERZ.out.modified_reads
     )
 
-    ch_versions = ch_versions.mix( ERZ_TO_ERR.out.versions.first() )
+    ch_versions = ch_versions.mix( ERR_TO_ERZ.out.versions.first() )
 
     emit:
     assembly_and_reads = result // tuple( meta, assembly_file, [raw_reads] )

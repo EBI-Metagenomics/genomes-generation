@@ -17,6 +17,8 @@ include { BAT                                        } from '../../modules/local
 include { BAT_TAXONOMY_WRITER                        } from '../../modules/local/bat_taxonomy_writer/main'
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../../modules/local/coverage_recycler/main'
 include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS       } from '../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
+include { GZIP as GZIP_MAGS                          } from '../../modules/local/utils'
+include { GZIP as GZIP_BINS                          } from '../../modules/local/utils'
 
 
 process CONCATENATE_QUALITY_FILES {
@@ -195,7 +197,7 @@ workflow EUK_MAGS_GENERATION {
             return tuple([id: "aggregated"], agg_genomes)
         }
 
-    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, 'aggregated_eukaryotes' )
+    DREP_MAGS( combine_drep.join( aggregated_quality ), params.euk_drep_args_mags, 'eukaryotes' )
 
     ch_versions = ch_versions.mix( DREP_MAGS.out.versions.first() )
 
@@ -253,6 +255,17 @@ workflow EUK_MAGS_GENERATION {
 
     ch_versions = ch_versions.mix( BAT.out.versions.first() )
     ch_versions = ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions.first() )
+
+    // compress euk genomes
+    GZIP_MAGS(drep_result)
+    compressed_genomes = GZIP_MAGS.out.compressed.subscribe({ cluster_fasta ->
+        cluster_fasta.copyTo("${params.outdir}/genomes_drep/eukaryotes/genomes/${cluster_fasta.name}")
+    })
+    // compress euk bins
+    GZIP_BINS(FILTER_QS50.out.qs50_filtered_genomes.map{ meta, genomes, quality -> genomes }.flatten())
+    compressed_bins = GZIP_BINS.out.compressed.subscribe({ cluster_fasta ->
+        cluster_fasta.copyTo("${params.outdir}/bins/eukaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
+    })
 
     emit:
     euk_quality = BUSCO_EUKCC_QC.out.busco_final_qc

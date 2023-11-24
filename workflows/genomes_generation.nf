@@ -208,6 +208,4 @@ workflow GGP {
     // )
     // multiqc_report = MULTIQC.out.report.toList()
 
-    // ---- compress results ---- //
-    //GZIP(PROK_SUBWF.out.prok_mags, channel.value("dereplicated_genomes_prok"))
 }

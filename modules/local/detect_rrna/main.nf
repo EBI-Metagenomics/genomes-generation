@@ -7,6 +7,16 @@ process DETECT_RRNA {
 
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'
 
+    errorStrategy {
+        task.exitStatus {
+            exitVal ->
+                // Retry on non-zero exit codes
+                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
+        }
+        maxRetries 3  // Set the maximum number of retries
+        sleep 10      // Set the delay between retries in seconds
+    }
+
     input:
     path fasta
     file cm_models
@@ -28,6 +38,13 @@ process DETECT_RRNA {
     FILENAME="\${BASENAME%.*}"
 
     mkdir -p "\${RESULTS_FOLDER}"
+
+    # tRNAscan-SE needs a tmp folder otherwise it will use the base TMPDIR (with no subfolder)
+    # and that causes issues as other detect_rrna process will crash when the files are cleaned
+    PROCESSTMP="\$(mktemp -d)"
+    export TMPDIR="\${PROCESSTMP}"
+    # bash trap to clean the tmp directory
+    trap 'rm -r -- "\${PROCESSTMP}"' EXIT
 
     echo "[ Detecting rRNAs ] "
 

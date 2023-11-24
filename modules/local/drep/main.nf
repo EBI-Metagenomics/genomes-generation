@@ -10,10 +10,13 @@ process DREP {
         'https://depot.galaxyproject.org/singularity/drep:3.2.2--pyhdfd78af_0':
         'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0' }"
 
+    // that publishDir needs to be a function because of type parameter
     publishDir(
-        path: "${params.outdir}/drep/${type}/${meta.id}/",
-        mode: params.publish_dir_mode,
-        failOnError: true
+            path: "${params.outdir}/genomes_drep/${type}",
+            mode: params.publish_dir_mode,
+            failOnError: true,
+            pattern: "dereplicated_genomes.txt",
+            when: { ${meta.id} == "aggregated" },
     )
 
     input:

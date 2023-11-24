@@ -28,15 +28,8 @@ process GZIP {
     stageInMode 'copy'
     tag "${file_to_compress}"
 
-    //publishDir(
-    //    path: "${params.outdir}/${output_folder}",
-    //    mode: 'copy',
-    //    failOnError: true
-    //)
-
     input:
-    tuple val(meta), file(file_to_compress)
-    //val output_folder
+    file(file_to_compress)
 
     output:
     path("*.gz"), emit: compressed
@@ -66,7 +59,7 @@ process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
     """
 }
 
-process ERZ_TO_ERR {
+process ERR_TO_ERZ {
 
     tag "${meta.id}"
 
@@ -78,16 +71,16 @@ process ERZ_TO_ERR {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("changed*.fastq.gz"), emit: modified_reads
+    tuple val(meta), path("changed*.*.gz"), emit: modified_reads
     path "versions.yml"                       , emit: versions
 
     script:
     """
     gunzip ${reads}
 
-    change_reads.py --reads *.fastq -f ${meta.erz} -t ${meta.id} --change_dots_to_underscores
+    change_reads.py --reads ${meta.id}* -t ${meta.erz} -f ${meta.id} --change_dots_to_underscores
 
-    gzip changed*.fastq
+    gzip changed*.*
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
