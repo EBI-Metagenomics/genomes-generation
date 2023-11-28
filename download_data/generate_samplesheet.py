@@ -11,14 +11,13 @@ def main(assembly_dir, run_dir, rename_file, output):
     accessions = {}
     with open(rename_file, 'r') as file_in:
         for line in file_in:
-            line = line.strip().split(',')  # err,erz
+            line = line.strip().split('\t')  # err,erz
             accessions[line[0]] = line[1]
 
     assemblies = {}
     for assembly_file in os.listdir(assembly_dir):
         accession = assembly_file.split('.')[0]
-        assemblies.setdefault(accession, [])
-        assemblies[accession].append(assembly_file)
+        assemblies[accession] = assembly_file
 
     runs = {}
     for run_file in os.listdir(run_dir):
@@ -27,11 +26,11 @@ def main(assembly_dir, run_dir, rename_file, output):
         runs[accession].append(run_file)
 
     with open(output, 'w') as file_out:
-        file_out.write('\t'.join(['id', 'assembly', 'fastq_1', 'fastq_2', 'assembly_accession']))
+        file_out.write(','.join(['id', 'assembly', 'fastq_1', 'fastq_2', 'assembly_accession']) + '\n')
         list_values = []
         for run_accession in accessions:
             assembly_accession = accessions[run_accession]
-            list_values.append(run_accession, os.path.join(assembly_dir, assemblies[assembly_accession]))
+            list_values.extend([run_accession, os.path.join(assembly_dir, assemblies[run_accession])])
             if len(runs[run_accession]) == 2:
                 if len(runs[run_accession][0].split('_1')) >= 2:
                     run1 = os.path.join(run_dir, runs[run_accession][0])
@@ -42,7 +41,7 @@ def main(assembly_dir, run_dir, rename_file, output):
             else:
                 run1 = os.path.join(run_dir, runs[run_accession][0])
                 run2 = ""
-            list_values.append(run1, run2, assembly_accession)
+            list_values.extend([run1, run2, assembly_accession])
             file_out.write(','.join(list_values) + '\n')
 
 def parse_args():
