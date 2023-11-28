@@ -10,7 +10,7 @@ import logging
 LIMIT_RRNA = 80
 LIMIT_TRNA = 18
 
-DEFAULT_BINNING_SOFTWARE = "mgbinrefinder_v1.0.0"
+DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.0.0"
 DEFAULT_BINNING_SOFTWARE_PARAMS = "default"
 
 EUK_PATH = os.path.join("genomes_drep", "eukaryotes", "genomes")
@@ -34,7 +34,6 @@ COLUMNS = {
     "co-assembly": "co-assembly",
     "rRNA_presence": "rRNA_presence",
     "taxonomy_lineage": "taxonomy_lineage",
-    "taxonomy_tool": "taxonomy_tool",
     "genome_coverage": "genome_coverage",
     "genome_path": "genome_path",
     "environment_biome": "broad_environment",
@@ -145,7 +144,7 @@ def parse_args():
         description="Allows to create a tsv of metadata for MAG upload to ENA.")
 
     parser.add_argument('--debug', action='store_true', help="logging.DEBUG output")
-    parser.add_argument('-o', '--output', type=str, required=False, help="Output files", default="for_uploader.tsv")
+    parser.add_argument('-o', '--output', type=str, required=False, help="Output files", default="final_table_for_uploader.tsv")
 
     parser.add_argument('-mp', '--mags-proks', type=str, required=False, help="Prokaryotic MAGs list of files", nargs='*')
     parser.add_argument('-me', '--mags-euks', type=str, required=False, help="Eukaryotic MAGs list of files",
@@ -171,10 +170,8 @@ def parse_args():
                         nargs="*")
     parser.add_argument('-rna', '--rna-outs', type=str, required=False, help="path to tRNA and rRNA .out files",
                         nargs="*")
-    parser.add_argument('-te', '--tax-euks', type=str, required=False, help="path to eukaryotic taxonomy",
-                        nargs="*")
-    parser.add_argument('-tp', '--tax-proks', type=str, required=False, help="path to prokaryotic taxonomy",
-                        nargs="*")
+    parser.add_argument('-te', '--tax-euks', type=str, required=False, help="path to eukaryotic taxonomy")
+    parser.add_argument('-tp', '--tax-proks', type=str, required=False, help="path to prokaryotic taxonomy")
     parser.add_argument('--biomes', type=str, required=True, help="comma-separated environment parameters "
                                                                              "(biome,feature,material)")
     parser.add_argument('--absolute-path', type=str, required=True, help="Absolute path to result folder of pipeline")
@@ -268,7 +265,9 @@ class MAGupload:
         self.output_table[COLUMNS["environment_feature"]] = [self.biomes[1] for _ in range(len(genomes_list))]
         self.output_table[COLUMNS["environment_material"]] = [self.biomes[2] for _ in range(len(genomes_list))]
         self.output_table[COLUMNS["rRNA_presence"]] = self.get_rna(genomes_list)
-        print(self.output_table)
+        self.output_table[COLUMNS["taxonomy_lineage"]] = self.get_taxonomy(genomes_list)
+
+        # output to file
         self.output_table.to_csv(self.output_file, sep='\t', index=True, header=True)
 
     def get_genomes_info(self):
@@ -352,15 +351,33 @@ class MAGupload:
                     return False
         return True
 
-"""
+    def get_taxonomy(self, genomes):
+        final_tax = []
+        lineage = {}
+        if self.tax_euks:
+            with open(self.tax_euks, 'r') as file_in:
+                for line in file_in:
+                    if 'classification' in line:
+                        continue
+                    else:
+                        line = line.strip().split('\t')
+                        lineage[line[0]] = line[3]
 
-        self.taxNCBI = "PATH/TO/NCBI_TAXDUMP_PREFERENTIALLY_"
-        self.ar53_metadata = "PATH/TO/ar53_metadata_r214.tsv"
-        self.bac120_metadata = "PATH/TO/bac120_metadata_r214.tsv"
-"""
+        if self.tax_proks:
+            with open(self.tax_proks, 'r') as file_in:
+                for line in file_in:
+                    if 'classification' in line:
+                        continue
+                    else:
+                        line = line.strip().split('\t')
+                        lineage[line[0]+'.fa'] = line[2]
+
+        final_tax = [lineage[genome] for genome in genomes]
+        return final_tax
+
 
 def main():
-    ena_uploader = MAGupload().process_mags()
+    MAGupload().process_mags()
     logging.info('Completed')
 
 

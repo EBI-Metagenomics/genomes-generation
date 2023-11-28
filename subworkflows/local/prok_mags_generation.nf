@@ -14,7 +14,6 @@ include { GTDBTK                             } from '../../modules/local/gtdbtk/
 include { CHANGE_UNDERSCORE_TO_DOT           } from '../../modules/local/utils'
 include { GZIP as GZIP_MAGS                  } from '../../modules/local/utils'
 
-
 process CHECKM2_TABLE_FOR_DREP_GENOMES {
 
     input:
@@ -105,7 +104,6 @@ workflow PROK_MAGS_GENERATION {
     rna_out = Channel.empty()
     rna_out = rna_out.mix( DETECT_RRNA.out.rrna_out_files.collect() )
     rna_out = rna_out.mix( DETECT_RRNA.out.trna_out_files.collect() )
-    print(rna_out)
 
     ch_versions = ch_versions.mix( DETECT_RRNA.out.versions.first() )
 
@@ -131,5 +129,6 @@ workflow PROK_MAGS_GENERATION {
     stats = CHECKM2_TABLE_FOR_DREP_GENOMES.out.checkm_results_mags
     coverage = COVERAGE_RECYCLER.out.mag_coverage.map{ meta, coverage_file -> coverage_file }.collect()
     rna = rna_out
+    taxonomy = GTDBTK.out.ncbi_taxonomy
     versions = ch_versions
 }

@@ -8,38 +8,41 @@ MGnify genomes generation pipeline to generate prokaryotic and eukaryotic MAGs f
 
 This pipeline does not support co-binning.
 
-Pipeline supports snakemake version to detect eukatyotic MAGs.
-
 ## Pipeline summary
 
 The pipeline performs the following tasks:
 
 - Supports short reads.
-- Renames the reads to their corresponding assembly accessions (in the ERZ namespace).
-- Quality trims the reads, removes adapters, and merges paired-end reads using [fastp](https://github.com/OpenGene/fastp).
+- Changes read headers to their corresponding assembly accessions (in the ERZ namespace).
+- Quality trims the reads, removes adapters [fastp](https://github.com/OpenGene/fastp).
 
 Afterward, the pipeline:
 
 - Runs a decontamination step using BWA to remove any host reads. By default, it uses the [hg39.fna](https://example.com/hg39.fna).
-- Bins the contigs using [Concoct](https://github.com/BinPro/CONCOCT).
-- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) bin_refinement compatible subworkflow.
+- Bins the contigs using [Concoct](https://github.com/BinPro/CONCOCT), [MetaBAT2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6662567/) and [MaxBin2](https://flowcraft.readthedocs.io/en/latest/user/components/maxbin2.html).
+- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) bin_refinement compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
 
 For prokaryotes:
 
 - Conducts bin quality control with [CAT](https://github.com/dutilh/CAT), [GUNC](https://github.com/CK7/GUNC), and [CheckM](https://github.com/Ecogenomics/CheckM).
 - Performs dereplication with [dRep](https://github.com/MrOlm/drep).
-- Calculates coverage.
-- Detects rRNA using [cmsearch](https://www.rfam.org/cmsearch).
+- Calculates coverage using MetaBAT2 calculated depths.
+- Detects rRNA and tRNA using [cmsearch](https://www.rfam.org/cmsearch).
 - Assigns taxonomy with [GTDBtk](https://github.com/Ecogenomics/GTDBTk).
 
 For eukaryotes:
 
-- Merges bins using [EukCC](https://github.com/algbio/EukCC).
+- Estimates quality and merges bins using [EukCC](https://github.com/algbio/EukCC).
 - Dereplicates MAGs using [dRep](https://github.com/MrOlm/drep).
-- Calculates coverage.
+- Calculates coverage using MetaBAT2 calculated depths.
 - Assesses quality with [BUSCO](https://busco.ezlab.org/) and EukCC.
 - Assigns taxonomy with [BAT](https://github.com/DRL/BAT).
 
+Final steps: 
+
+- Tools versions are available in versions.yml
+- Pipeline generates a tsv table for [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader)
+- TODO: finish MultiQC 
 
 ## Usage
 
@@ -57,11 +60,27 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 - [CheckM](https://github.com/Ecogenomics/CheckM)
 - [EukCC](https://github.com/algbio/EukCC)
 - [GUNC](https://github.com/CK7/GUNC)
-- [GTDB-Tk](https://github.com/Ecogenomics/GTDBTk)
+- [GTDB-Tk](https://github.com/Ecogenomics/GTDBTk) + ar53_metadata_r214.tsv, bac120_metadata_r214.tsv from [here](https://data.ace.uq.edu.au/public/gtdb/data/releases/)
 - [Rfam](https://www.rfam.org/)
 - The reference genome of your choice for decontamination, as a .fasta.
 
-## Input data
+## Data download
+
+If you use EBI cluster:
+1) Get your Raw reads and Assembly study accessions;
+2) Download data from ENA, [rename](download_data/rename-erz.py) assembly files and [generate](download_data/generate_samplesheet.py) input samplesheet:
+```commandline
+bash download_data/fetch_data.sh \
+    -a assembly_study_accession \
+    -r reads_study_accession \
+    -p `pwd` \
+    -c `pwd`/my_catalogue \
+    -f "false"
+```
+Otherwise, download your data and keep format as recommended in Sample sheet example section.
+
+
+## Pipeline input data
 
 ```bash
 nextflow run ebi-metagenomics/genomes-generation \
@@ -70,7 +89,7 @@ nextflow run ebi-metagenomics/genomes-generation \
 --assembly_software_file software.tsv \
 --metagenome "metagenome" \
 --biomes "biome,feature,material" \
---outdir <OUTDIR>
+--outdir <FULL_PATH_TO_OUTDIR>
 ```
 
 ### Sample sheet example
@@ -103,7 +122,19 @@ Comma-separated environment parameters in format:
 
 ## Pipeline output
 
+### Upload
+
+Use `final_table_for_uploader.tsv` to upload your MAGs with [uploader](https://github.com/EBI-Metagenomics/genome_uploader).
+
+There is example [here](assets/final_table_for_uploader.tsv).
+
+! _Do not modify existing output structure because that TSV file contains full paths to your genomes._
+
+### Structure
+
 ```
+final_table_for_uploader.tsv
+
 bins
 --- eukaryotes
 ------- run_accession

@@ -13,6 +13,8 @@ process PREPARE_TSV_FOR_UPLOADER {
     path coverage_euks
     path coverage_proks
     path rna
+    path taxonomy_euks
+    path taxonomy_proks
 
     output:
     path("*.tsv")        , emit: tsv_for_uploader
@@ -26,6 +28,8 @@ process PREPARE_TSV_FOR_UPLOADER {
     def args_coverage_proks = coverage_proks ? "--coverage-proks ${coverage_proks}": "" ;
     def args_assembly_file = assembly_software_file ? "--assembly-software-file ${assembly_software_file}": "" ;
     def args_rna = rna ? "--rna-outs ${rna}": "" ;
+    def args_tax_euks = taxonomy_euks ? "--tax-euks ${taxonomy_euks}": "" ;
+    def args_tax_proks = taxonomy_proks ? "--tax-proks ${taxonomy_proks}": "" ;
     """
     tsv_for_genome_upload.py \
         $args_genomes_euks \
@@ -36,6 +40,8 @@ process PREPARE_TSV_FOR_UPLOADER {
         $args_coverage_proks \
         $args_assembly_file \
         ${args_rna} \
+        ${args_tax_euks} \
+        ${args_tax_proks} \
         --metagenome '$params.metagenome' \
         --biomes '${params.biomes}' \
         --absolute-path $params.outdir

@@ -84,16 +84,17 @@ def multiqc_report    = []
 
 workflow GGP {
 
-    ch_versions = Channel.empty()
+    ch_versions    = Channel.empty()
 
-    euk_genomes = Channel.empty()
-    stats_euks = Channel.empty()
-    coverage_euks = Channel.empty()
-
-    prok_genomes = Channel.empty()
-    stats_proks = Channel.empty()
+    euk_genomes    = Channel.empty()
+    stats_euks     = Channel.empty()
+    coverage_euks  = Channel.empty()
+    prok_genomes   = Channel.empty()
+    stats_proks    = Channel.empty()
     coverage_proks = Channel.empty()
-    rna = Channel.empty()
+    rna            = Channel.empty()
+    taxonomy_euks  = Channel.empty()
+    taxonomy_proks = Channel.empty()
 
     // ---- combine data for reads and contigs pre-processing ---- //
     groupReads = { meta, assembly, fq1, fq2 ->
@@ -167,7 +168,7 @@ workflow GGP {
         euk_genomes = euk_genomes.mix( EUK_MAGS_GENERATION.out.genomes )
         stats_euks = stats_euks.mix( EUK_MAGS_GENERATION.out.stats )
         coverage_euks = coverage_euks.mix( EUK_MAGS_GENERATION.out.coverage )
-
+        taxonomy_euks = taxonomy_euks.mix( EUK_MAGS_GENERATION.out.taxonomy )
         ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
     }
 
@@ -193,6 +194,7 @@ workflow GGP {
         stats_proks = stats_proks.mix( PROK_MAGS_GENERATION.out.stats )
         coverage_proks = coverage_proks.mix( PROK_MAGS_GENERATION.out.coverage )
         rna = rna.mix( PROK_MAGS_GENERATION.out.rna )
+        taxonomy_proks = taxonomy_proks.mix( PROK_MAGS_GENERATION.out.taxonomy )
         ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
     }
 
@@ -204,7 +206,9 @@ workflow GGP {
         stats_proks,
         coverage_euks,
         coverage_proks,
-        rna
+        rna,
+        taxonomy_euks,
+        taxonomy_proks
     )
 
 

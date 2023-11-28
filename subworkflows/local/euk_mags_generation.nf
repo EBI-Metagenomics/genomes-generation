@@ -271,5 +271,6 @@ workflow EUK_MAGS_GENERATION {
     genomes = GZIP_MAGS.out.compressed.collect()
     stats = BUSCO_EUKCC_QC.out.eukcc_final_qc
     coverage = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ meta, coverage_file -> coverage_file }.collect()
+    taxonomy = BAT_TAXONOMY_WRITER.out.all_bin2classification
     versions = ch_versions
 }
