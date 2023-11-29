@@ -58,7 +58,7 @@ process METABAT2_METABAT2 {
             new_filename=\${original_name#*-}
             digit=\${new_filename#*.}
             digit_without_extension=\${digit%.*}
-            new_name="${meta.id}_metabat_bins/${meta.id}_bin.\${digit_without_extension}-metabat2_v\${version}.fa"
+            new_name="${meta.id}_metabat_bins/${meta.id}_metabat2_\${digit_without_extension}.fa"
             mv \${i} \${new_name}
         done
     fi

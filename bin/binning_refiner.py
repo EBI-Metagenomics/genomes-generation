@@ -264,6 +264,7 @@ refined_bins = open(contig_assignments_file_sorted_one_line)
 for each_refined_bin in refined_bins:
     each_refined_bin_split = each_refined_bin.strip().split('\t')
     each_refined_bin_name = output_name + '_' + each_refined_bin_split[0]
+    each_refined_bin_name = each_refined_bin_name.replace("refined_", "")
     each_refined_bin_length = 0
     each_refined_bin_contig = []
     if len(input_bin_folder_list) == 2:
