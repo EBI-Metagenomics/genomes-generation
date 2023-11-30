@@ -23,7 +23,8 @@ function RunRenamingScript {
   mkdir -p ${CATALOGUE_PATH}/Uploaded_Assembly_IDs
 
   python3 ${REPO_PATH}/download_data/rename-erz.py \
-  -d ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/ -o ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
+      -d ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/ \
+      -o ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
   cat ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt | tr ',' '\t' > ${CATALOGUE_PATH}/rename.tsv
   export CONVERT=${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
@@ -41,28 +42,28 @@ function Rename {
   done < $CONVERT
 }
 
+function GenerateSamplesheet {
+  echo "Generate samplesheet"
+  python3 ${REPO_PATH}/download_data/generate_samplesheet.py \
+  -a ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw \
+  -r ${CATALOGUE_PATH}/Raw_reads/${READS_ACC}/raw \
+  -n ${CATALOGUE_PATH}/rename.tsv \
+  -o ${CATALOGUE_PATH}/pipeline_input_samplesheet.csv
+  echo "Done: ${CATALOGUE_PATH}/pipeline_input_samplesheet.csv"
+}
 
-#function ChangeERRtoERZinReads {
-#  for read_file in (ls $CATALOGUE/Raw_reads/${SAMPLE}/raw/* )
-#    grep "${name}" ${rename_file} > help_file
-#    export from_accession=\$(cat help_file | cut -f1)
-#    export to_accession=\$(cat help_file | cut -f2)
-#    echo "\${from_accession} --> \${to_accession}"
-#
-#    zcat "${input_ch[0]}" | sed "s/\${from_accession}/\${to_accession}/g" | gzip > ${run_accession}_changed.fastq.gz
-#}
 SAMPLE=""
 READS_ACC=""
 CATALOGUE_PATH=""
-SKIP_FETCH="true" # Default to true
+SKIP_FETCH="false" # By default fetch step included
 REPO_PATH=""
 
-while getopts 'a:r:c:fp:' flag; do
+while getopts 'a:r:c:f:p:' flag; do
     case "${flag}" in
         a) SAMPLE="$OPTARG" ;;
         r) READS_ACC="$OPTARG" ;;
         c) CATALOGUE_PATH="$OPTARG" ;;
-        f) SKIP_FETCH='false' ;;
+        f) SKIP_FETCH="$OPTARG" ;;
         p) REPO_PATH="$OPTARG" ;;
         *) echo "Invalid option"; exit 1 ;;
     esac
@@ -82,4 +83,4 @@ fi
 
 RunRenamingScript
 Rename
-#ChangeERRtoERZinReads
+GenerateSamplesheet

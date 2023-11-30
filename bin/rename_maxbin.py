@@ -26,7 +26,7 @@ def main():
         # Define the regular expression pattern
         filename = os.path.basename(i)
         number = int(filename.split('.')[1])
-        new_filename = f"{args.accession}_bin.{number}-maxbin2_v{args.version}.fa"
+        new_filename = f"{args.accession}_maxbin2_{number}.fa"
         shutil.move(i, os.path.join(args.outdir, new_filename))
 if __name__ == "__main__":
     main()

@@ -268,8 +268,9 @@ workflow EUK_MAGS_GENERATION {
     })
 
     emit:
-    euk_quality = BUSCO_EUKCC_QC.out.busco_final_qc
+    genomes = GZIP_MAGS.out.compressed.collect()
+    stats = BUSCO_EUKCC_QC.out.eukcc_final_qc
+    coverage = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ meta, coverage_file -> coverage_file }.collect()
     taxonomy = BAT_TAXONOMY_WRITER.out.all_bin2classification
-    genomes = drep_result
     versions = ch_versions
 }

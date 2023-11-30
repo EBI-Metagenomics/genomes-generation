@@ -96,12 +96,12 @@ if __name__ == "__main__":
 
             for contig in bin_contigs[final_bin.replace('.fa','')]:
                 large_out.write(contig+'\t'+'\t'.join(contig_cov[contig])+'\n')
-                length=float(contig_cov[contig][0])
-                read_depth=float(contig_cov[contig][1])
-                assembled_pairs+=(length * read_depth)
-                assembly_length+=length
+                length = float(contig_cov[contig][0])
+                read_depth = float(contig_cov[contig][1])
+                assembled_pairs += (length * read_depth)
+                assembly_length += length
 
-            cov=assembled_pairs/assembly_length
+            cov = assembled_pairs/assembly_length
             short_out.write(final_bin+'\t'+str(cov)+'\n')
 
     print('Done!', file=sys.stdout)
