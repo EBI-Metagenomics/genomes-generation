@@ -24,11 +24,25 @@ def main(assembly_dir, run_dir, rename_file, output):
         accession = run_file.split('.')[0].split('_')[0]
         runs.setdefault(accession, [])
         runs[accession].append(run_file)
+    # double check for 2 fastq files or other starnge cases
+    for run_accession in runs:
+        se, pe_forward, pe_reversed = False, False, False
+        if len(runs[run_accession]) > 2:
+            for raw_file in runs[run_accession]:
+                if len(raw_file.split('_1')) >= 2:
+                    pe_forward = raw_file
+                elif len(raw_file.split('_2')) >= 2:
+                    pe_reversed = raw_file
+                else:
+                    se = raw_file
+            if se and pe_forward and pe_reversed:
+                print(f"More than 3 raw files detected for {run_accession}, choosing PE reads")
+                runs[run_accession] = [pe_forward, pe_reversed]
 
     with open(output, 'w') as file_out:
         file_out.write(','.join(['id', 'assembly', 'fastq_1', 'fastq_2', 'assembly_accession']) + '\n')
-        list_values = []
         for run_accession in accessions:
+            list_values = []
             assembly_accession = accessions[run_accession]
             list_values.extend([run_accession, os.path.join(assembly_dir, assemblies[run_accession])])
             if len(runs[run_accession]) == 2:
