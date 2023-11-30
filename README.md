@@ -40,7 +40,7 @@ For eukaryotes:
 
 Final steps: 
 
-- Tools versions are available in versions.yml
+- Tools versions are available in software_versions.yml 
 - Pipeline generates a tsv table for [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader)
 - TODO: finish MultiQC 
 
@@ -204,7 +204,7 @@ taxonomy
 ------- gtdbtk_results.tar.gz
 
 pipeline_info
---- versions.yml
+--- software_versions.yml 
 ```
 
 ## Citation
