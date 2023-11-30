@@ -17,7 +17,8 @@ process PREPARE_TSV_FOR_UPLOADER {
     path taxonomy_proks
 
     output:
-    path("*.tsv")        , emit: tsv_for_uploader
+    path "*.tsv"                , emit: tsv_for_uploader
+    path "versions.yml"         , emit: versions
 
     script:
     def args_genomes_euks = genomes_euks ? "--mags-euks ${genomes_euks}" : "" ;
@@ -49,7 +50,7 @@ process PREPARE_TSV_FOR_UPLOADER {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
-        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+        pandas: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('pandas').version)")
     END_VERSIONS
     """
 }

@@ -33,7 +33,7 @@ COLUMNS = {
     "metagenome": "metagenome",
     "co-assembly": "co-assembly",
     "rRNA_presence": "rRNA_presence",
-    "taxonomy_lineage": "taxonomy_lineage",
+    "taxonomy_lineage": "NCBI_lineage",
     "genome_coverage": "genome_coverage",
     "genome_path": "genome_path",
     "environment_biome": "broad_environment",
@@ -159,8 +159,8 @@ def parse_args():
                         help="Binning software that was used for binning")
     parser.add_argument('-p', '--binning-params', type=str, required=False, default=DEFAULT_BINNING_SOFTWARE_PARAMS,
                         help="Binning parameters that were used")
-    parser.add_argument('-se', '--stats-euks', type=str, required=True, help="path to eukaryotic stats output")
-    parser.add_argument('-sp', '--stats-proks', type=str, required=True, help="path to prokaryotic stats output")
+    parser.add_argument('-se', '--stats-euks', type=str, required=False, help="path to eukaryotic stats output")
+    parser.add_argument('-sp', '--stats-proks', type=str, required=False, help="path to prokaryotic stats output")
     parser.add_argument('--metagenome', type=str, required=True, choices=metagenomes,
                         help="choose the most appropriate metagenome "
                              "from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree")
@@ -266,6 +266,8 @@ class MAGupload:
         self.output_table[COLUMNS["environment_material"]] = [self.biomes[2] for _ in range(len(genomes_list))]
         self.output_table[COLUMNS["rRNA_presence"]] = self.get_rna(genomes_list)
         self.output_table[COLUMNS["taxonomy_lineage"]] = self.get_taxonomy(genomes_list)
+        # Remove ".fa" from each value in the specified column
+        self.output_table.index = self.output_table.index.str.replace(".fa", "")
 
         # output to file
         self.output_table.to_csv(self.output_file, sep='\t', index=True, header=True)
@@ -351,27 +353,25 @@ class MAGupload:
                     return False
         return True
 
-    def get_taxonomy(self, genomes):
-        final_tax = []
+    def process_tax_file(self, filename, type):
         lineage = {}
-        if self.tax_euks:
-            with open(self.tax_euks, 'r') as file_in:
-                for line in file_in:
-                    if 'classification' in line:
-                        continue
-                    else:
-                        line = line.strip().split('\t')
+        with open(filename, 'r') as file_in:
+            for line in file_in:
+                if 'classification' in line:
+                    continue
+                else:
+                    line = line.strip().split('\t')
+                    if type == 'euks':
                         lineage[line[0]] = line[3]
-
-        if self.tax_proks:
-            with open(self.tax_proks, 'r') as file_in:
-                for line in file_in:
-                    if 'classification' in line:
-                        continue
                     else:
-                        line = line.strip().split('\t')
-                        lineage[line[0]+'.fa'] = line[2]
+                        lineage[line[0] + '.fa'] = line[2]
+        return lineage
 
+    def get_taxonomy(self, genomes):
+        if self.tax_euks:
+            lineage = self.process_tax_file(self.tax_euks, type='euks')
+        if self.tax_proks:
+            lineage.update(self.process_tax_file(self.tax_proks, type='proks'))
         final_tax = [lineage[genome] for genome in genomes]
         return final_tax
 

@@ -199,17 +199,18 @@ workflow GGP {
     }
 
     PREPARE_TSV_FOR_UPLOADER(
-        euk_genomes,
-        prok_genomes,
+        euk_genomes.ifEmpty([]),
+        prok_genomes.ifEmpty([]),
         assembly_software,
-        stats_euks,
-        stats_proks,
-        coverage_euks,
-        coverage_proks,
-        rna,
-        taxonomy_euks,
-        taxonomy_proks
+        stats_euks.ifEmpty([]),
+        stats_proks.ifEmpty([]),
+        coverage_euks.ifEmpty([]),
+        coverage_proks.ifEmpty([]),
+        rna.ifEmpty([]),
+        taxonomy_euks.ifEmpty([]),
+        taxonomy_proks.ifEmpty([])
     )
+    ch_versions = ch_versions.mix( PREPARE_TSV_FOR_UPLOADER.out.versions )
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
