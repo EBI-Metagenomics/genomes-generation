@@ -79,8 +79,7 @@ bash download_data/fetch_data.sh \
 ```
 Otherwise, download your data and keep format as recommended in Sample sheet example section.
 
-
-## Pipeline input data
+## Run
 
 ```bash
 nextflow run ebi-metagenomics/genomes-generation \
@@ -91,6 +90,7 @@ nextflow run ebi-metagenomics/genomes-generation \
 --biomes "biome,feature,material" \
 --outdir <FULL_PATH_TO_OUTDIR>
 ```
+## Pipeline input data
 
 ### Sample sheet example
 
