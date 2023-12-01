@@ -33,10 +33,16 @@ process GZIP {
 
     output:
     path("*.gz"), emit: compressed
+    path "versions.yml"                       , emit: versions
 
     script:
     """
     pigz ${file_to_compress}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        pigz: \$(pigz --version 2>&1 | sed 's/pigz //g')
+    END_VERSIONS
     """
 }
 
@@ -59,35 +65,42 @@ process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
     """
 }
 
-process ERR_TO_ERZ {
+process ERR_TO_ERZ_SED {
 
     tag "${meta.id}"
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/biopython:1.75':
-        'quay.io/biocontainers/biopython:1.75' }"
+    container 'quay.io/biocontainers/pigz:2.3.4'
 
     input:
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("changed*.*.gz"), emit: modified_reads
+    tuple val(meta), path("*changed*.*.gz"), emit: modified_reads
     path "versions.yml"                       , emit: versions
 
     script:
-    """
-    gunzip ${reads}
+    input_ch = reads.collect()
+    if (input_ch.size() == 1 ) {
+        """
+        zcat "${input_ch[0]}" | sed 's/${meta.id}/${meta.erz}/g' | pigz > ${meta.id}_changed.fastq.gz
 
-    change_reads.py --reads ${meta.id}* -t ${meta.erz} -f ${meta.id} --change_dots_to_underscores
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            pigz: \$(pigz --version 2>&1 | sed 's/pigz //g')
+        END_VERSIONS
+        """
+    }
+    else if (input_ch.size() == 2 ) {
+        """
+        zcat "${input_ch[0]}" | sed 's/${meta.id}/${meta.erz}/g' | pigz > ${meta.id}_changed_1.fastq.gz
+        zcat "${input_ch[1]}" | sed 's/${meta.id}/${meta.erz}/g' | pigz > ${meta.id}_changed_2.fastq.gz
 
-    gzip changed*.*
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version 2>&1 | sed 's/Python //g')
-        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
-    END_VERSIONS
-    """
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            pigz: \$(pigz --version 2>&1 | sed 's/pigz //g')
+        END_VERSIONS
+        """
+    }
 }
 
 /*
