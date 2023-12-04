@@ -368,8 +368,9 @@ class MAGupload:
         return lineage
 
     def get_taxonomy(self, genomes):
+        lineage = {}
         if self.tax_euks:
-            lineage = self.process_tax_file(self.tax_euks, type='euks')
+            lineage.update(self.process_tax_file(self.tax_euks, type='euks'))
         if self.tax_proks:
             lineage.update(self.process_tax_file(self.tax_proks, type='proks'))
         final_tax = [lineage[genome] for genome in genomes]

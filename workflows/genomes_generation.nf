@@ -95,6 +95,7 @@ workflow GGP {
     rna            = Channel.empty()
     taxonomy_euks  = Channel.empty()
     taxonomy_proks = Channel.empty()
+    genomes        = Channel.empty()
 
     // ---- combine data for reads and contigs pre-processing ---- //
     groupReads = { meta, assembly, fq1, fq2 ->
@@ -197,21 +198,25 @@ workflow GGP {
         taxonomy_proks = taxonomy_proks.mix( PROK_MAGS_GENERATION.out.taxonomy )
         ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
     }
-
-    PREPARE_TSV_FOR_UPLOADER(
-        euk_genomes.ifEmpty([]),
-        prok_genomes.ifEmpty([]),
-        assembly_software,
-        stats_euks.ifEmpty([]),
-        stats_proks.ifEmpty([]),
-        coverage_euks.ifEmpty([]),
-        coverage_proks.ifEmpty([]),
-        rna.ifEmpty([]),
-        taxonomy_euks.ifEmpty([]),
-        taxonomy_proks.ifEmpty([])
-    )
-    ch_versions = ch_versions.mix( PREPARE_TSV_FOR_UPLOADER.out.versions )
-
+    if ( params.skip_euk && params.skip_prok ) {
+        println "You skipped proks and euks. No results for MAGs. Exit."
+        exit(1)
+    }
+    else {
+        PREPARE_TSV_FOR_UPLOADER(
+            euk_genomes.ifEmpty([]),
+            prok_genomes.ifEmpty([]),
+            assembly_software,
+            stats_euks.ifEmpty([]),
+            stats_proks.ifEmpty([]),
+            coverage_euks.ifEmpty([]),
+            coverage_proks.ifEmpty([]),
+            rna.ifEmpty([]),
+            taxonomy_euks.ifEmpty([]),
+            taxonomy_proks.ifEmpty([])
+        )
+        ch_versions = ch_versions.mix( PREPARE_TSV_FOR_UPLOADER.out.versions )
+    }
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
