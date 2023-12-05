@@ -25,14 +25,11 @@ process MAXBIN2 {
     task.ext.when == null || task.ext.when
 
     errorStrategy {
-        task.exitStatus {
-            exitVal ->
-                // Retry on non-zero exit codes
-                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
-        }
-        maxRetries 3  // Set the maximum number of retries
-        sleep 10      // Set the delay between retries in seconds
+        task.exitStatus !=0 && task.attempt <= 3 ? 'retry' : 'finish'
     }
+    maxRetries 3  // Set the maximum number of retries
+    sleep 10      // Set the delay between retries in seconds
+
 
     script:
     def args = task.ext.args ?: ''
