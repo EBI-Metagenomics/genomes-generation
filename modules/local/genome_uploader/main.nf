@@ -15,6 +15,7 @@ process PREPARE_TSV_FOR_UPLOADER {
     path rna
     path taxonomy_euks
     path taxonomy_proks
+    path workflow_versions
 
     output:
     path "*.tsv"                , emit: tsv_for_uploader

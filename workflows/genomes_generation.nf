@@ -208,7 +208,8 @@ workflow GGP {
         coverage_proks.ifEmpty([]),
         rna.ifEmpty([]),
         taxonomy_euks.ifEmpty([]),
-        taxonomy_proks.ifEmpty([])
+        taxonomy_proks.ifEmpty([]),
+        ch_versions
     )
     ch_versions = ch_versions.mix( PREPARE_TSV_FOR_UPLOADER.out.versions )
 
