@@ -95,7 +95,6 @@ workflow GGP {
     rna            = Channel.empty()
     taxonomy_euks  = Channel.empty()
     taxonomy_proks = Channel.empty()
-    genomes        = Channel.empty()
 
     // ---- combine data for reads and contigs pre-processing ---- //
     groupReads = { meta, assembly, fq1, fq2 ->
