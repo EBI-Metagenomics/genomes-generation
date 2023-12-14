@@ -22,7 +22,7 @@ function RunRenamingScript {
   sleep 1
   mkdir -p ${CATALOGUE_PATH}/Uploaded_Assembly_IDs
 
-  python3 ${REPO_PATH}/download_data/rename-erz.py \
+  python3 ${REPO_PATH}/rename-erz.py \
       -d ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/ \
       -o ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
@@ -44,7 +44,7 @@ function Rename {
 
 function GenerateSamplesheet {
   echo "Generate samplesheet"
-  python3 ${REPO_PATH}/download_data/generate_samplesheet.py \
+  python3 ${REPO_PATH}/generate_samplesheet.py \
   -a ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw \
   -r ${CATALOGUE_PATH}/Raw_reads/${READS_ACC}/raw \
   -n ${CATALOGUE_PATH}/rename.tsv \
@@ -56,15 +56,15 @@ SAMPLE=""
 READS_ACC=""
 CATALOGUE_PATH=""
 SKIP_FETCH="false" # By default fetch step included
-REPO_PATH=""
+SCRIPT_PATH="$(readlink -f $0)"
+REPO_PATH="$(dirname $SCRIPT_PATH)"
 
-while getopts 'a:r:c:f:p:' flag; do
+while getopts 'a:r:c:f:' flag; do
     case "${flag}" in
         a) SAMPLE="$OPTARG" ;;
         r) READS_ACC="$OPTARG" ;;
         c) CATALOGUE_PATH="$OPTARG" ;;
         f) SKIP_FETCH="$OPTARG" ;;
-        p) REPO_PATH="$OPTARG" ;;
         *) echo "Invalid option"; exit 1 ;;
     esac
 done
