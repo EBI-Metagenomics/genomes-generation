@@ -73,7 +73,6 @@ If you use EBI cluster:
 bash download_data/fetch_data.sh \
     -a assembly_study_accession \
     -r reads_study_accession \
-    -p `pwd` \
     -c `pwd`/my_catalogue \
     -f "false"
 ```
