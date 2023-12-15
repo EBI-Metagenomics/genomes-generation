@@ -113,11 +113,11 @@ workflow EUK_MAGS_GENERATION {
     ch_versions = Channel.empty()
 
     /* split the inputs */
-    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_folder, metabat_folder -> 
+    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins ->
         assembly_and_reads: [ meta, assembly, reads ]
         reads: [ meta, reads ]
-        bins_concoct: [ meta, concoct_folder ]
-        bins_metabat: [ meta, metabat_folder ]
+        bins_concoct: [ meta, concoct_bins ]
+        bins_metabat: [ meta, metabat_bins ]
     }.set {
         input
     }
@@ -163,11 +163,19 @@ workflow EUK_MAGS_GENERATION {
     quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
     // -- qs50 -- //
+    //empty_result_concoct = EUKCC_CONCOCT.out.eukcc_csv.map{ meta, csv -> (meta, []) }
+    //eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty(empty_result_concoct)
+    //empty_result_metabat = EUKCC_METABAT.out.eukcc_csv.map{ meta, csv -> (meta, []) }
+    //eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty(empty_result_metabat)
+
+    eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty([])
+    eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty([])
+
     collect_data = quality.join( input.bins_concoct ) \
         .join( input.bins_metabat ) \
-        .join( EUKCC_CONCOCT.out.eukcc_results ) \
-        .join( EUKCC_METABAT.out.eukcc_results )
-
+        .join( eukcc_merged_concoct ) \
+        .join( eukcc_merged_metabat )
+    collect_data.view()
     FILTER_QS50( collect_data )
 
     // input: tuple (meta, genomes/*, quality_file)
