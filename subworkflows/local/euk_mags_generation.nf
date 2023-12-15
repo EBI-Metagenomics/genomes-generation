@@ -163,19 +163,17 @@ workflow EUK_MAGS_GENERATION {
     quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
     // -- qs50 -- //
-    //empty_result_concoct = EUKCC_CONCOCT.out.eukcc_csv.map{ meta, csv -> (meta, []) }
-    //eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty(empty_result_concoct)
-    //empty_result_metabat = EUKCC_METABAT.out.eukcc_csv.map{ meta, csv -> (meta, []) }
-    //eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty(empty_result_metabat)
+    empty_result_concoct = EUKCC_CONCOCT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
+    eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty(empty_result_concoct)
+    empty_result_metabat = EUKCC_METABAT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
+    eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty(empty_result_metabat)
 
-    eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty([])
-    eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty([])
-
+    // combine concoct, metabat bins with merged bins (if any)
     collect_data = quality.join( input.bins_concoct ) \
         .join( input.bins_metabat ) \
         .join( eukcc_merged_concoct ) \
         .join( eukcc_merged_metabat )
-    collect_data.view()
+
     FILTER_QS50( collect_data )
 
     // input: tuple (meta, genomes/*, quality_file)
@@ -188,9 +186,6 @@ workflow EUK_MAGS_GENERATION {
     quality_all_csv = quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false)
 
     MODIFY_QUALITY_FILE( quality_all_csv, "aggregated_euk_quality.csv")
-
-    // TODO: MODIFY_QUALITY_FILE only uses sed, should we print that?
-    // ch_versions.mix( MODIFY_QUALITY_FILE.out.versions.first() )
 
     aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { modified_csv ->
         return tuple([id: "aggregated"], modified_csv)
