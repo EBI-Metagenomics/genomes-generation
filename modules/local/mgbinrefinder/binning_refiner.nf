@@ -9,8 +9,8 @@ process BINNING_REFINER {
     tuple val(meta), path(bin1, stageAs: "binner1/*"), path(bin2, stageAs: "binner2/*")
 
     output:
-    tuple val(meta), path("${meta.id}_output_${name}/refined/*"), emit: refined_bins
-    path "versions.yml"                                         , emit: versions
+    tuple val(meta), path("${meta.id}_output_${name}/refined/*"), optional: true, emit: refined_bins
+    path "versions.yml"                                                         , emit: versions
 
     script:
     """
@@ -38,8 +38,8 @@ process BINNING_REFINER3 {
           path(bin3, stageAs: "binner3/*")
 
     output:
-    tuple val(meta), path("${meta.id}_output_${name}/refined/*"), emit: refined_bins
-    path "versions.yml"                                         , emit: versions
+    tuple val(meta), path("${meta.id}_output_${name}/refined/*"), optional: true, emit: refined_bins
+    path "versions.yml"                                                         , emit: versions
 
     script:
     """

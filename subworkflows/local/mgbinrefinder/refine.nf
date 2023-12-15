@@ -13,16 +13,17 @@ workflow REFINE {
     main:
 
     ch_versions = Channel.empty()
+    empty_output = binner1.map{meta, _ -> return tuple(meta, [])}
 
     refined = Channel.empty()
     if ( binner3 ) {
         BINNING_REFINER3( name, binner1.join( binner2 ).join( binner3 ) )
-        refined = BINNING_REFINER3.out.refined_bins
+        refined = BINNING_REFINER3.out.refined_bins.ifEmpty(empty_output)
 
         ch_versions = ch_versions.mix( BINNING_REFINER3.out.versions.first() )
     } else {
         BINNING_REFINER( name, binner1.join( binner2 ) )
-        refined = BINNING_REFINER.out.refined_bins
+        refined = BINNING_REFINER.out.refined_bins.ifEmpty(empty_output)
 
         ch_versions = ch_versions.mix( BINNING_REFINER.out.versions.first() )
     }
