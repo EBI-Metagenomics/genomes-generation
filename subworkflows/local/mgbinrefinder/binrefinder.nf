@@ -70,10 +70,11 @@ workflow REFINEMENT {
         .join(REFINE123.out.filtered_bins_stats)
 
     CONSOLIDATE_BINS( binners, stats )
+    empty_result = CONSOLIDATE_BINS.out.consolidated_stats.map{ meta, csv -> return tuple(meta, []) }
 
     ch_versions = ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
 
     emit:
-    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins
+    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins.ifEmpty(empty_result)
     versions     = ch_versions
 }
