@@ -54,7 +54,7 @@ function GenerateSamplesheet {
 
 SAMPLE=""
 READS_ACC=""
-CATALOGUE_PATH=""
+CATALOGUE_PATH_INPUT=""
 SKIP_FETCH="false" # By default fetch step included
 SCRIPT_PATH="$(readlink -f $0)"
 REPO_PATH="$(dirname $SCRIPT_PATH)"
@@ -63,11 +63,13 @@ while getopts 'a:r:c:f:' flag; do
     case "${flag}" in
         a) SAMPLE="$OPTARG" ;;
         r) READS_ACC="$OPTARG" ;;
-        c) CATALOGUE_PATH="$OPTARG" ;;
+        c) CATALOGUE_PATH_INPUT="$OPTARG" ;;
         f) SKIP_FETCH="$OPTARG" ;;
         *) echo "Invalid option"; exit 1 ;;
     esac
 done
+
+CATALOGUE_PATH=$(readlink -f "$CATALOGUE_PATH_INPUT")
 
 if [[ -z $SAMPLE || -z $READS_ACC || -z $CATALOGUE_PATH || -z $REPO_PATH ]]; then
     echo "Missing required options"
