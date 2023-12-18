@@ -58,8 +58,9 @@ workflow BINNING {
         MAXBIN2 ( ch_maxbin2_input )
 
         RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )
+        empty_output_maxbin = ch_maxbin2_input.map{meta, _, _, _ -> return tuple(meta, [])}
 
-        maxbin_output = RENAME_MAXBIN.out.renamed_bins.map { meta, bins ->
+        maxbin_output = RENAME_MAXBIN.out.renamed_bins.ifEmpty(empty_output_maxbin).map { meta, bins ->
             [meta.subMap('id', 'erz'), bins]
         }
 
@@ -70,9 +71,11 @@ workflow BINNING {
 
     if ( !params.skip_metabat2 ) {
 
+        empty_output_metabat = ch_metabat2_input.map{meta, _, _ -> return tuple(meta, [])}
+
         METABAT2_METABAT2 ( ch_metabat2_input )
 
-        metabat_output = METABAT2_METABAT2.out.fasta.map { meta, bins ->
+        metabat_output = METABAT2_METABAT2.out.fasta.ifEmpty(empty_output_metabat).map { meta, bins ->
             [ meta.subMap('id', 'erz'), bins ]
         }
 
@@ -88,9 +91,11 @@ workflow BINNING {
             bams: [ meta_extended, bams, bais ]
         }.set { ch_concoct_input }
 
+        empty_output_concoct = ch_concoct_input.bins.map{meta, _ -> return tuple(meta, [])}
+
         FASTA_BINNING_CONCOCT( ch_concoct_input.bins, ch_concoct_input.bams )
 
-        concoct_output = FASTA_BINNING_CONCOCT.out.bins.map { meta, bins ->
+        concoct_output = FASTA_BINNING_CONCOCT.out.bins.ifEmpty(empty_output_concoct).map { meta, bins ->
             [ meta.subMap('id', 'erz'), bins ]
         }
 
