@@ -58,7 +58,7 @@ workflow BINNING {
         MAXBIN2 ( ch_maxbin2_input )
 
         RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )
-        empty_output_maxbin = ch_maxbin2_input.map{meta, _, _, _ -> return tuple(meta, [])}
+        empty_output_maxbin = ch_maxbin2_input.map{meta, contigs, reads, abund -> return tuple(meta, [])}
 
         maxbin_output = RENAME_MAXBIN.out.renamed_bins.ifEmpty(empty_output_maxbin).map { meta, bins ->
             [meta.subMap('id', 'erz'), bins]
@@ -71,7 +71,7 @@ workflow BINNING {
 
     if ( !params.skip_metabat2 ) {
 
-        empty_output_metabat = ch_metabat2_input.map{meta, _, _ -> return tuple(meta, [])}
+        empty_output_metabat = ch_metabat2_input.map{meta, fasta, depth -> return tuple(meta, [])}
 
         METABAT2_METABAT2 ( ch_metabat2_input )
 
