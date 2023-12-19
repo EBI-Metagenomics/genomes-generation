@@ -145,6 +145,15 @@ workflow EUK_MAGS_GENERATION {
 
     EUKCC_METABAT( binner2, metabat_linktable_bins, eukcc_db )
 
+    // EUKCC may return empty files, but the downstream jobs require
+    // all of the samples to be present (with empty [] to mark empty outputs)
+    // because the results may be empty we are constructing empty results
+    // using the csv mapping files, we need the meta argument for each sample
+    empty_result_concoct = EUKCC_CONCOCT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
+    eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty(empty_result_concoct)
+    empty_result_metabat = EUKCC_METABAT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
+    eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty(empty_result_metabat)
+
     ch_versions = ch_versions.mix( LINKTABLE_METABAT.out.versions.first() )
     ch_versions = ch_versions.mix( EUKCC_METABAT.out.versions.first() )
 
@@ -163,11 +172,6 @@ workflow EUK_MAGS_GENERATION {
     quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
     // -- qs50 -- //
-    empty_result_concoct = EUKCC_CONCOCT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
-    eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty(empty_result_concoct)
-    empty_result_metabat = EUKCC_METABAT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
-    eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty(empty_result_metabat)
-
     // combine concoct, metabat bins with merged bins (if any)
     collect_data = quality.join( input.bins_concoct ) \
         .join( input.bins_metabat ) \
@@ -182,7 +186,6 @@ workflow EUK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( DREP.out.versions.first() )
 
     // -- aggregate by samples
-    // TODO: this collectFile is incorrect
     quality_all_csv = quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false)
 
     MODIFY_QUALITY_FILE( quality_all_csv, "aggregated_euk_quality.csv")
