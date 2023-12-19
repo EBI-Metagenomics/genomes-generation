@@ -17,6 +17,7 @@ process LINKTABLE {
 
     script:
     """
+    mkdir -p bins
     BINS=\$(ls bins | grep -v "unbinned" | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "creating empty links file"
