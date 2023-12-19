@@ -11,7 +11,7 @@ process RENAME_AND_CHECK_SIZE_BINS {
 
     script:
     """
-    mkdir -p out
+    mkdir -p out bins_dir
     cd bins_dir
     for bin in \$(ls . ); do
         SIZE=\$(stat -L -c "%s" \${bin})

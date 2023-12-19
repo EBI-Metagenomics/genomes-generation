@@ -17,6 +17,7 @@ process LINKTABLE {
 
     script:
     """
+    mkdir -p bins
     BINS=\$(ls bins | grep -v "unbinned" | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "creating empty links file"
@@ -41,6 +42,18 @@ process LINKTABLE {
 
 /*
  * EukCC
+--- Examples of outputs:
+eukcc.csv:
+bin     completeness    contamination   ncbi_lng
+accession_bin.13.fa        3.88    0.0     1-131567-2759-2698737-33630-2864-89954-252141
+accession_merged.0.fa      73.6    0.6     1-131567-2759-33154-4751-451864-5204-452284-1538075-162474-742845
+
+merged.csv:
+merged  bins
+accession_merged.0.fa      accession_bin.12.fachild:accession_bin.9.fa
+
+merged_bins/
+accession_merged.0.fa
 */
 process EUKCC {
 
@@ -54,10 +67,10 @@ process EUKCC {
     path eukcc_db
 
     output:
-    tuple val(meta), path("*_merged_bins")                       , emit: eukcc_results
-    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv")      , emit: eukcc_csv
-    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"), optional: true, emit: eukcc_merged_csv
-    path "versions.yml"                                          , emit: versions
+    tuple val(meta), path("*_merged_bins/${binner}_${meta.id}_merged_bins/*"), optional: true, emit: eukcc_merged_bins
+    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                                   emit: eukcc_csv
+    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),             optional: true, emit: eukcc_merged_csv
+    path "versions.yml",                                                                       emit: versions
 
     script:
     """
