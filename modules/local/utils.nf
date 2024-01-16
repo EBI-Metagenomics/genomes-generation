@@ -67,6 +67,7 @@ process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
 
 process ERR_TO_ERZ_SED {
 
+    label 'process_low'
     tag "${meta.id}"
 
     container 'quay.io/biocontainers/pigz:2.3.4'
