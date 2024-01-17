@@ -1,5 +1,6 @@
 process BINNING_REFINER {
 
+    label 'process_low'
     tag "${name} ${meta.id}"
 
     container 'quay.io/biocontainers/biopython:1.75'
@@ -26,6 +27,7 @@ process BINNING_REFINER {
 
 process BINNING_REFINER3 {
 
+    label 'process_low'
     tag "${name} ${meta.id}"
 
     container 'quay.io/biocontainers/biopython:1.75'

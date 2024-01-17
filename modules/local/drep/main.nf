@@ -2,7 +2,7 @@
  * dRep, this workflow dereplicates a set of genomes.
 */
 process DREP {
-
+    label 'process_medium'
     tag "${meta.id} ${drep_params} ${type}"
 
     //conda "bioconda::drep=3.2.2"

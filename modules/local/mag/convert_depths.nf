@@ -1,4 +1,6 @@
 process CONVERT_DEPTHS {
+
+    label 'process_low'
     tag "${meta.id}"
 
     //conda "bioconda::bioawk=1.0"

@@ -1,4 +1,5 @@
 process BUSCO {
+    label 'process_medium'
     tag "${bin}"
 
     container 'quay.io/biocontainers/busco:5.4.7--pyhdfd78af_0'

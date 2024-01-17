@@ -1,5 +1,7 @@
 process PREPARE_TSV_FOR_UPLOADER {
 
+    label 'process_low'
+
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/pandas:0.24.1':
         'quay.io/biocontainers/pandas:0.24.1' }"

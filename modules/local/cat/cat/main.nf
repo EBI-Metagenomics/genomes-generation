@@ -1,5 +1,5 @@
 process CAT {
-
+    label 'process_medium'
     tag "${meta.id} ${bin_fa}"
 
     container 'quay.io/microbiome-informatics/cat:5.2.3'

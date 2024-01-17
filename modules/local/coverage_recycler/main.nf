@@ -1,5 +1,6 @@
 process COVERAGE_RECYCLER {
 
+    label 'process_medium'
     tag "${meta.id}"
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

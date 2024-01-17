@@ -1,5 +1,5 @@
 process GUNC {
-
+    label 'process_low'
     tag "${meta.id} ${fasta}"
 
     container 'quay.io/microbiome-informatics/genomes-pipeline.gunc:v4'

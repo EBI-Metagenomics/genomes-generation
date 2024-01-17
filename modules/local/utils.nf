@@ -4,6 +4,9 @@
     ~~~~~~~~~~~~~~~~~~
 */
 process GUNZIP {
+
+    label 'process_low'
+
     input:
     path(compressed_file)
 
@@ -25,6 +28,8 @@ process GUNZIP {
     ~~~~~~~~~~~~~~~~~~
 */
 process GZIP {
+
+    label 'process_low'
     stageInMode 'copy'
     tag "${file_to_compress}"
 
@@ -51,6 +56,7 @@ process GZIP {
 */
 process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
 
+    label 'process_low'
     tag "${meta.id}"
 
     input:
@@ -109,6 +115,7 @@ process ERR_TO_ERZ_SED {
 */
 process CHANGE_UNDERSCORE_TO_DOT {
 
+    label 'process_low'
     tag "${contigs}"
 
     input:

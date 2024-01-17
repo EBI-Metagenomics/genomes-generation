@@ -1,5 +1,6 @@
 process RENAME_AND_CHECK_SIZE_BINS {
 
+    label 'process_low'
     tag "${meta.id}"
 
     input:

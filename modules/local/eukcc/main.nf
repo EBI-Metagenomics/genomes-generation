@@ -1,5 +1,6 @@
 process LINKTABLE {
 
+    label 'process_medium'
     tag "${meta.id} ${binner}"
 
     // Multi-Package BioContainer
@@ -57,6 +58,7 @@ accession_merged.0.fa
 */
 process EUKCC {
 
+    label 'process_medium'
     tag "${meta.id} ${binner}"
 
     container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'

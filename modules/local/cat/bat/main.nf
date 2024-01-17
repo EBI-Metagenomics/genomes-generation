@@ -1,4 +1,6 @@
 process BAT {
+
+    label 'process_meduim'
     tag "${bin}"
 
     container 'quay.io/biocontainers/cat:5.2.3--hdfd78af_1'

@@ -3,6 +3,7 @@
 */
 process DETECT_RRNA {
 
+    label 'process_low'
     tag "${fasta}"
 
     container 'quay.io/microbiome-informatics/genomes-pipeline.detect_rrna:v3.1'

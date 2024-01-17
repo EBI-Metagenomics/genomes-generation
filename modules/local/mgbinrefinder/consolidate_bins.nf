@@ -1,4 +1,6 @@
 process CONSOLIDATE_BINS {
+
+    label 'process_low'
     tag "${meta.id}"
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

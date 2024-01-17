@@ -1,6 +1,7 @@
 
 process INDEX_FASTA {
 
+    label 'process_medium'
     tag "${meta.id} index ${fasta}"
 
     container 'quay.io/microbiome-informatics/bwamem2:2.2.1'
@@ -26,9 +27,8 @@ process INDEX_FASTA {
 
 process ALIGNMENT {
 
+    label 'process_medium'
     tag "${meta.id} align to ${ref_fasta}"
-
-    label 'alignment'
 
     container 'quay.io/microbiome-informatics/bwamem2:2.2.1'
 

@@ -1,5 +1,6 @@
 process GTDBTK {
 
+    label 'process_long'
     container 'quay.io/microbiome-informatics/gtdb-tk:2.3.0'
 
     containerOptions "${ workflow.containerEngine == 'singularity' ?

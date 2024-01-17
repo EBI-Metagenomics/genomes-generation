@@ -1,5 +1,6 @@
 process CHECKM2 {
 
+    label 'process_medium'
     tag "${name} ${meta.id}"
 
     container 'quay.io/biocontainers/checkm2:1.0.1--pyh7cba7a3_0'

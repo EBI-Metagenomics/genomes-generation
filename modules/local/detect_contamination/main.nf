@@ -1,5 +1,6 @@
 process DETECT_CONTAMINATION {
 
+    label 'process_low'
     tag "${meta.id} ${bin}"
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
