@@ -29,7 +29,7 @@ process GTDBTK_TO_NCBI_TAXONOMY {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        gtdb_to_ncbi_majority_vote.py: \$(echo \$(gtdb_to_ncbi_majority_vote.py --version 2>&1) | grep -e "INFO: GTDB to NCBI majority vote v" | sed "s/INFO: GTDB to NCBI majority vote v//")
+        gtdb_to_ncbi_majority_vote.py: \$(echo \$(gtdb_to_ncbi_majority_vote.py -h 2>&1) | head -n 1 | sed "s/gtdb_to_ncbi_majority_vote.py v//; s/:.*//")
     END_VERSIONS
     """
 
@@ -41,7 +41,7 @@ process GTDBTK_TO_NCBI_TAXONOMY {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        gtdb_to_ncbi_majority_vote.py: \$(echo \$(gtdb_to_ncbi_majority_vote.py --version 2>&1) | grep -e "INFO: GTDB to NCBI majority vote v" | sed "s/INFO: GTDB to NCBI majority vote v//")
+        gtdb_to_ncbi_majority_vote.py: \$(echo \$(gtdb_to_ncbi_majority_vote.py -h 2>&1) | head -n 1 | sed "s/gtdb_to_ncbi_majority_vote.py v//; s/:.*//")
     END_VERSIONS
     """
 }
