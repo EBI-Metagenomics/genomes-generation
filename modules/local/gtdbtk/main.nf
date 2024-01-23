@@ -13,8 +13,8 @@ process GTDBTK {
 
     output:
     path "gtdbtk_results.tar.gz", emit: gtdbtk_output_tarball
-    path "ncbi_taxonomy.txt", emit: ncbi_taxonomy
-    path "versions.yml"         , emit: versions
+    path "gtdbtk_results",        emit: gtdbtk_output
+    path "versions.yml",          emit: versions
 
 
     script:
@@ -30,15 +30,8 @@ process GTDBTK {
     --skip_ani_screen \
     --out_dir gtdbtk_results
 
-    echo "Create NCBI taxonomy"
-    gtdb_to_ncbi_majority_vote.py \
-        --gtdbtk_output_dir gtdbtk_results \
-        --output_file ncbi_taxonomy.txt \
-        --ar53_metadata_file ${gtdbtk_refdata}/ar53_metadata_r214.tsv \
-        --bac120_metadata_file ${gtdbtk_refdata}/bac120_metadata_r214.tsv
-
     echo "Compress GTDB-Tk"
-    tar -czf gtdbtk_results.tar.gz gtdbtk_results
+    tar -czf gtdbtk_results.tar.gz -C gtdbtk_results .
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -55,9 +48,8 @@ process GTDBTK {
     mkdir -p gtdbtk_results/classify
     touch gtdbtk_results/classify/gtdbtk.bac120.summary.tsv
     touch gtdbtk_results/classify/gtdbtk.ar122.summary.tsv
-    touch ncbi_taxonomy.txt
 
-    tar -czf gtdbtk_results.tar.gz gtdbtk_results
+    tar -czf gtdbtk_results.tar.gz -C gtdbtk_results .
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
