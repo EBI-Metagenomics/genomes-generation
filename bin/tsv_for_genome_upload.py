@@ -330,10 +330,10 @@ class MAGupload:
         for filename in self.rna:
             if filename.endswith('_rRNAs.out'):
                 genome = filename.split('_rRNAs.out')[0] + '.fa'
-                rrna[genome] = self.check_rna(filename, LIMIT_RRNA)
+                rrna[genome] = self.check_rna(filename, LIMIT_RRNA, 2)
             if filename.endswith('_tRNA_20aa.out'):
                 genome = filename.split('_tRNA_20aa.out')[0] + '.fa'
-                trna[genome] = self.check_rna(filename, LIMIT_TRNA)
+                trna[genome] = self.check_rna(filename, LIMIT_TRNA, 1)
         final_decision = []
         for genome in genomes:
             if genome not in trna or genome not in rrna:
@@ -345,10 +345,10 @@ class MAGupload:
                     final_decision.append('False')
         return final_decision
 
-    def check_rna(self, filename, limit):
+    def check_rna(self, filename, limit, field):
         with open(filename, 'r') as file_in:
             for line in file_in:
-                cur_rna_count = float(line.strip().split('\t')[1])
+                cur_rna_count = float(line.strip().split('\t')[field])
                 if cur_rna_count < limit:
                     return False
         return True
