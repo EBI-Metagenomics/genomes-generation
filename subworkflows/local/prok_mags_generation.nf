@@ -103,9 +103,7 @@ workflow PROK_MAGS_GENERATION {
         rfam_rrna_models
     )
     rna_out = Channel.empty()
-    rna_out = rna_out.mix( DETECT_RRNA.out.rrna_out_files.collect() )
-    rna_out = rna_out.mix( DETECT_RRNA.out.trna_out_files.collect() )
-
+    rna_out = rna_out.mix( DETECT_RRNA.out.rrna_out_files.collect(), DETECT_RRNA.out.trna_out_files.collect()  )
     ch_versions = ch_versions.mix( DETECT_RRNA.out.versions.first() )
 
     // -- Taxonomy --//
@@ -130,7 +128,7 @@ workflow PROK_MAGS_GENERATION {
     genomes = GZIP_MAGS.out.compressed.collect()
     stats = CHECKM2_TABLE_FOR_DREP_GENOMES.out.checkm_results_mags
     coverage = COVERAGE_RECYCLER.out.mag_coverage.map{ meta, coverage_file -> coverage_file }.collect()
-    rna = rna_out
+    rna = rna_out.collect()
     taxonomy = GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
     versions = ch_versions
 }
