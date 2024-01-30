@@ -133,6 +133,7 @@ There is example [here](assets/final_table_for_uploader.tsv).
 
 ```
 final_table_for_uploader.tsv
+unclassified_genomes.txt
 
 bins
 --- eukaryotes

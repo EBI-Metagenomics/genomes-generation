@@ -274,6 +274,9 @@ class MAGupload:
         if unclassified:
             print(f"You have {len(unclassified)} unclassified genomes")
             self.output_table = self.output_table.drop(unclassified)
+            with open("unclassified_genomes.txt", 'w') as file_out:
+                for item in unclassified:
+                    file_out.write(item + '\n')
         # output to file
         self.output_table.to_csv(self.output_file, sep='\t', index=True, header=True)
 
