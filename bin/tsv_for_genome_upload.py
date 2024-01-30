@@ -272,7 +272,8 @@ class MAGupload:
 
         # Remove unclassified mags
         if unclassified:
-            self.output_table.drop(unclassified)
+            print(f"You have {len(unclassified)} unclassified genomes")
+            self.output_table = self.output_table.drop(unclassified)
         # output to file
         self.output_table.to_csv(self.output_file, sep='\t', index=True, header=True)
 
@@ -369,24 +370,24 @@ class MAGupload:
                     if type == 'euks':
                         lineage[line[0]] = line[3]
                         if line[3] == 'Unclassified':
-                            unclassified.append(line[3])
+                            unclassified.append(line[0].replace('.fa', ''))
                     else:
                         lineage[line[0] + '.fa'] = line[2]
                         if line[2] == 'Unclassified':
-                            unclassified.append(line[2])
+                            unclassified.append(line[0])
         return lineage, unclassified
 
     def get_taxonomy(self, genomes):
         lineage = {}
         unclassified = []
         if self.tax_euks:
-            lineage, unclassified_euks = self.process_tax_file(self.tax_euks, type='euks')
-            lineage.update(lineage)
-            unclassified = unclassified.extend(unclassified_euks)
+            lineage_euks, unclassified_euks = self.process_tax_file(self.tax_euks, type='euks')
+            lineage.update(lineage_euks)
+            unclassified.extend(unclassified_euks)
         if self.tax_proks:
-            lineage, unclassified_proks = self.process_tax_file(self.tax_proks, type='proks')
-            lineage.update(lineage)
-            unclassified = unclassified.extend(unclassified_proks)
+            lineage_proks, unclassified_proks = self.process_tax_file(self.tax_proks, type='proks')
+            lineage.update(lineage_proks)
+            unclassified.extend(unclassified_proks)
         final_tax = [lineage[genome] for genome in genomes]
         return final_tax, unclassified
 
