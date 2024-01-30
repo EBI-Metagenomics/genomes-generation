@@ -265,10 +265,14 @@ class MAGupload:
         self.output_table[COLUMNS["environment_feature"]] = [self.biomes[1] for _ in range(len(genomes_list))]
         self.output_table[COLUMNS["environment_material"]] = [self.biomes[2] for _ in range(len(genomes_list))]
         self.output_table[COLUMNS["rRNA_presence"]] = self.get_rna(genomes_list)
-        self.output_table[COLUMNS["taxonomy_lineage"]] = self.get_taxonomy(genomes_list)
+        taxonomy, unclassified = self.get_taxonomy(genomes_list)
+        self.output_table[COLUMNS["taxonomy_lineage"]] = taxonomy
         # Remove ".fa" from each value in the specified column
         self.output_table.index = self.output_table.index.str.replace(".fa", "")
 
+        # Remove unclassified mags
+        if unclassified:
+            self.output_table.drop(unclassified)
         # output to file
         self.output_table.to_csv(self.output_file, sep='\t', index=True, header=True)
 
@@ -355,6 +359,7 @@ class MAGupload:
 
     def process_tax_file(self, filename, type):
         lineage = {}
+        unclassified = []
         with open(filename, 'r') as file_in:
             for line in file_in:
                 if 'classification' in line:
@@ -363,18 +368,27 @@ class MAGupload:
                     line = line.strip().split('\t')
                     if type == 'euks':
                         lineage[line[0]] = line[3]
+                        if line[3] == 'Unclassified':
+                            unclassified.append(line[3])
                     else:
                         lineage[line[0] + '.fa'] = line[2]
-        return lineage
+                        if line[2] == 'Unclassified':
+                            unclassified.append(line[2])
+        return lineage, unclassified
 
     def get_taxonomy(self, genomes):
         lineage = {}
+        unclassified = []
         if self.tax_euks:
-            lineage.update(self.process_tax_file(self.tax_euks, type='euks'))
+            lineage, unclassified_euks = self.process_tax_file(self.tax_euks, type='euks')
+            lineage.update(lineage)
+            unclassified = unclassified.extend(unclassified_euks)
         if self.tax_proks:
-            lineage.update(self.process_tax_file(self.tax_proks, type='proks'))
+            lineage, unclassified_proks = self.process_tax_file(self.tax_proks, type='proks')
+            lineage.update(lineage)
+            unclassified = unclassified.extend(unclassified_proks)
         final_tax = [lineage[genome] for genome in genomes]
-        return final_tax
+        return final_tax, unclassified
 
 
 def main():
