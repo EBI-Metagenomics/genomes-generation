@@ -372,8 +372,6 @@ class MAGupload:
                     line = line.strip().split('\t')
                     if type == 'euks':
                         lineage[line[0]] = line[3]
-                        if line[3] == 'Unclassified':
-                            unclassified.append(line[0].replace('.fa', ''))
                     else:
                         lineage[line[0] + '.fa'] = line[2]
                         if line[2] == 'Unclassified':
