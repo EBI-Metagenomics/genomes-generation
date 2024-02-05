@@ -1,6 +1,13 @@
 process CHECKM2 {
 
     label 'process_medium'
+    errorStrategy =
+    {
+        if (task.exitStatus == 1) { return 'ignore' }
+        else if (task.exitStatus in ((130..145) + 104)) { return 'retry' }
+        else { return 'finish' }
+    }
+
     tag "${name} ${meta.id}"
 
     container 'quay.io/biocontainers/checkm2:1.0.1--pyh7cba7a3_0'

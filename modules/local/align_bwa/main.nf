@@ -27,7 +27,8 @@ process INDEX_FASTA {
 
 process ALIGNMENT {
 
-    label 'process_medium'
+    errorStrategy = { task.exitStatus in ((130..145) + 104 + 1) ? 'retry' : 'finish' }
+
     tag "${meta.id} align to ${ref_fasta}"
 
     container 'quay.io/microbiome-informatics/bwamem2:2.2.1'

@@ -19,6 +19,10 @@ workflow REFINEMENT {
 
     ch_versions = Channel.empty()
 
+    empty_output = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
+        tuple( meta, [] )
+    }
+
     binner1 = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
         [ meta, concot_bins ]
     }
@@ -36,13 +40,13 @@ workflow REFINEMENT {
     RENAME_AND_CHECK_SIZE_BINS_BINNER3( "binner3", binner3 )
 
     // collect by meta
-    renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed
-    renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed
-    renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed
+    renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed.ifEmpty(empty_output)
+    renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed.ifEmpty(empty_output)
+    renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed.ifEmpty(empty_output)
 
-    REFINE12( "binner12", renamed_binner1, renamed_binner2, false, ref_checkm )
-    REFINE13( "binner13", renamed_binner1, renamed_binner3, false, ref_checkm )
-    REFINE23( "binner23", renamed_binner2, renamed_binner3, false, ref_checkm )
+    REFINE12( "binner12", renamed_binner1, renamed_binner2, empty_output, ref_checkm )
+    REFINE13( "binner13", renamed_binner1, renamed_binner3, empty_output, ref_checkm )
+    REFINE23( "binner23", renamed_binner2, renamed_binner3, empty_output, ref_checkm )
     REFINE123( "binner123", renamed_binner1, renamed_binner2, renamed_binner3, ref_checkm )
 
     CHECKM2_BINNER1( "binner1", renamed_binner1, ref_checkm )
@@ -53,28 +57,26 @@ workflow REFINEMENT {
     ch_versions = ch_versions.mix( CHECKM2_BINNER2.out.versions.first() )
     ch_versions = ch_versions.mix( CHECKM2_BINNER3.out.versions.first() )
 
-    binners = CHECKM2_BINNER1.out.filtered_genomes
-        .join(CHECKM2_BINNER2.out.filtered_genomes)
-        .join(CHECKM2_BINNER3.out.filtered_genomes)
-        .join(REFINE12.out.filtered_bins)
-        .join(REFINE13.out.filtered_bins)
-        .join(REFINE23.out.filtered_bins)
-        .join(REFINE123.out.filtered_bins)
+    binners = CHECKM2_BINNER1.out.filtered_genomes.ifEmpty(empty_output)
+        .join(CHECKM2_BINNER2.out.filtered_genomes.ifEmpty(empty_output))
+        .join(CHECKM2_BINNER3.out.filtered_genomes.ifEmpty(empty_output))
+        .join(REFINE12.out.filtered_bins.ifEmpty(empty_output))
+        .join(REFINE13.out.filtered_bins.ifEmpty(empty_output))
+        .join(REFINE23.out.filtered_bins.ifEmpty(empty_output))
+        .join(REFINE123.out.filtered_bins.ifEmpty(empty_output))
 
-    stats = CHECKM2_BINNER1.out.filtered_stats
-        .join(CHECKM2_BINNER2.out.filtered_stats)
-        .join(CHECKM2_BINNER3.out.filtered_stats)
-        .join(REFINE12.out.filtered_bins_stats)
-        .join(REFINE13.out.filtered_bins_stats)
-        .join(REFINE23.out.filtered_bins_stats)
-        .join(REFINE123.out.filtered_bins_stats)
+    stats = CHECKM2_BINNER1.out.filtered_stats.ifEmpty(empty_output)
+        .join(CHECKM2_BINNER2.out.filtered_stats.ifEmpty(empty_output))
+        .join(CHECKM2_BINNER3.out.filtered_stats.ifEmpty(empty_output))
+        .join(REFINE12.out.filtered_bins_stats.ifEmpty(empty_output))
+        .join(REFINE13.out.filtered_bins_stats.ifEmpty(empty_output))
+        .join(REFINE23.out.filtered_bins_stats.ifEmpty(empty_output))
+        .join(REFINE123.out.filtered_bins_stats.ifEmpty(empty_output))
 
     CONSOLIDATE_BINS( binners, stats )
-    empty_result = CONSOLIDATE_BINS.out.consolidated_stats.map{ meta, csv -> return tuple(meta, []) }
-
     ch_versions = ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
 
     emit:
-    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins.ifEmpty(empty_result)
+    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins.ifEmpty(empty_output)
     versions     = ch_versions
 }

@@ -169,14 +169,27 @@ def parse_args():
 def main(args):
     consolidated_bins = "consolidated_bins"
     dereplicated_bins = "dereplicated_bins"
-    binners = args.input
+    input_binners = args.input
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
+    binners = []
+    for binner in input_binners:
+        if os.path.exists(binner):
+            if os.listdir(binner):
+                binners.append(binner)
     if len(binners) < 2:
-        logging.info('Number of binners is less then 2. Check you input')
-        sys.exit(1)
+        logging.info('Number of binners is less then 2. No consolidation')
+        if len(binners) == 1:
+            logging.info(f'Dereplicated bins would be taken from {binners[0]}')
+            if not os.path.exists(dereplicated_bins):
+                os.mkdir(dereplicated_bins)
+            with open("dereplicated_list.tsv", 'w') as file_out:
+                for item in os.listdir(binners[0]):
+                    copy(os.path.join(binners[0], item), os.path.join(dereplicated_bins, item))
+                    file_out.write(item + '\n')
+        sys.exit()
     else:
         logging.info('-'.join(['-']*20) + f'---> Processing {len(binners)} input binners')
         best_bins, best_stats = {}, {}
