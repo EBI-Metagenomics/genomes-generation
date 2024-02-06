@@ -19,9 +19,8 @@ process LINKTABLE {
     script:
     """
     mkdir -p bins
-    BINS=\$(ls bins | grep -v "unbinned" | wc -l)
-    if [ \$BINS -eq 0 ]; then
-        echo "creating empty links file"
+    if [ -z "\$(find bins -mindepth 1 -type f ! -name '*unbinned*' -print -quit)" ]; then
+        echo "Bins directory is empty"
         touch ${meta.id}.${binner}.links.csv
     else
         binlinks.py --ANI 99 \
