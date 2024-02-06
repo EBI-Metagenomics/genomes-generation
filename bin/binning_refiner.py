@@ -1,5 +1,32 @@
 #!/usr/bin/env python3
-# coding=utf-8
+
+# Copyright (C) 2017, Weizhi Song, Torsten Thomas.
+# songwz03@gmail.com
+# t.thomas@unsw.edu.au
+
+# Binning_refiner is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Binning_refiner is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# metaWRAP author notes:
+# I thank the original creator of this script! This is a great idea! To make
+# this script more usable as part of the metaWRAP binning pipeline, I
+# removed unnecessary visual aaspects of the original Bin_refiner script
+# and made it python2 compatible.
+
+# Check out the original program: https://github.com/songweizhi/Binning_refiner
+# And the publication: https://www.ncbi.nlm.nih.gov/pubmed/28186226
+
 
 import os
 import glob
@@ -67,7 +94,7 @@ if os.path.exists(output_folder):
     shutil.rmtree(output_folder)
 os.mkdir(output_folder)
 print(f'Output folder {output_folder}')
-refined_output_folder = os.path.join(output_folder, 'Refined')
+refined_output_folder = os.path.join(output_folder, 'refined')
 if not os.path.exists(refined_output_folder):
     os.mkdir(refined_output_folder)
 print(f'Refined output {refined_output_folder}')
@@ -145,7 +172,6 @@ with open(contig_assignments_file_sorted, 'r') as contig_assignments_sorted, ope
     current_length_total = 0
     n = 1
     for each in contig_assignments_sorted:
-        print(each, current_match, current_match_contigs, current_length_total)
         each_split = each.strip().split('\t')
         current_contig = each_split[-2]
         current_length = int(each_split[-1])
@@ -180,28 +206,23 @@ refined_bins = open(contig_assignments_file_sorted_one_line)
 for each_refined_bin in refined_bins:
     each_refined_bin_split = each_refined_bin.strip().split('\t')
     each_refined_bin_name = output_name + '_' + each_refined_bin_split[0]
-    each_refined_bin_length = 0
-    each_refined_bin_contig = []
     if len(input_bin_folder_list) == 2:
-        each_refined_bin_source = each_refined_bin_split[1:3]
-        each_refined_bin_length = int(each_refined_bin_split[3][:-2])
         each_refined_bin_contig = each_refined_bin_split[4:]
-
     if len(input_bin_folder_list) == 3:
-        each_refined_bin_source = each_refined_bin_split[1:4]
-        each_refined_bin_length = int(each_refined_bin_split[4][:-2])
         each_refined_bin_contig = each_refined_bin_split[5:]
 
-    stdout.write('\rExtracting refined bin: %s.fa' % each_refined_bin_name)
+    added_contigs = []
+    stdout.write(f'Extracting refined bin: {each_refined_bin_name}.fa')
     refined_bin_file = os.path.join(refined_output_folder, f'{each_refined_bin_name}.fa')
-    input_contigs_file = os.path.join(output_folder, f'combined_{input_bin_folder_1}_bins.fa')
     with open(refined_bin_file, 'w') as refined_bin_handle:
-        input_contigs = SeqIO.parse(input_contigs_file, 'fasta')
+        input_contigs = SeqIO.parse(combined_all_bins_file, 'fasta')
         for each_input_contig in input_contigs:
             each_input_contig_id = each_input_contig.id.split(SEPARATOR)[-1]
             if each_input_contig_id in each_refined_bin_contig:
-                each_input_contig.id = each_input_contig_id
-                each_input_contig.description = ''
-                SeqIO.write(each_input_contig, refined_bin_handle, 'fasta')
+                if each_input_contig_id not in added_contigs:
+                    each_input_contig.id = each_input_contig_id
+                    each_input_contig.description = ''
+                    SeqIO.write(each_input_contig, refined_bin_handle, 'fasta')
+                    added_contigs.append(each_input_contig_id)
 
 
