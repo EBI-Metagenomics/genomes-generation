@@ -19,7 +19,8 @@ process LINKTABLE {
     script:
     """
     mkdir -p bins
-    if [[ \$(find bins -mindepth 1 -maxdepth 1 -type f ! -name '*unbinned*' | wc -l) -eq 0 ]]; then
+    export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
+     if [ \$BINS -eq 0 ]; then
         echo "Bins directory is empty"
         touch ${meta.id}.${binner}.links.csv
     else
