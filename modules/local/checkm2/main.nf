@@ -1,11 +1,7 @@
 process CHECKM2 {
 
     label 'process_medium'
-    errorStrategy =
-    {
-        if (task.exitStatus in ((130..145) + 104)) { return 'retry' }
-        else { return 'finish' }
-    }
+
     tag "${name} ${meta.id}"
 
     container 'quay.io/biocontainers/checkm2:1.0.1--pyh7cba7a3_0'
@@ -42,16 +38,17 @@ process CHECKM2 {
         echo "Checkm2 exit code \$CHECMK2_EXITCODE"
         if [ ! -e "${name}_checkm_output/checkm2.log" ]; then
             echo "checkm2.log does not exist. Exit"
+            echo "Error" >&2
             exit \$CHECMK2_EXITCODE
         else
-            echo "checkm2.log exists -> checking for diamond error"
+            echo "checkm2.log exists -> checking if DIAMOND failed"
             if grep -q "No DIAMOND annotation was generated. Exiting" "${name}_checkm_output/checkm2.log"; then
                 echo "No DIAMOND annotation was generated"
                 touch "${name}_all_stats.csv" "${name}_filtered_genomes.tsv"
                 mkdir "${name}_filtered_genomes"
                 exit 0
             else
-                echo "It is not Diamond, sorry, check manually. Exit"
+                echo "It is not DIAMOND, sorry, check manually. Exit" >&2
                 exit \$CHECMK2_EXITCODE
             fi
         fi
