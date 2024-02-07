@@ -27,7 +27,7 @@ process INDEX_FASTA {
 
 process ALIGNMENT {
 
-    errorStrategy = { task.exitStatus in ((130..145) + 104 + 1) ? 'retry' : 'finish' }
+    errorStrategy = { task.exitStatus in ((130..145) + 104) ? 'retry' : 'finish' }
 
     tag "${meta.id} align to ${ref_fasta}"
 
