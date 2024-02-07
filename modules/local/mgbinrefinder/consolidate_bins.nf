@@ -26,11 +26,11 @@ process CONSOLIDATE_BINS {
           path(stats123, stageAs: "stats/*")
 
     output:
-    tuple val(meta), path("consolidated_bins"), optional: true,   emit: consolidated_bins
-    tuple val(meta), path("consolidated_stats.tsv"),              emit: consolidated_stats
-    tuple val(meta), path("dereplicated_bins/*"), optional: true, emit: dereplicated_bins
-    tuple val(meta), path("dereplicated_list.tsv") ,              emit: dereplicated_list
-    path "versions.yml"                            ,              emit: versions
+    tuple val(meta), path("consolidated_bins"),      optional: true, emit: consolidated_bins
+    tuple val(meta), path("consolidated_stats.tsv"), optional: true, emit: consolidated_stats
+    tuple val(meta), path("dereplicated_bins/*"),    optional: true, emit: dereplicated_bins
+    tuple val(meta), path("dereplicated_list.tsv") , optional: true, emit: dereplicated_list
+    path "versions.yml"                            ,                 emit: versions
 
     script:
     """
