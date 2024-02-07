@@ -61,6 +61,7 @@ process EUKCC {
     label 'process_medium'
     tag "${meta.id} ${binner}"
 
+    //container 'quay.io/microbiome-informatics/eukcc:2.1.1.1'
     container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'
 
     input:
@@ -69,10 +70,10 @@ process EUKCC {
     path eukcc_db
 
     output:
-    tuple val(meta), path("*_merged_bins/${binner}_${meta.id}_merged_bins/*"), optional: true, emit: eukcc_merged_bins
-    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                                   emit: eukcc_csv
-    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),             optional: true, emit: eukcc_merged_csv
-    path "versions.yml",                                                                       emit: versions
+    tuple val(meta), path("${binner}_${meta.id}_merged_bins/merged_bins"),    emit: eukcc_merged_bins
+    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                  emit: eukcc_csv
+    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),            emit: eukcc_merged_csv
+    path "versions.yml",                                                      emit: versions
 
     script:
     """
@@ -91,10 +92,7 @@ process EUKCC {
     echo "EukCC finished"
 
     cp ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-    lines=\$(wc -l < ${binner}_${meta.id}_merged_bins/merged_bins.csv)
-    if [ \${lines} -gt 1 ]; then
-        cp ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
-    fi
+    cp ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

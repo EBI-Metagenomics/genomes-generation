@@ -87,10 +87,10 @@ process FILTER_QS50 {
             cp concoct_bins/\${i} output_genomes; done
         for i in \$(ls metabat_bins | grep -w -f filtered_genomes.txt); do
             cp metabat_bins/\${i} output_genomes; done
-        for i in \$(ls concoct_bins_merged | grep -w -f filtered_genomes.txt); do
-            cp concoct_bins_merged/\${i} output_genomes; done
-        for i in \$(ls metabat_bins_merged | grep -w -f filtered_genomes.txt); do
-            cp metabat_bins_merged/\${i} output_genomes; done
+        for i in \$(ls concoct_bins_merged/merged_bins | grep -w -f filtered_genomes.txt); do
+            cp concoct_bins_merged/merged_bins/\${i} output_genomes; done
+        for i in \$(ls metabat_bins_merged/merged_bins | grep -w -f filtered_genomes.txt); do
+            cp metabat_bins_merged/merged_bins/\${i} output_genomes; done
 
         echo "genome,completeness,contamination" > quality_file.csv
         grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
@@ -145,15 +145,6 @@ workflow EUK_MAGS_GENERATION {
 
     EUKCC_METABAT( binner2, metabat_linktable_bins, eukcc_db )
 
-    // EUKCC may return empty files, but the downstream jobs require
-    // all of the samples to be present (with empty [] to mark empty outputs)
-    // because the results may be empty we are constructing empty results
-    // using the csv mapping files, we need the meta argument for each sample
-    empty_result_concoct = EUKCC_CONCOCT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
-    eukcc_merged_concoct = EUKCC_CONCOCT.out.eukcc_merged_bins.ifEmpty(empty_result_concoct)
-    empty_result_metabat = EUKCC_METABAT.out.eukcc_csv.map{ meta, csv -> return tuple(meta, []) }
-    eukcc_merged_metabat = EUKCC_METABAT.out.eukcc_merged_bins.ifEmpty(empty_result_metabat)
-
     ch_versions = ch_versions.mix( LINKTABLE_METABAT.out.versions.first() )
     ch_versions = ch_versions.mix( EUKCC_METABAT.out.versions.first() )
 
@@ -172,11 +163,12 @@ workflow EUK_MAGS_GENERATION {
     quality = CONCATENATE_QUALITY_FILES.out.concatenated_result
 
     // -- qs50 -- //
+    // [meta, concoct_bins, metabat_bins, merged_concoct, merged_metabat]
     // combine concoct, metabat bins with merged bins (if any)
     collect_data = quality.join( input.bins_concoct ) \
         .join( input.bins_metabat ) \
-        .join( eukcc_merged_concoct ) \
-        .join( eukcc_merged_metabat )
+        .join( EUKCC_CONCOCT.out.eukcc_merged_bins ) \
+        .join( EUKCC_METABAT.out.eukcc_merged_bins )
 
     FILTER_QS50( collect_data )
 

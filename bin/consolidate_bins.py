@@ -168,6 +168,11 @@ def parse_args():
 
 def main(args):
     consolidated_bins = "consolidated_bins"
+    # consolidate folder and stats
+    if os.path.exists(consolidated_bins):
+        rmtree(consolidated_bins)
+    os.mkdir(consolidated_bins)
+
     dereplicated_bins = "dereplicated_bins"
     input_binners = args.input
     if args.verbose:
@@ -202,12 +207,6 @@ def main(args):
                 logging.debug(f'{bin} has {len(list(bins[bin].keys()))} contigs')
             logging.debug(f'stats {best_stats}')
 
-    # consolidate folder and stats
-    if not os.path.exists(consolidated_bins):
-        os.mkdir(consolidated_bins)
-    else:
-        rmtree(consolidated_bins)
-        os.mkdir(consolidated_bins)
     for bin in best_bins:
         for binner in binners:
             if bin in os.listdir(binner):

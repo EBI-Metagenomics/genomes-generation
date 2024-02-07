@@ -17,22 +17,32 @@ process CHECKM2 {
     tuple val(meta), path("${name}_filtered_genomes.tsv"), emit: filtered_stats
     path "versions.yml"                                  , emit: versions
 
+    // Checkm2 works with list of files OR folder as --input
+
     script:
     """
-    mkdir -p bins
-    set +e
-    echo "checkm predict"
-    checkm2 predict --threads ${task.cpus} \
-        --input bins \
-        -x fa \
-        --output-directory ${name}_checkm_output \
-        --database_path ${checkm2_db}
-    CHECMK2_EXITCODE="\$?"
-
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         checkm2: \$(checkm2 --version)
     END_VERSIONS
+
+    mkdir -p bins
+    set +e
+    export BINS=\$(ls bins/* | grep '.fa' | wc -l)
+    if [ \$BINS -eq 0 ]; then
+        echo "Bins folder is empty"
+        mkdir "${name}_filtered_genomes"
+        touch "${name}_all_stats.csv" "${name}_filtered_genomes.tsv"
+        exit 0
+    fi
+
+    echo "checkm predict"
+    checkm2 predict --threads ${task.cpus} \
+        --input bins/* \
+        -x fa \
+        --output-directory ${name}_checkm_output \
+        --database_path ${checkm2_db}
+    CHECMK2_EXITCODE="\$?"
 
     if [ "\$CHECMK2_EXITCODE" == "1" ]; then
         echo "Checkm2 exit code \$CHECMK2_EXITCODE"

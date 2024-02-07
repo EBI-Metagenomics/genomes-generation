@@ -77,7 +77,7 @@ workflow PROK_MAGS_GENERATION {
         return tuple( meta, it )
     }
 
-    CHECKM2( channel.value("aggregated"), all_bins, checkm2_db )
+    CHECKM2( "aggregated", all_bins, checkm2_db )
 
     ch_versions = ch_versions.mix( CHECKM2.out.versions.first() )
 

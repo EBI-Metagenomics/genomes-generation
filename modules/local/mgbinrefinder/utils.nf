@@ -8,7 +8,7 @@ process RENAME_AND_CHECK_SIZE_BINS {
     tuple val(meta), path(bins, stageAs: "bins_dir/*")
 
     output:
-    tuple val(meta), path("out/*"), emit: renamed, optional: true
+    tuple val(meta), path("out"), emit: renamed
 
     script:
     """

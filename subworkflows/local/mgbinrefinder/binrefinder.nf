@@ -19,10 +19,6 @@ workflow REFINEMENT {
 
     ch_versions = Channel.empty()
 
-    empty_output = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
-        tuple( meta, [] )
-    }
-
     binner1 = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
         [ meta, concot_bins ]
     }
@@ -40,14 +36,18 @@ workflow REFINEMENT {
     RENAME_AND_CHECK_SIZE_BINS_BINNER3( "binner3", binner3 )
 
     // collect by meta
-    renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed.ifEmpty(empty_output)
-    renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed.ifEmpty(empty_output)
-    renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed.ifEmpty(empty_output)
+    renamed_binner1 = RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.renamed
+    renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed
+    renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed
 
-    REFINE12( "binner12", renamed_binner1, renamed_binner2, empty_output, ref_checkm )
-    REFINE13( "binner13", renamed_binner1, renamed_binner3, empty_output, ref_checkm )
-    REFINE23( "binner23", renamed_binner2, renamed_binner3, empty_output, ref_checkm )
-    REFINE123( "binner123", renamed_binner1, renamed_binner2, renamed_binner3, ref_checkm )
+    binners = renamed_binner1.join(renamed_binner2, remainder: true).join(renamed_binner3, remainder: true)
+    refine12_input = binners.map{meta, b1, b2, b3 -> [meta, b1, b2, []]}
+    refine13_input = binners.map{meta, b1, b2, b3 -> [meta, b1, b3, []]}
+    refine23_input = binners.map{meta, b1, b2, b3 -> [meta, b2, b3, []]}
+    REFINE12( "binner12", refine12_input, ref_checkm )
+    REFINE13( "binner13", refine13_input, ref_checkm )
+    REFINE23( "binner23", refine23_input, ref_checkm )
+    REFINE123( "binner123", binners, ref_checkm )
 
     CHECKM2_BINNER1( "binner1", renamed_binner1, ref_checkm )
     CHECKM2_BINNER2( "binner2", renamed_binner2, ref_checkm )
@@ -57,26 +57,26 @@ workflow REFINEMENT {
     ch_versions = ch_versions.mix( CHECKM2_BINNER2.out.versions.first() )
     ch_versions = ch_versions.mix( CHECKM2_BINNER3.out.versions.first() )
 
-    binners = CHECKM2_BINNER1.out.filtered_genomes.ifEmpty(empty_output)
-        .join(CHECKM2_BINNER2.out.filtered_genomes.ifEmpty(empty_output))
-        .join(CHECKM2_BINNER3.out.filtered_genomes.ifEmpty(empty_output))
-        .join(REFINE12.out.filtered_bins.ifEmpty(empty_output))
-        .join(REFINE13.out.filtered_bins.ifEmpty(empty_output))
-        .join(REFINE23.out.filtered_bins.ifEmpty(empty_output))
-        .join(REFINE123.out.filtered_bins.ifEmpty(empty_output))
+    binners = CHECKM2_BINNER1.out.filtered_genomes
+        .join(CHECKM2_BINNER2.out.filtered_genomes)
+        .join(CHECKM2_BINNER3.out.filtered_genomes)
+        .join(REFINE12.out.filtered_bins)
+        .join(REFINE13.out.filtered_bins)
+        .join(REFINE23.out.filtered_bins)
+        .join(REFINE123.out.filtered_bins)
 
-    stats = CHECKM2_BINNER1.out.filtered_stats.ifEmpty(empty_output)
-        .join(CHECKM2_BINNER2.out.filtered_stats.ifEmpty(empty_output))
-        .join(CHECKM2_BINNER3.out.filtered_stats.ifEmpty(empty_output))
-        .join(REFINE12.out.filtered_bins_stats.ifEmpty(empty_output))
-        .join(REFINE13.out.filtered_bins_stats.ifEmpty(empty_output))
-        .join(REFINE23.out.filtered_bins_stats.ifEmpty(empty_output))
-        .join(REFINE123.out.filtered_bins_stats.ifEmpty(empty_output))
+    stats = CHECKM2_BINNER1.out.filtered_stats
+        .join(CHECKM2_BINNER2.out.filtered_stats)
+        .join(CHECKM2_BINNER3.out.filtered_stats)
+        .join(REFINE12.out.filtered_bins_stats)
+        .join(REFINE13.out.filtered_bins_stats)
+        .join(REFINE23.out.filtered_bins_stats)
+        .join(REFINE123.out.filtered_bins_stats)
 
     CONSOLIDATE_BINS( binners, stats )
     ch_versions = ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
 
     emit:
-    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins.ifEmpty(empty_output)
+    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins
     versions     = ch_versions
 }
