@@ -69,16 +69,18 @@ process FILTER_QS50 {
     tuple val(meta), path(quality_file), path(concoct_bins, stageAs: "concoct_bins/*"), path(metabat_bins, stageAs: "metabat_bins/*"), path(concoct_bins_merged, stageAs: "concoct_bins_merged/*"), path(metabat_bins_merged, stageAs: "metabat_bins_merged/*")
 
     output:
-    tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
+    tuple val(meta), path("output_genomes"), path("quality_file.csv"), emit: qs50_filtered_genomes
 
     script:
     """
+    mkdir -p output_genomes
+
     # prepare drep quality file
     cat ${quality_file} | grep -v "completeness" |\
         awk '{{if(\$2 - 5*\$3 >=50){{print \$0}}}}' |\
         sort -k 2,3 -n | cut -f1 > filtered_genomes.txt
-    BINS=\$(cat filtered_genomes.txt | wc -l)
-    mkdir -p output_genomes
+
+    export BINS=\$(cat filtered_genomes.txt | wc -l)
     if [ \$BINS -lt 2 ];
     then
         touch quality_file.csv

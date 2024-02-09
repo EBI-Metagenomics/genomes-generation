@@ -61,8 +61,7 @@ process EUKCC {
     label 'process_medium'
     tag "${meta.id} ${binner}"
 
-    //container 'quay.io/microbiome-informatics/eukcc:2.1.1.1'
-    container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'
+    container 'quay.io/microbiome-informatics/eukcc:2.1.2'
 
     input:
     val binner
