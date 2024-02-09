@@ -19,7 +19,7 @@ process PREPARE_TSV_FOR_UPLOADER {
     path taxonomy_proks
 
     output:
-    path "*.tsv"                                   , emit: tsv_for_uploader
+    path "*.tsv"                   , optional: true, emit: tsv_for_uploader
     path "unclassified_genomes.txt", optional: true, emit: unclassified_genomes_file
     path "versions.yml"                            , emit: versions
 

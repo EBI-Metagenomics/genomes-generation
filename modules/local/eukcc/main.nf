@@ -73,6 +73,7 @@ process EUKCC {
     tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                  emit: eukcc_csv
     tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),            emit: eukcc_merged_csv
     path "versions.yml",                                                      emit: versions
+    path "progress.log",                                                      emit: progress_log
 
     script:
     """
@@ -97,5 +98,10 @@ process EUKCC {
     "${task.process}":
         EukCC: \$( eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' )
     END_VERSIONS
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}\t${binner}
+        bins: \$(ls bins | wc -l), merged: \$(ls ${binner}_${meta.id}_merged_bins/merged_bins | wc -l)
+    END_LOGGING
     """
 }

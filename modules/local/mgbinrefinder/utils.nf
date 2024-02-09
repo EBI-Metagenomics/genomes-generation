@@ -8,7 +8,8 @@ process RENAME_AND_CHECK_SIZE_BINS {
     tuple val(meta), path(bins, stageAs: "bins_dir/*")
 
     output:
-    tuple val(meta), path("out"), emit: renamed
+    tuple val(meta), path("out/*"), emit: renamed, optional: true
+    path "progress.log"           , emit: progress_log
 
     script:
     """
@@ -23,5 +24,11 @@ process RENAME_AND_CHECK_SIZE_BINS {
             echo "Skipping \${bin} because the bin size \${SIZE} is not between 50kb and 20Mb"
         fi
     done
+    cd ..
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}\t${name}
+        bins_dir: \$(ls bins_dir | wc -l), filtered_out: \$(ls out | wc -l)
+    END_LOGGING
     """
 }

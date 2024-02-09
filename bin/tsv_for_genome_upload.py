@@ -180,7 +180,7 @@ def parse_args():
 
     if not (args.mags_proks or args.mags_euks):
         print("No MAGs in input")
-        sys.exit(1)
+        sys.exit(0)
 
     if args.coassemblies is not None and not os.path.exists(args.coassemblies):
         print("Co-assembly description file does not exist")

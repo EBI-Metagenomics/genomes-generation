@@ -58,6 +58,7 @@ assembly_software  = file(params.assembly_software_file)
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { PREPARE_TSV_FOR_UPLOADER    } from '../modules/local/genome_uploader/main'
+include { FINALIZE_LOGGING            } from '../modules/local/utils'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,6 +86,7 @@ def multiqc_report    = []
 workflow GGP {
 
     ch_versions    = Channel.empty()
+    ch_log         = Channel.empty()
 
     euk_genomes    = Channel.empty()
     stats_euks     = Channel.empty()
@@ -134,7 +136,6 @@ workflow GGP {
 
     // ---- binning ---- //
     BINNING( ALIGN.out.assembly_bam )
-
     ch_versions = ch_versions.mix( BINNING.out.versions )
 
     collectBinsFolder = { meta, bin_folder ->
@@ -170,6 +171,7 @@ workflow GGP {
         coverage_euks = coverage_euks.mix( EUK_MAGS_GENERATION.out.coverage )
         taxonomy_euks = taxonomy_euks.mix( EUK_MAGS_GENERATION.out.taxonomy )
         ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
+        ch_log = ch_log.mix( EUK_MAGS_GENERATION.out.progress_log )
     }
 
     if ( !params.skip_prok ) {
@@ -196,6 +198,7 @@ workflow GGP {
         rna = rna.mix( PROK_MAGS_GENERATION.out.rna )
         taxonomy_proks = taxonomy_proks.mix( PROK_MAGS_GENERATION.out.taxonomy )
         ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
+        ch_log = ch_log.mix( PROK_MAGS_GENERATION.out.progress_log )
     }
 
     if ( params.skip_euk && params.skip_prok ) {
@@ -221,6 +224,9 @@ workflow GGP {
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
+
+    pipeline_logging = ch_log.collectFile(name: 'pipeline_logging.txt')
+    FINALIZE_LOGGING(pipeline_logging, "structured_pipeline_logging_by_runs.txt")
 
     //
     // MODULE: MultiQC

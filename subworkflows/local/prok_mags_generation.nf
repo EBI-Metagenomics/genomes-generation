@@ -46,6 +46,7 @@ workflow PROK_MAGS_GENERATION {
     main:
 
     ch_versions = Channel.empty()
+    ch_log = Channel.empty()
 
     collected_binners = collected_binners_and_depth.map { meta, concot_bins, maxbin_bins, metabat_bins, _ -> 
         [ meta, concot_bins, maxbin_bins, metabat_bins ]
@@ -55,7 +56,6 @@ workflow PROK_MAGS_GENERATION {
 
     // -- bin refinement //
     BIN_REFINEMENT( collected_binners, checkm2_db )
-
     ch_versions = ch_versions.mix( BIN_REFINEMENT.out.versions )
 
     // -- clean bins
@@ -124,6 +124,10 @@ workflow PROK_MAGS_GENERATION {
         cluster_fasta.copyTo("${params.outdir}/genomes_drep/prokaryotes/genomes/${cluster_fasta.name}")
     })
 
+    ch_log = ch_log.mix( BIN_REFINEMENT.out.progress_log )
+    ch_log = ch_log.mix( CHECKM2.out.progress_log )
+    ch_log = ch_log.mix( DREP.out.progress_log )
+
     emit:
     genomes = GZIP_MAGS.out.compressed.collect()
     stats = CHECKM2_TABLE_FOR_DREP_GENOMES.out.checkm_results_mags
@@ -131,4 +135,5 @@ workflow PROK_MAGS_GENERATION {
     rna = rna_out.collect()
     taxonomy = GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
     versions = ch_versions
+    progress_log = ch_log
 }

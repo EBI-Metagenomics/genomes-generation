@@ -12,12 +12,17 @@ process CHECKM2 {
     path checkm2_db
 
     output:
-    tuple val(meta), path(bins), path("${name}_all_stats.csv")   , emit: stats
+    tuple val(meta), path("bins_folder"), path("${name}_all_stats.csv")   , emit: stats
     tuple val(meta), path("${name}_filtered_genomes")    , emit: filtered_genomes
     tuple val(meta), path("${name}_filtered_genomes.tsv"), emit: filtered_stats
     path "versions.yml"                                  , emit: versions
+    path "progress.log"                                  , emit: progress_log
 
+    // NOTE:
     // Checkm2 works with list of files OR folder as --input
+    // bins can be a folder with bins OR folder with folder of bins
+    // there is a check for both structures
+    // bins finally moved to bins_folder
 
     script:
     """
@@ -32,12 +37,17 @@ process CHECKM2 {
     echo "Move bins to bins_folder"
     export BINS=\$(ls bins | grep '.fa' | wc -l)
     if [ \$BINS != 0 ]; then
-        mv bins/*.fa bins_folder
+        cp bins/*.fa bins_folder
     fi
     export BINS=\$(ls bins/* | grep '.fa' | wc -l)
     if [ \$BINS != 0 ]; then
-        mv bins/*/*.fa bins_folder
+        cp bins/*/*.fa bins_folder
     fi
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}
+        bins_folder: \$(ls bins_folder | wc -l)
+    END_LOGGING
 
     echo "Check the number of bins"
     export BINS=\$(ls bins_folder | grep '.fa' | wc -l)
@@ -95,5 +105,9 @@ process CHECKM2 {
     for i in \$(cat ${name}_filtered_genomes.tsv | grep -v "completeness" | cut -f1 ); do
         cp bins_folder/\${i}.* ${name}_filtered_genomes
     done
+
+    cat <<-END_LOGGING >> progress.log
+        filtered: \$(ls ${name}_filtered_genomes | wc -l)
+    END_LOGGING
     """
 }

@@ -56,7 +56,7 @@ process MODIFY_QUALITY_FILE {
     script:
     """
     echo "genome,completeness,contamination" > ${output_name}
-    cat ${quality_table_csv} | grep -v "completeness" | cut -f1-3 | tr '\t' ',' >> ${output_name}
+    grep -v "completeness" ${quality_table_csv} | cut -f1-3 | tr '\t' ',' >> ${output_name} || true
     """
 }
 
@@ -69,21 +69,26 @@ process FILTER_QS50 {
     tuple val(meta), path(quality_file), path(concoct_bins, stageAs: "concoct_bins/*"), path(metabat_bins, stageAs: "metabat_bins/*"), path(concoct_bins_merged, stageAs: "concoct_bins_merged/*"), path(metabat_bins_merged, stageAs: "metabat_bins_merged/*")
 
     output:
-    tuple val(meta), path("output_genomes"), path("quality_file.csv"), emit: qs50_filtered_genomes
+    tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
+    path "progress.log"                                       , emit: progress_log
 
     script:
     """
     mkdir -p output_genomes
+    touch quality_file.csv
 
+    echo "Prepare drep quality"
     # prepare drep quality file
-    cat ${quality_file} | grep -v "completeness" |\
-        awk '{{if(\$2 - 5*\$3 >=50){{print \$0}}}}' |\
-        sort -k 2,3 -n | cut -f1 > filtered_genomes.txt
+    grep -v "completeness" ${quality_file} |\
+    awk '{{if(\$2 - 5*\$3 >=50){{print \$0}}}}' |\
+    sort -k 2,3 -n | cut -f1 > filtered_genomes.txt || true
 
+    echo "bins count"
     export BINS=\$(cat filtered_genomes.txt | wc -l)
+    echo "\$BINS"
     if [ \$BINS -lt 2 ];
     then
-        touch quality_file.csv
+        echo "No genomes"
     else
         for i in \$(ls concoct_bins | grep -w -f filtered_genomes.txt); do
             cp concoct_bins/\${i} output_genomes; done
@@ -97,6 +102,11 @@ process FILTER_QS50 {
         echo "genome,completeness,contamination" > quality_file.csv
         grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
     fi
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}
+        concoct_bins: \$(ls concoct_bins | wc -l), metabat_bins: \$(ls metabat_bins | wc -l), concoct_bins_merged: \$(ls concoct_bins_merged/merged_bins | wc -l), metabat_bins_merged: \$(ls metabat_bins_merged/merged_bins | wc -l), output_genomes: \$(ls output_genomes | wc -l)
+    END_LOGGING
     """
 }
 
@@ -113,6 +123,7 @@ workflow EUK_MAGS_GENERATION {
     main:
 
     ch_versions = Channel.empty()
+    ch_log      = Channel.empty()
 
     /* split the inputs */
     assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins ->
@@ -147,8 +158,8 @@ workflow EUK_MAGS_GENERATION {
 
     EUKCC_METABAT( binner2, metabat_linktable_bins, eukcc_db )
 
-    ch_versions = ch_versions.mix( LINKTABLE_METABAT.out.versions.first() )
-    ch_versions = ch_versions.mix( EUKCC_METABAT.out.versions.first() )
+    ch_versions = ch_versions.mix( LINKTABLE_METABAT.out.versions )
+    ch_versions = ch_versions.mix( EUKCC_METABAT.out.versions )
 
     // -- prepare quality file
     combine_quality = EUKCC_CONCOCT.out.eukcc_csv.join( EUKCC_METABAT.out.eukcc_csv )
@@ -262,10 +273,17 @@ workflow EUK_MAGS_GENERATION {
         cluster_fasta.copyTo("${params.outdir}/genomes_drep/eukaryotes/genomes/${cluster_fasta.name}")
     })
     // compress euk bins
-    GZIP_BINS(FILTER_QS50.out.qs50_filtered_genomes.map{ meta, genomes, quality -> genomes }.flatten())
+    bins_to_compress = FILTER_QS50.out.qs50_filtered_genomes.map{ meta, genomes, quality -> genomes }
+    GZIP_BINS(bins_to_compress.flatten())
     compressed_bins = GZIP_BINS.out.compressed.subscribe({ cluster_fasta ->
         cluster_fasta.copyTo("${params.outdir}/bins/eukaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
     })
+
+    ch_log = ch_log.mix (EUKCC_METABAT.out.progress_log )
+    ch_log = ch_log.mix (EUKCC_CONCOCT.out.progress_log )
+    ch_log = ch_log.mix( FILTER_QS50.out.progress_log )
+    ch_log = ch_log.mix( DREP.out.progress_log )
+    ch_log = ch_log.mix( DREP_MAGS.out.progress_log )
 
     emit:
     genomes = GZIP_MAGS.out.compressed.collect()
@@ -273,4 +291,5 @@ workflow EUK_MAGS_GENERATION {
     coverage = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ meta, coverage_file -> coverage_file }.collect()
     taxonomy = BAT_TAXONOMY_WRITER.out.all_bin2classification
     versions = ch_versions
+    progress_log = ch_log
 }
