@@ -26,9 +26,21 @@ process CHECKM2 {
         checkm2: \$(checkm2 --version)
     END_VERSIONS
 
-    mkdir -p bins
+    mkdir -p bins_folder
     set +e
+
+    echo "Move bins to bins_folder"
+    export BINS=\$(ls bins | grep '.fa' | wc -l)
+    if [ \$BINS != 0 ]; then
+        mv bins/*.fa bins_folder
+    fi
     export BINS=\$(ls bins/* | grep '.fa' | wc -l)
+    if [ \$BINS != 0 ]; then
+        mv bins/*/*.fa bins_folder
+    fi
+
+    echo "Check the number of bins"
+    export BINS=\$(ls bins_folder | grep '.fa' | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "Bins folder is empty"
         mkdir "${name}_filtered_genomes"
@@ -38,7 +50,7 @@ process CHECKM2 {
 
     echo "checkm predict"
     checkm2 predict --threads ${task.cpus} \
-        --input bins/* \
+        --input bins_folder \
         -x fa \
         --output-directory ${name}_checkm_output \
         --database_path ${checkm2_db}
@@ -81,7 +93,7 @@ process CHECKM2 {
     echo "choose genomes"
     mkdir -p ${name}_filtered_genomes
     for i in \$(cat ${name}_filtered_genomes.tsv | grep -v "completeness" | cut -f1 ); do
-        cp bins/\${i}.* ${name}_filtered_genomes
+        cp bins_folder/\${i}.* ${name}_filtered_genomes
     done
     """
 }
