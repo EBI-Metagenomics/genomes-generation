@@ -117,6 +117,7 @@ workflow GGP {
     tuple_assemblies = PROCESS_INPUT.out.assembly_and_reads.map{ meta, assembly, _ -> [meta, assembly] }
 
     // --- trimming reads ---- //
+    PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] }.view()
     QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
 
     ch_versions = ch_versions.mix( QC_AND_MERGE_READS.out.versions )
