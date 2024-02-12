@@ -14,7 +14,7 @@ def main():
     output_dir = args.output
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-    for root, dirs, files in os.walk(args.input):
+    for root, dirs, files in os.walk(args.input, followlinks=True):
         for filename in files:
             # Check if the file is a .fa file
             if filename.endswith('.fa'):
