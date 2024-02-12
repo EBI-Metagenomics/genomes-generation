@@ -31,18 +31,12 @@ process CHECKM2 {
         checkm2: \$(checkm2 --version)
     END_VERSIONS
 
-    mkdir -p bins_folder
+    mkdir -p bins_folder "${name}_filtered_genomes"
+    touch "${name}_all_stats.csv" "${name}_filtered_genomes.tsv"
+
     set +e
 
-    echo "Move bins to bins_folder"
-    export BINS=\$(ls bins | grep '.fa' | wc -l)
-    if [ \$BINS != 0 ]; then
-        cp bins/*.fa bins_folder
-    fi
-    export BINS=\$(ls bins/* | grep '.fa' | wc -l)
-    if [ \$BINS != 0 ]; then
-        cp bins/*/*.fa bins_folder
-    fi
+    export BINS=\$(restructure_input.py -i bins -o bins_folder)
 
     cat <<-END_LOGGING > progress.log
     ${meta.id}\t${task.process}
@@ -50,11 +44,8 @@ process CHECKM2 {
     END_LOGGING
 
     echo "Check the number of bins"
-    export BINS=\$(ls bins_folder | grep '.fa' | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "Bins folder is empty"
-        mkdir "${name}_filtered_genomes"
-        touch "${name}_all_stats.csv" "${name}_filtered_genomes.tsv"
         exit 0
     fi
 

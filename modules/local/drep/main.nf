@@ -40,21 +40,10 @@ process DREP {
     mkdir -p drep_output/dereplicated_genomes genomes_folder
     touch dereplicated_genomes.txt
 
-    echo "Move genomes to genomes_folder"
-    export GENOMES=\$(ls genomes_dir | grep .fa | wc -l )
-    echo "\$GENOMES"
-    if [ \$GENOMES != 0 ]; then
-        cp genomes_dir/*.fa genomes_folder
-    else
-        export GENOMES_SUB=\$(ls genomes_dir/* | grep .fa | wc -l )
-        echo "\$GENOMES_SUB"
-        if [ \$GENOMES_SUB != 0 ]; then
-            cp genomes_dir/*/*.fa genomes_folder
-        fi
-    fi
+    echo "Moving genomes to genomes_folder"
+    export LEN=\$(restructure_input.py -i genomes_dir -o genomes_folder)
 
     echo "Checking number of given genomes"
-    export LEN=\$(ls genomes_folder | wc -l)
     if [ \$LEN -eq 0 ]; then
         echo "no genomes"
     elif [ \$LEN -eq 1 ]; then
