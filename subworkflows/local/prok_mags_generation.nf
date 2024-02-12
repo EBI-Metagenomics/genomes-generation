@@ -26,7 +26,7 @@ process CHECKM2_TABLE_FOR_DREP_GENOMES {
 
     script:
     """
-    grep -f ${dereplicated_genomes_tsv} ${checkm_filtered_genomes_dir} > checkm_results_mags.tab
+    grep -f ${dereplicated_genomes_tsv} ${checkm_filtered_genomes_dir} > checkm_results_mags.tab || true
     """
 }
 
