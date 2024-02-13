@@ -60,7 +60,7 @@ process MODIFY_QUALITY_FILE {
     """
 }
 
-process FILTER_QS50 {
+process FILTER_QUALITY {
     tag "${meta.id}"
 
     label 'process_light'
@@ -80,7 +80,7 @@ process FILTER_QS50 {
     echo "Prepare drep quality"
     # prepare drep quality file
     grep -v "completeness" ${quality_file} |\
-    awk '{{if(\$2 - 5*\$3 >=50){{print \$0}}}}' |\
+    awk '{{if(\$2>=50 && \$2<=100 && \$3>=0 && \$3<=5){{print \$0}}}}' |\
     sort -k 2,3 -n | cut -f1 > filtered_genomes.txt || true
 
     echo "bins count"
@@ -183,10 +183,10 @@ workflow EUK_MAGS_GENERATION {
         .join( EUKCC_CONCOCT.out.eukcc_merged_bins ) \
         .join( EUKCC_METABAT.out.eukcc_merged_bins )
 
-    FILTER_QS50( collect_data )
+    FILTER_QUALITY( collect_data )
 
     // input: tuple (meta, genomes/*, quality_file)
-    DREP( FILTER_QS50.out.qs50_filtered_genomes, params.euk_drep_args, "eukaryotes" )
+    DREP( FILTER_QUALITY.out.qs50_filtered_genomes, params.euk_drep_args, "eukaryotes" )
 
     ch_versions = ch_versions.mix( DREP.out.versions.first() )
 
@@ -274,7 +274,7 @@ workflow EUK_MAGS_GENERATION {
         cluster_fasta.copyTo("${params.outdir}/genomes_drep/eukaryotes/genomes/${cluster_fasta.name}")
     })
     // compress euk bins
-    bins_to_compress = FILTER_QS50.out.qs50_filtered_genomes.map{ meta, genomes, quality -> genomes }
+    bins_to_compress = FILTER_QUALITY.out.qs50_filtered_genomes.map{ meta, genomes, quality -> genomes }
     GZIP_BINS(bins_to_compress.flatten())
     compressed_bins = GZIP_BINS.out.compressed.subscribe({ cluster_fasta ->
         cluster_fasta.copyTo("${params.outdir}/bins/eukaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
@@ -282,7 +282,7 @@ workflow EUK_MAGS_GENERATION {
 
     ch_log = ch_log.mix (EUKCC_METABAT.out.progress_log )
     ch_log = ch_log.mix (EUKCC_CONCOCT.out.progress_log )
-    ch_log = ch_log.mix( FILTER_QS50.out.progress_log )
+    ch_log = ch_log.mix( FILTER_QUALITY.out.progress_log )
     ch_log = ch_log.mix( DREP.out.progress_log )
     ch_log = ch_log.mix( DREP_MAGS.out.progress_log )
 
