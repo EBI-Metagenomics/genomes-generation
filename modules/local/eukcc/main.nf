@@ -87,7 +87,7 @@ process EUKCC {
         --suffix .fa \
         --db ${eukcc_db} \
         --out ${binner}_${meta.id}_merged_bins \
-        --prefix "${binner}_${meta.id}_merged." \
+        --prefix "${meta.id}_${binner}_merged." \
         bins
     echo "EukCC finished"
 
