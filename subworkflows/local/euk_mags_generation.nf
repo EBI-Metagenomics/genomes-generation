@@ -234,7 +234,7 @@ workflow EUK_MAGS_GENERATION {
         [ meta, bams, bais ]
     }
     METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS ( ch_summarizedepth_input )
-    euks_depth = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth.map{ meta, depth -> depth }.collectFile("euks_depth.txt.gz")
+    euks_depth = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth.map{ meta, depth -> depth }.collectFile(name: "euks_depth.txt.gz")
     COVERAGE_RECYCLER_EUK(
         DREP_MAGS.out.dereplicated_genomes,
         euks_depth
