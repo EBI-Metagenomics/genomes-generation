@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
-function FetchAssembliesAndReads {
-  echo 'Fetching reads and assemblies...'
+function FetchReads {
+  echo 'Fetching reads...'
+  . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
+  mitload fetchtool
+  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/" --run-list ${CATALOGUE_PATH}/runs.tsv
+}
+
+function FetchAssemblies {
+  echo 'Fetching assemblies...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
   bsub -I -q production "bash fetch-assemblies-tool.sh -v -p $SAMPLE -d ${CATALOGUE_PATH}/Assemblies/"
-  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/"
 }
 
 
@@ -27,11 +33,13 @@ function RunRenamingScript {
       -o ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 
   cat ${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt | tr ',' '\t' > ${CATALOGUE_PATH}/rename.tsv
+  cut -f1 ${CATALOGUE_PATH}/rename.tsv > ${CATALOGUE_PATH}/runs.tsv
   export CONVERT=${CATALOGUE_PATH}/Uploaded_Assembly_IDs/${SAMPLE}.uploaded_runs.txt
 }
 
 
 function Rename {
+  echo "Rename assemblies"
   while read line; do
     if [[ $line == [SED]RR* ]]
     then
@@ -79,10 +87,15 @@ fi
 mkdir -p "$CATALOGUE_PATH"
 
 if [[ $SKIP_FETCH == 'false' ]]; then
-  FetchAssembliesAndReads
+  FetchAssemblies
   Unzip
 fi
 
 RunRenamingScript
 Rename
+
+if [[ $SKIP_FETCH == 'false' ]]; then
+  FetchReads
+fi
+
 GenerateSamplesheet
