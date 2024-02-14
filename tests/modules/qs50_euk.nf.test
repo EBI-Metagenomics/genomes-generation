@@ -2,7 +2,7 @@ nextflow_process {
 
     name "Test module QS 50 for euk"
     script "subworkflows/euk_mags_generation.nf"
-    process "FILTER_QS50"
+    process "FILTER_QUALITY"
 
     test("qs50 after eukcc") {
 
