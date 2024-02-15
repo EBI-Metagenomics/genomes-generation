@@ -177,9 +177,9 @@ workflow GGP {
     if ( !params.skip_prok ) {
 
         // input: tuple( meta, concoct, metabat, maxbin, depth_file)
-        collected_binners_and_depth = concoct_collected_bins.join( maxbin_collected_bins ) \
-            .join( metabat_collected_bins ) \
-            .join( BINNING.out.metabat2depths )
+        collected_binners_and_depth = concoct_collected_bins.join( maxbin_collected_bins, remainder: true ) \
+            .join( metabat_collected_bins, remainder: true ) \
+            .join( BINNING.out.metabat2depths, remainder: true )
 
         PROK_MAGS_GENERATION(
             collected_binners_and_depth,
