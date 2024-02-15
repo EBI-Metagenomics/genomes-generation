@@ -26,11 +26,12 @@ process CONSOLIDATE_BINS {
           path(stats123, stageAs: "stats/*")
 
     output:
-    tuple val(meta), path("consolidated_bins"), optional: true,   emit: consolidated_bins
-    tuple val(meta), path("consolidated_stats.tsv"),              emit: consolidated_stats
-    tuple val(meta), path("dereplicated_bins/*"), optional: true, emit: dereplicated_bins
-    tuple val(meta), path("dereplicated_list.tsv") ,              emit: dereplicated_list
-    path "versions.yml"                            ,              emit: versions
+    tuple val(meta), path("consolidated_bins"),                      emit: consolidated_bins
+    tuple val(meta), path("consolidated_stats.tsv"), optional: true, emit: consolidated_stats
+    tuple val(meta), path("dereplicated_bins/*"),    optional: true, emit: dereplicated_bins
+    tuple val(meta), path("dereplicated_list.tsv") , optional: true, emit: dereplicated_list
+    path "versions.yml"                            ,                 emit: versions
+    path "progress.log"                            ,                 emit: progress_log
 
     script:
     """
@@ -42,5 +43,10 @@ process CONSOLIDATE_BINS {
         biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
         numpy: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('numpy').version)")
     END_VERSIONS
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}
+        binner1: \$(ls binner1 | wc -l), binner2: \$(ls binner2 | wc -l), binner3: \$(ls binner3 | wc -l), binner12: \$(ls binner12 | wc -l), binner23: \$(ls binner23 | wc -l), binner13: \$(ls binner13 | wc -l), binner123: \$(ls binner123 | wc -l), consolidated: \$(ls consolidated_bins | wc -l)
+    END_LOGGING
     """
 }

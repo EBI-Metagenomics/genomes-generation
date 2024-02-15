@@ -44,6 +44,9 @@ workflow CLEAN_AND_FILTER_BINS {
         return cluster_fasta
     })
 
+    //file("${workDir}/cleaned_${meta_id}").mkdirs()
+    //filtered_bins_folder = filtered_bins.map{it -> it.copyTo("${workDir}/cleaned_${meta_id}/${it.name}")}
+
     // --- compress prok bins
     GZIP_BINS(filtered_bins)
     compressed_output = GZIP_BINS.out.compressed

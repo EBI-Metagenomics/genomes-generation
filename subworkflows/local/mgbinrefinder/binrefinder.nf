@@ -18,6 +18,7 @@ workflow REFINEMENT {
     main:
 
     ch_versions = Channel.empty()
+    ch_log = Channel.empty()
 
     binner1 = collected_binners.map { meta, concot_bins, maxbin_bins, metabat_bins ->
         [ meta, concot_bins ]
@@ -40,10 +41,22 @@ workflow REFINEMENT {
     renamed_binner2 = RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.renamed
     renamed_binner3 = RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.renamed
 
-    REFINE12( "binner12", renamed_binner1, renamed_binner2, false, ref_checkm )
-    REFINE13( "binner13", renamed_binner1, renamed_binner3, false, ref_checkm )
-    REFINE23( "binner23", renamed_binner2, renamed_binner3, false, ref_checkm )
-    REFINE123( "binner123", renamed_binner1, renamed_binner2, renamed_binner3, ref_checkm )
+    binners_all = renamed_binner1.join(renamed_binner2, remainder: true).join(renamed_binner3, remainder: true)
+    // replace null (generated with remainder to [])
+    binners = binners_all.map{ meta, b1, b2, b3 ->
+                        result = [meta]
+                        if (b1) { result.add(b1) } else { result.add([]) }
+                        if (b2) { result.add(b2) } else { result.add([]) }
+                        if (b3) { result.add(b3) } else { result.add([]) }
+                        return result
+    }
+    refine12_input = binners.map{meta, b1, b2, b3 -> [meta, b1, b2, []]}
+    refine13_input = binners.map{meta, b1, b2, b3 -> [meta, b1, b3, []]}
+    refine23_input = binners.map{meta, b1, b2, b3 -> [meta, b2, b3, []]}
+    REFINE12( "binner12", refine12_input, ref_checkm )
+    REFINE13( "binner13", refine13_input, ref_checkm )
+    REFINE23( "binner23", refine23_input, ref_checkm )
+    REFINE123( "binner123", binners, ref_checkm )
 
     CHECKM2_BINNER1( "binner1", renamed_binner1, ref_checkm )
     CHECKM2_BINNER2( "binner2", renamed_binner2, ref_checkm )
@@ -70,11 +83,23 @@ workflow REFINEMENT {
         .join(REFINE123.out.filtered_bins_stats)
 
     CONSOLIDATE_BINS( binners, stats )
-    empty_result = CONSOLIDATE_BINS.out.consolidated_stats.map{ meta, csv -> return tuple(meta, []) }
-
     ch_versions = ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
 
+    // collect logging
+    ch_log = ch_log.mix( RENAME_AND_CHECK_SIZE_BINS_BINNER1.out.progress_log )
+    ch_log = ch_log.mix( RENAME_AND_CHECK_SIZE_BINS_BINNER2.out.progress_log )
+    ch_log = ch_log.mix( RENAME_AND_CHECK_SIZE_BINS_BINNER3.out.progress_log )
+    ch_log = ch_log.mix( REFINE12.out.progress_log )
+    ch_log = ch_log.mix( REFINE13.out.progress_log )
+    ch_log = ch_log.mix( REFINE23.out.progress_log )
+    ch_log = ch_log.mix( REFINE123.out.progress_log )
+    ch_log = ch_log.mix( CHECKM2_BINNER1.out.progress_log )
+    ch_log = ch_log.mix( CHECKM2_BINNER2.out.progress_log )
+    ch_log = ch_log.mix( CHECKM2_BINNER3.out.progress_log )
+    ch_log = ch_log.mix( CONSOLIDATE_BINS.out.progress_log )
+
     emit:
-    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins.ifEmpty(empty_result)
+    bin_ref_bins = CONSOLIDATE_BINS.out.dereplicated_bins
     versions     = ch_versions
+    progress_log = ch_log
 }

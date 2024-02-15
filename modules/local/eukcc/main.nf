@@ -19,9 +19,9 @@ process LINKTABLE {
     script:
     """
     mkdir -p bins
-    BINS=\$(ls bins | grep -v "unbinned" | wc -l)
-    if [ \$BINS -eq 0 ]; then
-        echo "creating empty links file"
+    export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
+     if [ \$BINS -eq 0 ]; then
+        echo "Bins directory is empty"
         touch ${meta.id}.${binner}.links.csv
     else
         binlinks.py --ANI 99 \
@@ -61,7 +61,7 @@ process EUKCC {
     label 'process_medium'
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/biocontainers/eukcc:2.1.0--pypyhdfd78af_0'
+    container 'quay.io/microbiome-informatics/eukcc:2.1.2'
 
     input:
     val binner
@@ -69,10 +69,11 @@ process EUKCC {
     path eukcc_db
 
     output:
-    tuple val(meta), path("*_merged_bins/${binner}_${meta.id}_merged_bins/*"), optional: true, emit: eukcc_merged_bins
-    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                                   emit: eukcc_csv
-    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),             optional: true, emit: eukcc_merged_csv
-    path "versions.yml",                                                                       emit: versions
+    tuple val(meta), path("${binner}_${meta.id}_merged_bins/merged_bins"),    emit: eukcc_merged_bins
+    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                  emit: eukcc_csv
+    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),            emit: eukcc_merged_csv
+    path "versions.yml",                                                      emit: versions
+    path "progress.log",                                                      emit: progress_log
 
     script:
     """
@@ -86,19 +87,21 @@ process EUKCC {
         --suffix .fa \
         --db ${eukcc_db} \
         --out ${binner}_${meta.id}_merged_bins \
-        --prefix "${binner}_${meta.id}_merged." \
+        --prefix "${meta.id}_${binner}_merged." \
         bins
     echo "EukCC finished"
 
     cp ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-    lines=\$(wc -l < ${binner}_${meta.id}_merged_bins/merged_bins.csv)
-    if [ \${lines} -gt 1 ]; then
-        cp ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
-    fi
+    cp ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         EukCC: \$( eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' )
     END_VERSIONS
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}\t${binner}
+        bins: \$(ls bins | wc -l), merged: \$(ls ${binner}_${meta.id}_merged_bins/merged_bins | wc -l)
+    END_LOGGING
     """
 }

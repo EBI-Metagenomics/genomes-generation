@@ -17,6 +17,7 @@ workflow BINNING {
     main:
 
     ch_versions = Channel.empty()
+
     // optional //
     metabat_output = Channel.empty()
     concoct_output = Channel.empty()

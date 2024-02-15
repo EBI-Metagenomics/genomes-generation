@@ -1,29 +1,82 @@
 process CHECKM2 {
 
     label 'process_medium'
+
     tag "${name} ${meta.id}"
 
     container 'quay.io/biocontainers/checkm2:1.0.1--pyh7cba7a3_0'
 
     input:
     val(name)
-    tuple val(meta), path(bins, stageAs: "bins/*")  // bins can be a list or directory (checkm2 supports both)
+    tuple val(meta), path(bins, stageAs: "bins/*")
     path checkm2_db
 
     output:
-    tuple val(meta), path(bins), path("${name}_all_stats.csv")   , emit: stats
+    tuple val(meta), path("bins_folder"), path("${name}_all_stats.csv")   , emit: stats
     tuple val(meta), path("${name}_filtered_genomes")    , emit: filtered_genomes
     tuple val(meta), path("${name}_filtered_genomes.tsv"), emit: filtered_stats
     path "versions.yml"                                  , emit: versions
+    path "progress.log"                                  , emit: progress_log
+
+    // NOTE:
+    // Checkm2 works with list of files OR folder as --input
+    // bins can be a folder with bins OR folder with folder of bins
+    // there is a check for both structures
+    // bins finally moved to bins_folder
 
     script:
     """
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        checkm2: \$(checkm2 --version)
+    END_VERSIONS
+
+    mkdir -p bins_folder "${name}_filtered_genomes"
+    touch "${name}_all_stats.csv" "${name}_filtered_genomes.tsv"
+
+    set +e
+
+    export BINS=\$(restructure_input.py -i bins -o bins_folder)
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}
+        bins_folder: \$(ls bins_folder | wc -l)
+    END_LOGGING
+
+    echo "Check the number of bins"
+    if [ \$BINS -eq 0 ]; then
+        echo "Bins folder is empty"
+        exit 0
+    fi
+
     echo "checkm predict"
     checkm2 predict --threads ${task.cpus} \
-        --input bins \
+        --input bins_folder \
         -x fa \
         --output-directory ${name}_checkm_output \
         --database_path ${checkm2_db}
+    CHECMK2_EXITCODE="\$?"
+
+    if [ "\$CHECMK2_EXITCODE" == "1" ]; then
+        echo "Checkm2 exit code \$CHECMK2_EXITCODE"
+        if [ ! -e "${name}_checkm_output/checkm2.log" ]; then
+            echo "checkm2.log does not exist. Exit"
+            echo "Error" >&2
+            exit \$CHECMK2_EXITCODE
+        else
+            echo "checkm2.log exists -> checking if DIAMOND failed"
+            if grep -q "No DIAMOND annotation was generated. Exiting" "${name}_checkm_output/checkm2.log"; then
+                echo "No DIAMOND annotation was generated"
+                touch "${name}_all_stats.csv" "${name}_filtered_genomes.tsv"
+                mkdir "${name}_filtered_genomes"
+                exit 0
+            else
+                echo "It is not DIAMOND, sorry, check manually. Exit" >&2
+                exit \$CHECMK2_EXITCODE
+            fi
+        fi
+    fi
+    set -e
 
     echo "checkm table"
     echo "genome,completeness,contamination" > ${name}_checkm2.tsv
@@ -41,12 +94,11 @@ process CHECKM2 {
     echo "choose genomes"
     mkdir -p ${name}_filtered_genomes
     for i in \$(cat ${name}_filtered_genomes.tsv | grep -v "completeness" | cut -f1 ); do
-        cp bins/\${i}.* ${name}_filtered_genomes
+        cp bins_folder/\${i}.* ${name}_filtered_genomes
     done
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        checkm2: \$(checkm2 --version)
-    END_VERSIONS
+    cat <<-END_LOGGING >> progress.log
+        filtered: \$(ls ${name}_filtered_genomes | wc -l)
+    END_LOGGING
     """
 }

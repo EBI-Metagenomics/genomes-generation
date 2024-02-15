@@ -1,42 +1,32 @@
 include { BINNING_REFINER                } from '../../../modules/local/mgbinrefinder/binning_refiner'
-include { BINNING_REFINER3               } from '../../../modules/local/mgbinrefinder/binning_refiner'
 include { CHECKM2 as CHECKM2_REFINE      } from '../../../modules/local/checkm2/main'
 
 workflow REFINE {
     take:
     name
-    binner1
-    binner2
-    binner3
+    binners
     checkm2_db
 
     main:
 
     ch_versions = Channel.empty()
-    empty_output = binner1.map{meta, _ -> return tuple(meta, [])}
+    ch_log = Channel.empty()
 
-    refined = Channel.empty()
-    if ( binner3 ) {
-        BINNING_REFINER3( name, binner1.join( binner2 ).join( binner3 ) )
-        refined = BINNING_REFINER3.out.refined_bins.ifEmpty(empty_output)
+    BINNING_REFINER( name, binners )
+    ch_versions = ch_versions.mix( BINNING_REFINER.out.versions.first() )
 
-        ch_versions = ch_versions.mix( BINNING_REFINER3.out.versions.first() )
-    } else {
-        BINNING_REFINER( name, binner1.join( binner2 ) )
-        refined = BINNING_REFINER.out.refined_bins.ifEmpty(empty_output)
-
-        ch_versions = ch_versions.mix( BINNING_REFINER.out.versions.first() )
-    }
-
-    CHECKM2_REFINE( name, refined, checkm2_db )
-
+    CHECKM2_REFINE( name, BINNING_REFINER.out.refined_bins, checkm2_db )
     ch_versions = ch_versions.mix( CHECKM2_REFINE.out.versions.first() )
 
+    ch_log = ch_log.mix(BINNING_REFINER.out.progress_log)
+    ch_log = ch_log.mix(CHECKM2_REFINE.out.progress_log)
+
     emit:
-    refined = refined
+    refined = BINNING_REFINER.out.refined_bins
     filtered_bins = CHECKM2_REFINE.out.filtered_genomes
     filtered_bins_stats = CHECKM2_REFINE.out.filtered_stats
     versions = ch_versions
+    progress_log = ch_log
 }
 
 

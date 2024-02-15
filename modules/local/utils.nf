@@ -130,3 +130,23 @@ process CHANGE_UNDERSCORE_TO_DOT {
     """
 }
 
+
+process FINALIZE_LOGGING {
+
+    label 'process_low'
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/pandas:0.24.1':
+        'quay.io/biocontainers/pandas:0.24.1' }"
+
+    input:
+    path(logging_file)
+    val(output)
+
+    output:
+    path("${output}"), emit: structured_logging
+
+    script:
+    """
+    logging_stats.py -i ${logging_file} -o ${output}
+    """
+}
