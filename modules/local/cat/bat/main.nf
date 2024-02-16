@@ -21,7 +21,7 @@ process BAT {
       -d ${cat_db_folder} \
       -t ${cat_taxonomy_db} \
       -o ${bin.baseName}.BAT_run \
-      --force
+      --force --no_stars
 
     echo "[MAG euk taxonomy] Adding taxonomy names"
     CAT add_names -i ${bin.baseName}.BAT_run.bin2classification.txt \
