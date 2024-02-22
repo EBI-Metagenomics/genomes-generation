@@ -46,6 +46,8 @@ process MAXBIN2 {
         -out $prefix
 
     MAXBIN_EXITCODE="\$?"
+    set -e
+
     echo "Exit code \$MAXBIN_EXITCODE"
     if [ "\$MAXBIN_EXITCODE" == "255" ]; then
         echo "Maxbin2 exit code \$MAXBIN_EXITCODE"
@@ -65,13 +67,10 @@ process MAXBIN2 {
             fi
         fi
     fi
-    sleep 5
 
     echo "Collect folder"
     mv $prefix*.fasta maxbin_output/
     echo "Compress files"
     gzip *.noclass *.tooshort *log *.marker
-
-    set -e
     """
 }

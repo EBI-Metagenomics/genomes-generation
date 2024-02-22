@@ -26,6 +26,6 @@ def main():
         filename = os.path.basename(i)
         number = int(filename.split('.')[1])
         new_filename = f"{args.accession}_maxbin2_{number}.fa"
-        shutil.copy(os.path.join(args.bins, i), os.path.join(args.outdir, new_filename))
+        shutil.move(os.path.join(args.bins, i), os.path.join(args.outdir, new_filename))
 if __name__ == "__main__":
     main()
