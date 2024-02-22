@@ -13,8 +13,7 @@ def main():
     parser.add_argument("-o", "--output", dest="outdir", type=str, help="Output directory")
     parser.add_argument("--bins",
         dest="bins",
-        nargs="+",
-        help="Maxbin bins list"
+        help="Maxbin bins folder"
     )
     parser.add_argument("-v", "--version", dest="version", type=str, help="Tool version")
     parser.add_argument("-a", "--accession", dest="accession", type=str, help="Run accession")
@@ -22,11 +21,11 @@ def main():
     args = parser.parse_args()
     if not os.path.exists(args.outdir):
         os.mkdir(args.outdir)
-    for i in args.bins:
+    for i in os.listdir(args.bins):
         # Define the regular expression pattern
         filename = os.path.basename(i)
         number = int(filename.split('.')[1])
         new_filename = f"{args.accession}_maxbin2_{number}.fa"
-        shutil.move(i, os.path.join(args.outdir, new_filename))
+        shutil.move(os.path.join(args.bins, i), os.path.join(args.outdir, new_filename))
 if __name__ == "__main__":
     main()

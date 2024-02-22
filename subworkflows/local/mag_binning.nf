@@ -58,12 +58,9 @@ workflow BINNING {
 
         MAXBIN2 ( ch_maxbin2_input )
 
-        RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )
-        empty_output_maxbin = ch_maxbin2_input.map{meta, contigs, reads, abund -> return tuple(meta, [])}
-
-        maxbin_output = RENAME_MAXBIN.out.renamed_bins.ifEmpty(empty_output_maxbin).map { meta, bins ->
-            [meta.subMap('id', 'erz'), bins]
-        }
+        RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )    // output can be empty folder
+        maxbin_output = RENAME_MAXBIN.out.renamed_bins.map { meta, bins ->
+            [ meta.subMap('id', 'erz'), bins ]}
 
         ch_versions = ch_versions.mix( CONVERT_DEPTHS.out.versions.first() )
         ch_versions = ch_versions.mix( MAXBIN2.out.versions.first() )
@@ -76,9 +73,8 @@ workflow BINNING {
 
         METABAT2_METABAT2 ( ch_metabat2_input )
 
-        metabat_output = METABAT2_METABAT2.out.fasta.ifEmpty(empty_output_metabat).map { meta, bins ->
-            [ meta.subMap('id', 'erz'), bins ]
-        }
+        metabat_output = METABAT2_METABAT2.out.fasta.map { meta, bins ->
+            [ meta.subMap('id', 'erz'), bins ]}
 
         ch_versions = ch_versions.mix(METABAT2_METABAT2.out.versions.first())
     }
@@ -92,13 +88,10 @@ workflow BINNING {
             bams: [ meta_extended, bams, bais ]
         }.set { ch_concoct_input }
 
-        empty_output_concoct = ch_concoct_input.bins.map{meta, _ -> return tuple(meta, [])}
-
         FASTA_BINNING_CONCOCT( ch_concoct_input.bins, ch_concoct_input.bams )
 
-        concoct_output = FASTA_BINNING_CONCOCT.out.bins.ifEmpty(empty_output_concoct).map { meta, bins ->
-            [ meta.subMap('id', 'erz'), bins ]
-        }
+        concoct_output = FASTA_BINNING_CONCOCT.out.bins.map { meta, bins ->
+            [ meta.subMap('id', 'erz'), bins ]}
 
         ch_versions = ch_versions.mix( FASTA_BINNING_CONCOCT.out.versions.first() )
     }
