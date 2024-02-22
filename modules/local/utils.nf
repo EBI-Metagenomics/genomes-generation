@@ -71,12 +71,12 @@ process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
     """
 }
 
-process ERR_TO_ERZ_SED {
+process ERR_TO_ERZ {
 
-    label 'process_low'
+    label 'process_medium'
     tag "${meta.id}"
 
-    container 'quay.io/biocontainers/pigz:2.3.4'
+    container 'quay.io/biocontainers/seqkit:2.7.0--h9ee0642_0'
 
     input:
     tuple val(meta), path(reads)
@@ -89,22 +89,27 @@ process ERR_TO_ERZ_SED {
     input_ch = reads.collect()
     if (input_ch.size() == 1 ) {
         """
-        zcat "${input_ch[0]}" | sed 's/${meta.id}/${meta.erz}/g' | pigz > ${meta.id}_changed.fastq.gz
+        seqkit replace -p ${meta.id} -r ${meta.erz} ${input_ch[0]} | gzip > ${meta.id}_changed.fastq.gz
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            pigz: \$(pigz --version 2>&1 | sed 's/pigz //g')
+            seqkit: \$(seqkit --version 2>&1 | sed 's/seqkit //g')
         END_VERSIONS
         """
     }
     else if (input_ch.size() == 2 ) {
         """
-        zcat "${input_ch[0]}" | sed 's/${meta.id}/${meta.erz}/g' | pigz > ${meta.id}_changed_1.fastq.gz
-        zcat "${input_ch[1]}" | sed 's/${meta.id}/${meta.erz}/g' | pigz > ${meta.id}_changed_2.fastq.gz
+        echo "read1"
+        seqkit replace -p ${meta.id} -r ${meta.erz} ${input_ch[0]} | gzip > ${meta.id}_changed_1.fastq.gz
+
+        echo "read2"
+        seqkit replace -p ${meta.id} -r ${meta.erz} ${input_ch[1]} | gzip > ${meta.id}_changed_2.fastq.gz
+
+        echo "Done"
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            pigz: \$(pigz --version 2>&1 | sed 's/pigz //g')
+            seqkit: \$(seqkit --version 2>&1 | sed 's/seqkit //g')
         END_VERSIONS
         """
     }
