@@ -20,7 +20,7 @@ process LINKTABLE {
     """
     mkdir -p bins
     export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
-     if [ \$BINS -eq 0 ]; then
+    if [ \$BINS -eq 0 ]; then
         echo "Bins directory is empty"
         touch ${meta.id}.${binner}.links.csv
     else
@@ -77,22 +77,27 @@ process EUKCC {
 
     script:
     """
-    eukcc folder \
-        --improve_percent 10 \
-        --n_combine 1 \
-        --threads ${task.cpus} \
-        --improve_ratio  5 \
-        --links ${links} \
-        --min_links 100 \
-        --suffix .fa \
-        --db ${eukcc_db} \
-        --out ${binner}_${meta.id}_merged_bins \
-        --prefix "${meta.id}_${binner}_merged." \
-        bins
-    echo "EukCC finished"
+    export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
+    if [ \$BINS -eq 0 ]; then
+        echo "No bins in input"
+    else
+        eukcc folder \
+            --improve_percent 10 \
+            --n_combine 1 \
+            --threads ${task.cpus} \
+            --improve_ratio  5 \
+            --links ${links} \
+            --min_links 100 \
+            --suffix .fa \
+            --db ${eukcc_db} \
+            --out ${binner}_${meta.id}_merged_bins \
+            --prefix "${meta.id}_${binner}_merged." \
+            bins
+        echo "EukCC finished"
 
-    cp ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-    cp ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+        cp ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
+        cp ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

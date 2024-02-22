@@ -44,15 +44,7 @@ workflow FASTA_BINNING_CONCOCT {
     ch_versions = ch_versions.mix(CONCOCT_EXTRACTFASTABINS.out.versions.first())
 
     emit:
-    coverage_table      = CONCOCT_CONCOCTCOVERAGETABLE.out.tsv     // channel: [ val(meta), [ tsv ] ]
 
-    original_csv        = CONCOCT_CONCOCT.out.original_data_csv    // channel: [ val(meta), [ csv ] ]
-    raw_clustering_csv  = CONCOCT_CONCOCT.out.clustering_csv       // channel: [ val(meta), [ csv ] ]
-    pca_original        = CONCOCT_CONCOCT.out.pca_components_csv   // channel: [ val(meta), [ csv ] ]
-    pca_transformed     = CONCOCT_CONCOCT.out.pca_transformed_csv  // channel: [ val(meta), [ csv ] ]
-
-    cluster_table       = CONCOCT_MERGECUTUPCLUSTERING.out.csv     // channel: [ val(meta), [ csv ] ]
     bins                = CONCOCT_EXTRACTFASTABINS.out.fasta       // channel: [ val(meta), [ fasta ] ]
-
     versions = ch_versions                                         // channel: [ versions.yml ]
 }
