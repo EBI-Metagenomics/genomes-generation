@@ -77,7 +77,10 @@ process EUKCC {
 
     script:
     """
-    export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
+    mkdir -p bins ${binner}_${meta.id}_merged_bins/merged_bins
+    touch ${meta.id}_${binner}.eukcc.csv ${meta.id}_${binner}.merged_bins.csv
+
+    export BINS=\$(ls bins | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "No bins in input"
     else
