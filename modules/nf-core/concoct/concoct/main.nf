@@ -32,8 +32,6 @@ process CONCOCT_CONCOCT {
         concoct: \$(echo \$(concoct --version 2>&1) | sed 's/concoct //g' )
     END_VERSIONS
 
-    touch ${prefix}_clustering_gt.csv
-
     set +e
     concoct \\
         $args \\
@@ -55,6 +53,7 @@ process CONCOCT_CONCOCT {
             echo "concoct logfile exists -> checking for unbinning issue"
             if grep -q "Not enough contigs pass the threshold filter." "${prefix}_log.txt"; then
                 echo "Not enough contigs pass the threshold filter"
+                touch ${prefix}_clustering_gt.csv
                 exit 0
             else
                 echo "Unknown problem. Exit"
