@@ -58,7 +58,6 @@ process CONCOCT_EXTRACTFASTABINS {
         done
     fi
 
-    version=\$(echo \$(concoct --version 2>&1) | sed 's/concoct //g')
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         concoct: \$(echo \$(concoct --version 2>&1) | sed 's/concoct //g' )
