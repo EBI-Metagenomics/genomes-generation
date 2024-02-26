@@ -17,8 +17,6 @@ process MAXBIN2 {
     tuple val(meta), path("*.marker.gz")  , emit: marker_counts, optional: true
     tuple val(meta), path("*.noclass.gz") , emit: unbinned_fasta, optional: true
     tuple val(meta), path("*.tooshort.gz"), emit: tooshort_fasta, optional: true
-    tuple val(meta), path("*_bin.tar.gz") , emit: marker_bins , optional: true
-    tuple val(meta), path("*_gene.tar.gz"), emit: marker_genes, optional: true
     path "versions.yml"                   , emit: versions
 
     when:
@@ -69,8 +67,8 @@ process MAXBIN2 {
     fi
 
     echo "Collect folder"
-    mv $prefix*.fasta maxbin_output/
+    mv $prefix*.fasta maxbin_output/  || true
     echo "Compress files"
-    gzip *.noclass *.tooshort *log *.marker
+    gzip *.noclass *.tooshort *log *.marker || true
     """
 }
