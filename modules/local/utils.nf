@@ -89,7 +89,7 @@ process ERR_TO_ERZ {
     input_ch = reads.collect()
     if (input_ch.size() == 1 ) {
         """
-        seqkit replace -p ${meta.id} -r ${meta.erz} ${input_ch[0]} | gzip > ${meta.id}_changed.fastq.gz
+        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed.fastq.gz
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -100,10 +100,10 @@ process ERR_TO_ERZ {
     else if (input_ch.size() == 2 ) {
         """
         echo "read1"
-        seqkit replace -p ${meta.id} -r ${meta.erz} ${input_ch[0]} | gzip > ${meta.id}_changed_1.fastq.gz
+        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed_1.fastq.gz
 
         echo "read2"
-        seqkit replace -p ${meta.id} -r ${meta.erz} ${input_ch[1]} | gzip > ${meta.id}_changed_2.fastq.gz
+        seqkit sana ${input_ch[1]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed_2.fastq.gz
 
         echo "Done"
 

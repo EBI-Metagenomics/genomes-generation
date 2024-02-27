@@ -101,14 +101,14 @@ workflow GGP {
     // ---- combine data for reads and contigs pre-processing ---- //
     groupReads = { meta, assembly, fq1, fq2 ->
         if (fq2 == []) {
-            return tuple(meta, assembly, [fq1])
+            return tuple(meta + [single_end: true], assembly, [fq1])
         }
         else {
-            return tuple(meta, assembly, [fq1, fq2])
+            return tuple(meta + [single_end: false], assembly, [fq1, fq2])
         }
     }
     assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
-
+    assembly_and_runs.view()
     // ---- pre-processing ---- //
     PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
 
