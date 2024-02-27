@@ -31,7 +31,7 @@ process CONCOCT_EXTRACTFASTABINS {
     def args   = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir ${prefix}
+    mkdir -p ${prefix} ${meta.id}_concoct_bins
 
     extract_fasta_bins.py \\
         $args \\
@@ -39,18 +39,16 @@ process CONCOCT_EXTRACTFASTABINS {
         $csv \\
         --output_path ${prefix}
 
-    ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
-    ## renames 1.fa to accession_bin.1.fa
-    for i in ${prefix}/*.fa; do
-        mv \${i} \${i/\\///${prefix}_bin.}
-    done
-
-    version=\$(echo \$(concoct --version 2>&1) | sed 's/concoct //g')
-
-    mkdir -p ${meta.id}_concoct_bins
-    if [ -z "\$(ls -A ${prefix}/*.fa)" ]; then
-        echo "Folder is empty"
+    export BINS=\$(ls ${prefix} | wc -l)
+    if [ \$BINS -eq 0 ]; then
+        echo "Result folder is empty"
     else
+        ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
+        ## renames 1.fa to accession_bin.1.fa
+        for i in ${prefix}/*.fa; do
+            mv \${i} \${i/\\///${prefix}_bin.}
+        done
+
         for i in ${prefix}/*.fa; do
             original_name=\$(basename \${i})
             original_name_without_extension=\${original_name%.*}
