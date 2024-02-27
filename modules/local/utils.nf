@@ -87,7 +87,7 @@ process ERR_TO_ERZ {
 
     script:
     input_ch = reads.collect()
-    if (input_ch.size() == 1 ) {
+    if (meta.single_end ) {
         """
         seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed.fastq.gz
 
@@ -97,13 +97,21 @@ process ERR_TO_ERZ {
         END_VERSIONS
         """
     }
-    else if (input_ch.size() == 2 ) {
+    else {
         """
         echo "read1"
-        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed_1.fastq.gz
+        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_tmp_1.fastq.gz
 
         echo "read2"
-        seqkit sana ${input_ch[1]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed_2.fastq.gz
+        seqkit sana ${input_ch[1]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_tmp_2.fastq.gz
+
+        echo "sync read1"
+        seqkit sana -i ${meta.id}_tmp_1.fastq.gz ${meta.id}_tmp_2.fastq.gz -o ${meta.id}_changed_1.fastq.gz
+
+        echo "sync read2"
+        seqkit sana -i ${meta.id}_tmp_2.fastq.gz ${meta.id}_tmp_1.fastq.gz -o ${meta.id}_changed_2.fastq.gz
+
+        rm ${meta.id}_tmp_1.fastq.gz ${meta.id}_tmp_2.fastq.gz
 
         echo "Done"
 

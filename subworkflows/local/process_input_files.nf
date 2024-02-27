@@ -29,7 +29,7 @@ workflow PROCESS_INPUT {
     // it is required for next step FASTP that SE reads should be also in list
     reads_changed = ERR_TO_ERZ.out.modified_reads.map{meta, reads ->
                                                             result = [meta]
-                                                            if (reads.collect().size() == 2) {
+                                                            if (!meta.single_end) {
                                                                 result.add(reads) }
                                                             else {
                                                                 result.add([reads]) }

@@ -43,7 +43,7 @@ process ALIGNMENT {
 
     script:
     def input_reads = "";
-    if ( reads.collect().size() == 1 ) {
+    if ( meta.single_end ) {
         input_reads = "${reads[0]}";
     } else {
         if (reads[0].name.contains("_1")) {

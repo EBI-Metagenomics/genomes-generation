@@ -22,7 +22,7 @@ workflow DECONTAMINATION {
 
     ALIGNMENT( to_align, false )
 
-    SAMTOOLS_BAM2FQ( ALIGNMENT.out.bam.map { meta, ref_fasta, bam, bai -> [ meta, bam ] }, true )
+    SAMTOOLS_BAM2FQ( ALIGNMENT.out.bam.map { meta, ref_fasta, bam, bai -> [ meta, bam ] }, reads.map { meta, reads -> meta.single_end == false } )
 
     ch_versions = ch_versions.mix(ALIGNMENT.out.versions.first())
     ch_versions = ch_versions.mix(SAMTOOLS_BAM2FQ.out.versions.first())

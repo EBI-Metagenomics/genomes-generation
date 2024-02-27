@@ -26,7 +26,7 @@ process FASTP {
     task.ext.when == null || task.ext.when
 
     script:
-    def single_end = reads.collect().size() == 1
+    def single_end = meta.single_end
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def adapter_list = adapter_fasta ? "--adapter_fasta ${adapter_fasta}" : ""
@@ -103,7 +103,7 @@ process FASTP {
 
     stub:
     def layout = ""
-    if (reads.collect().size() == 1) {
+    if (meta.single_end) {
         layout = 'SE'
     }
     else {

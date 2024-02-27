@@ -108,7 +108,7 @@ workflow GGP {
         }
     }
     assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
-    assembly_and_runs.view()
+
     // ---- pre-processing ---- //
     PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
 
