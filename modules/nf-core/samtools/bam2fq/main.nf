@@ -21,18 +21,14 @@ process SAMTOOLS_BAM2FQ {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def single_end = reads.collect().size() == 1
 
-    if (split){
+    if (single_end) {
         """
         samtools \\
             bam2fq \\
-            $args \\
             -@ $task.cpus \\
-            -1 ${prefix}_1.fq.gz \\
-            -2 ${prefix}_2.fq.gz \\
-            -0 ${prefix}_other.fq.gz \\
-            -s ${prefix}_singleton.fq.gz \\
-            $inputbam
+            $bam | gzip --no-name > ${prefix}.bwa.fq.gz
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -43,9 +39,12 @@ process SAMTOOLS_BAM2FQ {
         """
         samtools \\
             bam2fq \\
-            $args \\
             -@ $task.cpus \\
-            $inputbam | gzip --no-name > ${prefix}_interleaved.fq.gz
+            -1 ${prefix}_1.bwa.fq.gz \\
+            -2 ${prefix}_2.bwa.fq.gz \\
+            -0 /dev/null \\
+            -s /dev/null \\
+            $bam
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
