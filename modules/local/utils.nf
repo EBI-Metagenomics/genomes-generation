@@ -100,18 +100,17 @@ process ERR_TO_ERZ {
     else {
         """
         echo "read1"
-        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_tmp_1.fastq.gz
+        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed_1.fastq.gz
 
         echo "read2"
-        seqkit sana ${input_ch[1]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_tmp_2.fastq.gz
+        seqkit sana ${input_ch[1]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_changed_2.fastq.gz
 
-        echo "sync read1"
-        seqkit sana -i ${meta.id}_tmp_1.fastq.gz ${meta.id}_tmp_2.fastq.gz -o ${meta.id}_changed_1.fastq.gz
+        echo "sync read1 and read2"
+        seqkit pair -1 ${meta.id}_changed_1.fastq.gz -2 ${meta.id}_changed_2.fastq.gz -O result
 
-        echo "sync read2"
-        seqkit sana -i ${meta.id}_tmp_2.fastq.gz ${meta.id}_tmp_1.fastq.gz -o ${meta.id}_changed_2.fastq.gz
-
-        rm ${meta.id}_tmp_1.fastq.gz ${meta.id}_tmp_2.fastq.gz
+        mv result/${meta.id}_changed_1.fastq.gz ${meta.id}_changed_1.fastq.gz
+        mv result/${meta.id}_changed_2.fastq.gz ${meta.id}_changed_2.fastq.gz
+        rm -rf result
 
         echo "Done"
 
