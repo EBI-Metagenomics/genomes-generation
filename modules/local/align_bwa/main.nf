@@ -46,11 +46,7 @@ process ALIGNMENT {
     if ( meta.single_end ) {
         input_reads = "${reads[0]}";
     } else {
-        if (reads[0].name.contains("_1")) {
-            input_reads = "${reads[0]} ${reads[1]}"
-        } else {
-            input_reads = "${reads[1]} ${reads[0]}"
-        }
+        input_reads = "${reads[0]} ${reads[1]}"
     }
 
     def samtools_args = ""

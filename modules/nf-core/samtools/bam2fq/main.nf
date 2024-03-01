@@ -20,8 +20,9 @@ process SAMTOOLS_BAM2FQ {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def single_end = meta.single_end
 
-    if (split) {
+    if (!single_end) {
         """
         samtools \\
             bam2fq \\
@@ -37,6 +38,8 @@ process SAMTOOLS_BAM2FQ {
         "${task.process}":
             samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
         END_VERSIONS
+
+        rm $inputbam
         """
     } else {
         """
