@@ -8,7 +8,7 @@ process SAMTOOLS_BAM2FQ {
         'biocontainers/samtools:1.17--h00cdaf9_0' }"
 
     input:
-    tuple val(meta), path(inputbam)
+    tuple val(meta), path(bam)
     val split
 
     output:
@@ -21,9 +21,8 @@ process SAMTOOLS_BAM2FQ {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def single_end = reads.collect().size() == 1
 
-    if (single_end) {
+    if (!split) {
         """
         samtools \\
             bam2fq \\

@@ -72,8 +72,8 @@ process MAXBIN2 {
         echo "Folder is empty"
     else
         for i in maxbin_output/*; do
-            number=\$(echo "\$i" | cut -d '.' -f 2)
-            new_name="${prefix}_maxbin2_\${number}.fa"
+            number=\$(echo "\$i" | cut -d '.' -f 2 | sed 's/^0*//')
+            new_name="maxbin_output/${meta.id}_maxbin2_\${number}.fa"
             echo "\${i} to \${new_name}"
             mv \${i} \${new_name}
         done
