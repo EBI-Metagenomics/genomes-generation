@@ -68,6 +68,16 @@ process MAXBIN2 {
 
     echo "Collect folder"
     mv $prefix*.fasta maxbin_output/  || true
+    if [ -z "\$(ls -A maxbin_output)" ]; then
+        echo "Folder is empty"
+    else
+        for i in maxbin_output/*; do
+            number=\$(echo "\$i" | cut -d '.' -f 2)
+            new_name="${prefix}_maxbin2_\${number}.fa"
+            echo "\${i} to \${new_name}"
+            mv \${i} \${new_name}
+        done
+    fi
     echo "Compress files"
     gzip *.noclass *.tooshort *log *.marker || true
     """

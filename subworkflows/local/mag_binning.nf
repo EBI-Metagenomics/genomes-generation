@@ -6,7 +6,6 @@ include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS  } from '../../modules/nf-core/me
 include { MAXBIN2                               } from '../../modules/nf-core/maxbin2/main'
 
 include { CONVERT_DEPTHS                        } from '../../modules/local/mag/convert_depths'
-include { RENAME_MAXBIN                         } from '../../modules/local/rename_maxbin/main'
 include { FASTA_BINNING_CONCOCT                 } from '../nf-core/fasta_binning_concoct/main'
 
 workflow BINNING {
@@ -56,15 +55,12 @@ workflow BINNING {
             [meta.subMap('id', 'erz') + [binner: 'MaxBin2'], assembly, [], depth ]
         }
 
-        MAXBIN2 ( ch_maxbin2_input )
-
-        RENAME_MAXBIN ( MAXBIN2.out.binned_fastas )    // output can be empty folder
-        maxbin_output = RENAME_MAXBIN.out.renamed_bins.map { meta, bins ->
+        MAXBIN2 ( ch_maxbin2_input )  // output can be empty folder
+        maxbin_output = MAXBIN2.out.binned_fastas.map { meta, bins ->
             [ meta.subMap('id', 'erz'), bins ]}
 
         ch_versions = ch_versions.mix( CONVERT_DEPTHS.out.versions.first() )
         ch_versions = ch_versions.mix( MAXBIN2.out.versions.first() )
-        ch_versions = ch_versions.mix( RENAME_MAXBIN.out.versions.first() )
     }
 
     if ( !params.skip_metabat2 ) {
