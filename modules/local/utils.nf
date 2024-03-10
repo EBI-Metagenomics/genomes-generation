@@ -93,7 +93,7 @@ process ERR_TO_ERZ {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            seqkit: \$(seqkit --version 2>&1 | sed 's/seqkit //g')
+            seqkit: \$(seqkit version 2>&1 | sed 's/seqkit //g')
         END_VERSIONS
         """
     }
@@ -109,7 +109,7 @@ process ERR_TO_ERZ {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            seqkit: \$(seqkit --version 2>&1 | sed 's/seqkit //g')
+            seqkit: \$(seqkit version 2>&1 | sed 's/seqkit //g')
         END_VERSIONS
         """
     }
