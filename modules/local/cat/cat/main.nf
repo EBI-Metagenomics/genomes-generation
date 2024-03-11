@@ -34,6 +34,13 @@ process CAT {
     CAT summarise -c ${bin_fa} \
     -i ${meta.id}.contig2classification.official_names.txt -o ${meta.id}.summary.txt
 
+    echo "Remove diamond alignment"
+    rm "${meta.id}.alignment.diamond"
+
+    echo "Remove predicted proteins"
+    rm "${meta.id}.predicted_proteins.faa" || true
+    rm "${meta.id}.predicted_proteins.gff" || true
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         CAT: \$(CAT --version | sed "s/CAT v//; s/(.*//")
