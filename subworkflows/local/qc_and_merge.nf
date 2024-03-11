@@ -19,8 +19,8 @@ workflow QC_AND_MERGE_READS {
     ch_multiqc_files      = Channel.empty()
 
     reads.branch {
-        single: it[1].collect().size() == 1
-        paired: it[1].collect().size() == 2
+        single: it[0].single_end
+        paired: !it[0].single_end
     }.set {
         ch_input_for_fastp
     }

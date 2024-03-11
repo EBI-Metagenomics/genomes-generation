@@ -101,10 +101,10 @@ workflow GGP {
     // ---- combine data for reads and contigs pre-processing ---- //
     groupReads = { meta, assembly, fq1, fq2 ->
         if (fq2 == []) {
-            return tuple(meta, assembly, [fq1])
+            return tuple(meta + [single_end: true], assembly, [fq1])
         }
         else {
-            return tuple(meta, assembly, [fq1, fq2])
+            return tuple(meta + [single_end: false], assembly, [fq1, fq2])
         }
     }
     assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
@@ -144,6 +144,7 @@ workflow GGP {
     concoct_collected_bins = BINNING.out.concoct_bins.map( collectBinsFolder )
     metabat_collected_bins = BINNING.out.metabat_bins.map( collectBinsFolder )
     maxbin_collected_bins = BINNING.out.maxbin_bins.map( collectBinsFolder )
+    binning_depths = BINNING.out.metabat2depths
 
     if ( !params.skip_euk ) {
 
@@ -175,11 +176,10 @@ workflow GGP {
     }
 
     if ( !params.skip_prok ) {
-
         // input: tuple( meta, concoct, metabat, maxbin, depth_file)
         collected_binners_and_depth = concoct_collected_bins.join( maxbin_collected_bins, remainder: true ) \
             .join( metabat_collected_bins, remainder: true ) \
-            .join( BINNING.out.metabat2depths, remainder: true )
+            .join( binning_depths, remainder: true )
 
         PROK_MAGS_GENERATION(
             collected_binners_and_depth,

@@ -27,6 +27,7 @@ workflow BINNING {
     }
 
     METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS ( ch_summarizedepth_input )
+    depth = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
 
     ch_metabat_depths = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
         .map { meta, depths ->
@@ -52,12 +53,12 @@ workflow BINNING {
 
         ch_maxbin2_input = CONVERT_DEPTHS.out.output.map { meta, assembly, depth ->
             // we provide empty reads as we don't want maxbin2 to calculate for us.
-            [meta.subMap('id', 'erz') + [binner: 'MaxBin2'], assembly, [], depth ]
+            [meta.subMap('id', 'erz', 'single_end') + [binner: 'MaxBin2'], assembly, [], depth ]
         }
 
         MAXBIN2 ( ch_maxbin2_input )  // output can be empty folder
         maxbin_output = MAXBIN2.out.binned_fastas.map { meta, bins ->
-            [ meta.subMap('id', 'erz'), bins ]}
+            [ meta.subMap('id', 'erz', 'single_end'), bins ]}
 
         ch_versions = ch_versions.mix( CONVERT_DEPTHS.out.versions.first() )
         ch_versions = ch_versions.mix( MAXBIN2.out.versions.first() )
@@ -65,12 +66,10 @@ workflow BINNING {
 
     if ( !params.skip_metabat2 ) {
 
-        empty_output_metabat = ch_metabat2_input.map{meta, fasta, depth -> return tuple(meta, [])}
-
         METABAT2_METABAT2 ( ch_metabat2_input )
 
         metabat_output = METABAT2_METABAT2.out.fasta.map { meta, bins ->
-            [ meta.subMap('id', 'erz'), bins ]}
+            [ meta.subMap('id', 'erz', 'single_end'), bins ]}
 
         ch_versions = ch_versions.mix(METABAT2_METABAT2.out.versions.first())
     }
@@ -87,13 +86,13 @@ workflow BINNING {
         FASTA_BINNING_CONCOCT( ch_concoct_input.bins, ch_concoct_input.bams )
 
         concoct_output = FASTA_BINNING_CONCOCT.out.bins.map { meta, bins ->
-            [ meta.subMap('id', 'erz'), bins ]}
+            [ meta.subMap('id', 'erz', 'single_end'), bins ]}
 
         ch_versions = ch_versions.mix( FASTA_BINNING_CONCOCT.out.versions.first() )
     }
 
     emit:
-    metabat2depths   = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
+    metabat2depths   = depth
     maxbin_bins      = maxbin_output
     concoct_bins     = concoct_output
     metabat_bins     = metabat_output
