@@ -2,27 +2,53 @@
  * Binning with MetaBAT2, MaxBin2 and Concoct
  */
 include { METABAT2_METABAT2                     } from '../../modules/nf-core/metabat2/metabat2/main'
+include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS  } from '../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
 include { MAXBIN2                               } from '../../modules/nf-core/maxbin2/main'
+
 include { CONVERT_DEPTHS                        } from '../../modules/local/mag/convert_depths'
 include { FASTA_BINNING_CONCOCT                 } from '../nf-core/fasta_binning_concoct/main'
 
 workflow BINNING {
 
     take:
-    binning_input  // channel: [ val(meta), path(assembly), path(depth), [reads] ]
+    assemblies_bams  // channel: [ val(meta), path(assembly), path(bams), path(bais) ]
 
     main:
 
     ch_versions = Channel.empty()
+
     // optional //
     metabat_output = Channel.empty()
     concoct_output = Channel.empty()
 
-    assembly = binning_input.map{ meta, assembly, depth, reads -> [meta, assembly] }
-    depth = binning_input.map{ meta, assembly, depth, reads -> [meta, depth] }
+    // generate coverage depths for each contig
+    ch_summarizedepth_input = assemblies_bams.map { meta, assembly, bams, bais ->
+        [ meta, bams, bais ]
+    }
 
+    METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS ( ch_summarizedepth_input )
+    depth = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
+
+    ch_metabat_depths = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth
+        .map { meta, depths ->
+            [ meta + [binner: 'MetaBAT2'], depths ]
+        }
+
+    ch_versions = ch_versions.mix( METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.versions.first() )
+
+    // combine depths back with assemblies
+    ch_metabat2_input = assemblies_bams
+        .map { meta, assembly, bams, bais ->
+            [meta + [binner: 'MetaBAT2'], assembly, bams, bais]
+        }
+        .join( ch_metabat_depths )
+        .map { meta, assembly, bams, bais, depths ->
+            [ meta, assembly, depths ]
+        }
+
+    // convert metabat2 depth files to maxbin2
     if ( !params.skip_maxbin2 ) {
-        
+
         CONVERT_DEPTHS ( ch_metabat2_input )
 
         ch_maxbin2_input = CONVERT_DEPTHS.out.output.map { meta, assembly, depth ->
@@ -30,8 +56,7 @@ workflow BINNING {
             [meta.subMap('id', 'erz', 'single_end') + [binner: 'MaxBin2'], assembly, [], depth ]
         }
 
-        MAXBIN2 ( ch_maxbin2_input )  // input (meta, assembly, reads, depth); output can be empty folder
-
+        MAXBIN2 ( ch_maxbin2_input )  // output can be empty folder
         maxbin_output = MAXBIN2.out.binned_fastas.map { meta, bins ->
             [ meta.subMap('id', 'erz', 'single_end'), bins ]}
 
@@ -40,10 +65,8 @@ workflow BINNING {
     }
 
     if ( !params.skip_metabat2 ) {
-        ch_metabat2_input = assembly.join(depth).map { meta, assembly, depth ->
-                                                    [meta + [binner: 'MetaBAT2'], assembly, depth]
-                                                    }
-        METABAT2_METABAT2 ( ch_metabat2_input )   // input: (meta, fasta, depth)
+
+        METABAT2_METABAT2 ( ch_metabat2_input )
 
         metabat_output = METABAT2_METABAT2.out.fasta.map { meta, bins ->
             [ meta.subMap('id', 'erz', 'single_end'), bins ]}
