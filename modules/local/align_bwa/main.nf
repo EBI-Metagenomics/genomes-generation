@@ -25,36 +25,40 @@ process INDEX_FASTA {
     """
 }
 
-process ALIGNMENT_BAM {
-    // module does alignment with chosen arguments and generates BAM and BAM.BAI files as output
+process ALIGNMENT_DEPTH {
+
+    /*
+    This module aligns reads to the reference using specified arguments and produces output in the form of FASTQ.GZ, BAM and BAM.BAI files.
+    metabat2 jgi_summarize_bam_contig_depths generates depths of input reads.
+    BAM files removed in the end.
+    */
+
     label 'process_medium'
 
     tag "${meta.id} align to ${ref_fasta}"
 
-    container 'quay.io/microbiome-informatics/bwamem2:2.2.1'
+    container 'quay.io/microbiome-informatics/bwa_metabat:2.2.1_2.15'
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
-    val align  // if true: align (include reads), else: decontaminate (exclude reads)
 
     output:
-    tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bam
-    path "versions.yml"                                                                                             , emit: versions
+    tuple val(meta), path(ref_fasta), path("*.txt.gz"), emit: depth
+    path "versions.yml"                               , emit: versions
 
     script:
     def input_reads = "";
+    def args_jgi_summarize_bam_contig_depths = task.ext.args_jgi_summarize_bam_contig_depths ?: ''
+    def prefix_jgi_summarize_bam_contig_depths = task.ext.prefix_jgi_summarize_bam_contig_depths ?: "${meta.id}"
+
     if ( meta.single_end ) {
         input_reads = "${reads[0]}";
     } else {
         input_reads = "${reads[0]} ${reads[1]}"
     }
 
-    def samtools_args = ""
-    if ( align ) {
-        samtools_args = task.ext.alignment_args
-    } else {
-        samtools_args = task.ext.decontamination_args
-    }
+    def samtools_args = task.ext.alignment_args
+
     """
     mkdir -p output
     echo "mapping files to host genome"
@@ -68,18 +72,35 @@ process ALIGNMENT_BAM {
     echo "samtools index sorted bam"
     samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
 
+    echo "generate depth"
+    export OMP_NUM_THREADS=$task.cpus
+
+    jgi_summarize_bam_contig_depths \\
+        --outputDepth ${prefix_jgi_summarize_bam_contig_depths}.txt \\
+        $args_jgi_summarize_bam_contig_depths \\
+        output/${meta.id}_sorted.bam
+
+    echo "compress depth"
+    bgzip --threads $task.cpus ${prefix_jgi_summarize_bam_contig_depths}.txt
+
+    echo "remove bams"
+    rm -rf output
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bwa-mem2: \$(bwa-mem2 version 2> /dev/null)
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        metabat2: \$( metabat2 --help 2>&1 | head -n 2 | tail -n 1| sed 's/.*\\:\\([0-9]*\\.[0-9]*\\).*/\\1/' )
     END_VERSIONS
     """
 }
 
-process ALIGNMENT_READS {
+process ALIGNMENT_DECONTAMINATION {
 
-    // module does alignment with chosen arguments and generates FASTQ.GZ files as output
-    // that module was done to remove storage of heavy bam files
+    /*
+    This module aligns reads to the reference using specified arguments and produces output in the form of FASTQ.GZ files.
+    Once the alignment is completed, the BAM files are removed to save disk space.
+    */
 
     label 'process_medium'
 
@@ -89,7 +110,6 @@ process ALIGNMENT_READS {
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
-    val align  // if true: align (include reads), else: decontaminate (exclude reads)
 
     output:
     tuple val(meta), path("*_*.fq.gz"), emit: reads
@@ -106,12 +126,7 @@ process ALIGNMENT_READS {
         input_reads = "${reads[0]} ${reads[1]}"
     }
 
-    def samtools_args = ""
-    if ( align ) {
-        samtools_args = task.ext.alignment_args
-    } else {
-        samtools_args = task.ext.decontamination_args
-    }
+    def samtools_args = task.ext.decontamination_args
 
     """
     mkdir -p output
@@ -144,6 +159,7 @@ process ALIGNMENT_READS {
             output/${meta.id}_sorted.bam
     fi
 
+    echo "remove bams"
     rm -rf output
 
     cat <<-END_VERSIONS > versions.yml

@@ -35,11 +35,11 @@ process CAT {
     -i ${meta.id}.contig2classification.official_names.txt -o ${meta.id}.summary.txt
 
     echo "Remove diamond alignment"
-    rm "${meta.id}.alignment.diamond"
+    rm -f "${meta.id}.alignment.diamond"
 
     echo "Remove predicted proteins"
-    rm "${meta.id}.predicted_proteins.faa" || true
-    rm "${meta.id}.predicted_proteins.gff" || true
+    rm -f "${meta.id}.predicted_proteins.faa"
+    rm -f "${meta.id}.predicted_proteins.gff"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

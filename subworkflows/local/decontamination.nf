@@ -3,7 +3,7 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { ALIGNMENT_READS    } from '../../modules/local/align_bwa/main'
+include { ALIGNMENT_DECONTAMINATION    } from '../../modules/local/align_bwa/main'
 
 workflow DECONTAMINATION {
     take:
@@ -19,11 +19,11 @@ workflow DECONTAMINATION {
         [ meta, reads, ref_genome, ref_genome_index ]
     }
 
-    ALIGNMENT_READS( to_align, false )
+    ALIGNMENT_DECONTAMINATION( to_align )
 
-    ch_versions = ch_versions.mix(ALIGNMENT_READS.out.versions.first())
+    ch_versions = ch_versions.mix(ALIGNMENT_DECONTAMINATION.out.versions.first())
 
     emit:
-    decontaminated_reads = ALIGNMENT_READS.out.reads
+    decontaminated_reads = ALIGNMENT_DECONTAMINATION.out.reads
     versions = ch_versions                          // channel: [ versions.yml ]
 }

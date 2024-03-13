@@ -130,12 +130,12 @@ workflow GGP {
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
 
-    ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
+    ALIGN( assembly_and_reads ) // input: tuple (meta, fasta, [reads]); output: tuple (meta, fasta, depth, [reads])
 
     ch_versions = ch_versions.mix( ALIGN.out.versions )
 
     // ---- binning ---- //
-    BINNING( ALIGN.out.assembly_bam )
+    BINNING( ALIGN.out.assembly_depth_reads )
     ch_versions = ch_versions.mix( BINNING.out.versions )
 
     collectBinsFolder = { meta, bin_folder ->
