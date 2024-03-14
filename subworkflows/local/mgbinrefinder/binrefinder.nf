@@ -82,7 +82,9 @@ workflow REFINEMENT {
         .join(REFINE23.out.filtered_bins_stats)
         .join(REFINE123.out.filtered_bins_stats)
 
-    CONSOLIDATE_BINS( binners, stats )
+    consolidate_input = binners.join(stats)
+
+    CONSOLIDATE_BINS( consolidate_input )
     ch_versions = ch_versions.mix( CONSOLIDATE_BINS.out.versions.first() )
 
     // collect logging

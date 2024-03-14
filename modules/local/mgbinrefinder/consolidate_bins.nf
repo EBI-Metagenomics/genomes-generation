@@ -15,8 +15,7 @@ process CONSOLIDATE_BINS {
           path(bins12, stageAs: "binner12"),
           path(bins13, stageAs: "binner13"),
           path(bins23, stageAs: "binner23"),
-          path(bins123, stageAs: "binner123")
-    tuple val(meta),
+          path(bins123, stageAs: "binner123"),
           path(stats1, stageAs: "stats/*"),
           path(stats2, stageAs: "stats/*"),
           path(stats3, stageAs: "stats/*"),
