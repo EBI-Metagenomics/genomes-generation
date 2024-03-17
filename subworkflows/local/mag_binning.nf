@@ -48,7 +48,7 @@ workflow BINNING {
 
     // convert metabat2 depth files to maxbin2
     if ( !params.skip_maxbin2 ) {
-        
+
         CONVERT_DEPTHS ( ch_metabat2_input )
 
         ch_maxbin2_input = CONVERT_DEPTHS.out.output.map { meta, assembly, depth ->

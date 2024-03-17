@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~~~~
 */
 include { INDEX_FASTA } from '../../modules/local/align_bwa/main'
-include { ALIGNMENT   } from '../../modules/local/align_bwa/main'
+include { ALIGNMENT_BAM   } from '../../modules/local/align_bwa/main'
 
 workflow ALIGN {
 
@@ -21,15 +21,12 @@ workflow ALIGN {
         .map { meta, assembly, reads -> [ meta, reads ] } \
         .join( INDEX_FASTA.out.fasta_with_index )
 
-    ALIGNMENT(
-        reads_assembly_index,
-        true,
-    )
+    ALIGNMENT_BAM( reads_assembly_index )
 
     ch_versions = ch_versions.mix( INDEX_FASTA.out.versions.first() )
-    ch_versions = ch_versions.mix( ALIGNMENT.out.versions.first() )
+    ch_versions = ch_versions.mix( ALIGNMENT_BAM.out.versions.first() )
 
     emit:
-    assembly_bam = ALIGNMENT.out.bam // [meta, assembly_fasta, bam, bai]
-    versions     = ch_versions       // channel: [ versions.yml ]
+    assembly_bam = ALIGNMENT_BAM.out.bam // [meta, assembly_fasta, bam, bai]
+    versions     = ch_versions           // channel: [ versions.yml ]
 }

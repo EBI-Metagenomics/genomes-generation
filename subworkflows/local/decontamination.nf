@@ -3,8 +3,7 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { ALIGNMENT       } from '../../modules/local/align_bwa/main'
-include { SAMTOOLS_BAM2FQ } from '../../modules/nf-core/samtools/bam2fq/main'
+include { ALIGNMENT_DECONTAMINATION    } from '../../modules/local/align_bwa/main'
 
 workflow DECONTAMINATION {
     take:
@@ -20,14 +19,11 @@ workflow DECONTAMINATION {
         [ meta, reads, ref_genome, ref_genome_index ]
     }
 
-    ALIGNMENT( to_align, false )
+    ALIGNMENT_DECONTAMINATION( to_align )
 
-    SAMTOOLS_BAM2FQ( ALIGNMENT.out.bam.map { meta, ref_fasta, bam, bai -> [ meta, bam ] } )
-
-    ch_versions = ch_versions.mix(ALIGNMENT.out.versions.first())
-    ch_versions = ch_versions.mix(SAMTOOLS_BAM2FQ.out.versions.first())
+    ch_versions = ch_versions.mix(ALIGNMENT_DECONTAMINATION.out.versions.first())
 
     emit:
-    decontaminated_reads = SAMTOOLS_BAM2FQ.out.reads
+    decontaminated_reads = ALIGNMENT_DECONTAMINATION.out.reads
     versions = ch_versions                          // channel: [ versions.yml ]
 }
