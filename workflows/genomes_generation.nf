@@ -59,6 +59,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { PREPARE_TSV_FOR_UPLOADER    } from '../modules/local/genome_uploader/main'
 include { FINALIZE_LOGGING            } from '../modules/local/utils'
+include { GUNZIP as GUNZIP_ASSEMBLY   } from '../modules/local/utils'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,11 +132,15 @@ workflow GGP {
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
 
     ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
-
     ch_versions = ch_versions.mix( ALIGN.out.versions )
 
+    assembly = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, assembly_fasta]}
+    bams = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, bam, bai]}
+
+    GUNZIP_ASSEMBLY(assembly)
+
     // ---- binning ---- //
-    BINNING( ALIGN.out.assembly_bam )
+    BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(bams) )
     ch_versions = ch_versions.mix( BINNING.out.versions )
 
     collectBinsFolder = { meta, bin_folder ->

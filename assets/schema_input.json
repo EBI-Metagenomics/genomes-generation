@@ -15,7 +15,7 @@
       },
       "assembly": {
         "type": "string",
-        "pattern": "^\\S+\\.(fa|fasta)$",
+        "pattern": "^\\S+\\.(fa.gz|fasta.gz)$",
         "errorMessage": "The assembly needs to be a fasta file."
       },
       "fastq_1": {

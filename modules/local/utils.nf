@@ -6,17 +6,18 @@
 process GUNZIP {
 
     label 'process_low'
+    tag "$meta.id"
 
     input:
-    path(compressed_file)
+    tuple val(meta), path(compressed_file)
 
     output:
-    path("out/*"), emit: uncompressed
+    tuple val(meta), path("out/*"), emit: uncompressed
 
     script:
     """
     mkdir out
-    cp ${compressed_file} out
+    cp ${compressed_file} "out/${meta.id}.fasta.gz"
     cd out
     gunzip *
     """
@@ -63,11 +64,11 @@ process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
     tuple val(meta), path(contigs)
 
     output:
-    tuple val(meta), path("${contigs}"), emit: underscore_contigs
+    tuple val(meta), path("${meta.id}_underscore.fasta.gz"), emit: underscore_contigs
 
     script:
     """
-    sed -i 's/\\./\\_/' ${contigs}
+    zcat ${contigs} | sed 's/\\./\\_/' | gzip > ${meta.id}_underscore.fasta.gz
     """
 }
 
