@@ -3,7 +3,7 @@
      Run subworkflow
     ~~~~~~~~~~~~~~~~~~
 */
-include { INDEX_FASTA } from '../../modules/local/align_bwa/main'
+include { INDEX_FASTA }     from '../../modules/local/align_bwa/main'
 include { ALIGNMENT_BAM   } from '../../modules/local/align_bwa/main'
 
 workflow ALIGN {

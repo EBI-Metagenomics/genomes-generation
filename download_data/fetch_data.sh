@@ -7,17 +7,12 @@ function FetchReads {
   bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/" --run-list ${CATALOGUE_PATH}/runs.tsv
 }
 
+
 function FetchAssemblies {
   echo 'Fetching assemblies...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
   bsub -I -q production "bash fetch-assemblies-tool.sh -v -p $SAMPLE -d ${CATALOGUE_PATH}/Assemblies/"
-}
-
-
-function Unzip {
-  echo 'Unzipping...'
-  gunzip -f ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/*gz
 }
 
 
@@ -45,10 +40,11 @@ function Rename {
     then
       export OLD=$(echo $line | cut -d ',' -f1)
       export NEW=$(echo $line | cut -d ',' -f2)
-      mv ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/${NEW}.fasta ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/${OLD}.fasta
+      mv ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/${NEW}.fasta.gz ${CATALOGUE_PATH}/Assemblies/${SAMPLE}/raw/${OLD}.fasta.gz
     fi
   done < $CONVERT
 }
+
 
 function GenerateSamplesheet {
   echo "Generate samplesheet"
@@ -88,7 +84,6 @@ mkdir -p "$CATALOGUE_PATH"
 
 if [[ $SKIP_FETCH == 'false' ]]; then
   FetchAssemblies
-  Unzip
 fi
 
 RunRenamingScript
