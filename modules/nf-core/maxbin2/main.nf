@@ -50,9 +50,23 @@ process MAXBIN2 {
     if [ "\$MAXBIN_EXITCODE" == "255" ]; then
         echo "Maxbin2 exit code \$MAXBIN_EXITCODE"
         if [ ! -e "${prefix}.log" ]; then
-            echo "maxbin.log does not exist. Exit"
-            echo "Error" >&2
-            exit \$MAXBIN_EXITCODE
+            echo "maxbin.log does not exist."
+            if [ ! -e "${prefix}.tooshort" ]; then
+                echo "Unknown error" >&2
+                exit \$MAXBIN_EXITCODE
+            else
+                echo "Checking for all contigs were moved to .tooshort file"
+                export INITIAL_NUMBER=\$(grep '>' $contigs | wc -l)
+                export TOO_SHORT_NUMBER=\$(grep '>' ${prefix}.tooshort | wc -l)
+                if [[ \$INITIAL_NUMBER -eq \$TOO_SHORT_NUMBER ]]; then
+                    echo "All contigs are short"
+                    gzip *log
+                    exit 0
+                else
+                    echo "Not all contigs are short. Exit with unknown error"
+                    exit \$MAXBIN_EXITCODE
+                fi
+            fi
         else
             echo "maxbin.log exists -> checking for not enough marker genes error"
             if grep -q "Marker gene search reveals that the dataset cannot be binned (the medium of marker gene number <= 1). Program stop." "${prefix}.log"; then
