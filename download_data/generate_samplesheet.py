@@ -24,7 +24,7 @@ def main(assembly_dir, run_dir, rename_file, output):
         accession = run_file.split('.')[0].split('_')[0]
         runs.setdefault(accession, [])
         runs[accession].append(run_file)
-    # double check for 2 fastq files or other starnge cases
+    # double check for 2 fastq files or other strange cases
     for run_accession in runs:
         se, pe_forward, pe_reversed = False, False, False
         if len(runs[run_accession]) > 2:
@@ -43,8 +43,14 @@ def main(assembly_dir, run_dir, rename_file, output):
         file_out.write(','.join(['id', 'assembly', 'fastq_1', 'fastq_2', 'assembly_accession']) + '\n')
         for run_accession in accessions:
             list_values = []
+            if run_accession not in accessions:
+                print(f'No {run_accession} in fetched assemblies')
+                continue
             assembly_accession = accessions[run_accession]
             list_values.extend([run_accession, os.path.join(assembly_dir, assemblies[run_accession])])
+            if run_accession not in runs:
+                print(f'No {run_accession} in fetched runs')
+                continue
             if len(runs[run_accession]) == 2:
                 if len(runs[run_accession][0].split('_1')) >= 2:
                     run1 = os.path.join(run_dir, runs[run_accession][0])
