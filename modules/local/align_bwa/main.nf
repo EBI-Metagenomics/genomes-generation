@@ -92,55 +92,36 @@ process ALIGNMENT_DECONTAMINATION {
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
 
     output:
-    tuple val(meta), path("*_*.fq.gz"), emit: reads
+    tuple val(meta), path("*{_1,_2,_interleaved}.fq.gz"), emit: reads
     path "versions.yml",              emit: versions
 
     script:
     def bam2fq_args = task.ext.bam2fq_args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-
-    def input_reads = "";
-    if ( meta.single_end ) {
-        input_reads = "${reads[0]}";
-    } else {
-        input_reads = "${reads[0]} ${reads[1]}"
-    }
-
     def samtools_args = task.ext.decontamination_args
 
     """
-    mkdir -p output
-    echo "mapping files to host genome"
-    bwa-mem2 mem -M \
-      -t ${task.cpus} \
-      ${ref_fasta} \
-      ${input_reads} | \
-    samtools view -@ ${task.cpus} ${samtools_args} - | \
-    samtools sort -@ ${task.cpus} -O bam - -o output/${meta.id}_sorted.bam
-
-    echo "samtools index sorted bam"
-    samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
-
     if [[ "${meta.single_end}" == "true" ]]; then
-       samtools \
-            bam2fq \
-            $bam2fq_args \
-            -@ $task.cpus \
-            output/${meta.id}_sorted.bam | gzip --no-name > ${prefix}_interleaved.fq.gz
+        bwa-mem2 \
+            mem \
+            -M \
+            -t $task.cpus \
+            $ref_fasta \
+            $reads \
+            | samtools view -@ ${task.cpus} ${samtools_args} - \
+            | samtools sort -@ ${task.cpus} -n -O bam - \
+            | samtools bam2fq ${bam2fq_args} -@ $task.cpus - | gzip --no-name > ${prefix}_interleaved.fq.gz
     else
-        samtools \
-            bam2fq \
-            $bam2fq_args \
-            -@ $task.cpus \
-            -1 ${prefix}_1.fq.gz \
-            -2 ${prefix}_2.fq.gz \
-            -0 ${prefix}.other.fq.gz \
-            -s ${prefix}.singleton.fq.gz \
-            output/${meta.id}_sorted.bam
+        bwa-mem2 \
+            mem \
+            -M \
+            -t $task.cpus \
+            $ref_fasta \
+            $reads \
+            | samtools view -@ ${task.cpus} ${samtools_args} - \
+            | samtools sort -@ ${task.cpus} -n -O bam - \
+            | samtools bam2fq ${bam2fq_args} -@ ${task.cpus} -1 ${prefix}_1.fq.gz -2 ${prefix}_2.fq.gz -0 /dev/null -s /dev/null
     fi
-
-    echo "remove bams"
-    rm -rf output
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
