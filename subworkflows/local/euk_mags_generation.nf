@@ -15,7 +15,6 @@ include { BUSCO_EUKCC_QC                             } from '../../modules/local
 include { BAT                                        } from '../../modules/local/cat/bat/main'
 include { BAT_TAXONOMY_WRITER                        } from '../../modules/local/bat_taxonomy_writer/main'
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../../modules/local/coverage_recycler/main'
-include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS       } from '../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
 include { GZIP as GZIP_MAGS                          } from '../../modules/local/utils'
 include { GZIP as GZIP_BINS                          } from '../../modules/local/utils'
 
@@ -221,22 +220,16 @@ workflow EUK_MAGS_GENERATION {
 
     bins_alignment_by_bins = bins_alignment.map( spreadBins ).transpose(by: [1])  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
 
+    // ---- coverage generation ----- //
     ALIGN_BINS( bins_alignment_by_bins ) // out: [meta, fasta, bam, bai]
-
     ch_versions = ch_versions.mix( ALIGN_BINS.out.versions )
 
-    // ---- coverage generation ----- //
-    ch_summarizedepth_input = ALIGN_BINS.out.assembly_bam.map { meta, assembly, bams, bais ->
-        [ meta, bams, bais ]
-    }
-    METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS ( ch_summarizedepth_input )
-    euks_depth = METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.depth.map{ meta, depth -> depth }.collectFile(name: "euks_depth.txt.gz")
+    euks_depth = ALIGN_BINS.out.jgi_depth.map{ meta, depth -> depth }.collectFile(name: "euks_depth.txt.gz")
+
     COVERAGE_RECYCLER_EUK(
         DREP_MAGS.out.dereplicated_genomes,
         euks_depth
     )
-
-    ch_versions = ch_versions.mix( METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS.out.versions.first() )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions.first() )
 
     // ---- QC generation----- //

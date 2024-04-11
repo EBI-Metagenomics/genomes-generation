@@ -136,11 +136,12 @@ workflow GGP {
 
     assembly = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, assembly_fasta]}
     bams = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, bam, bai]}
+    jgi_depth = ALIGN.out.jgi_depth
 
     GUNZIP_ASSEMBLY(assembly)
 
     // ---- binning ---- //
-    BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(bams) )
+    BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(bams).join(jgi_depth) )
     ch_versions = ch_versions.mix( BINNING.out.versions )
 
     collectBinsFolder = { meta, bin_folder ->
