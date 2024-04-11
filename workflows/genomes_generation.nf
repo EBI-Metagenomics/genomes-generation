@@ -155,12 +155,12 @@ workflow GGP {
 
         // ---- detect euk ---- //
         // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
-        euk_input = tuple_assemblies.join(
-            DECONTAMINATION.out.decontaminated_reads
-        ).join(
+        euk_input = assembly_and_reads.join(
             concoct_collected_bins
         ).join(
             metabat_collected_bins
+        ).join(
+            bams
         )
 
         EUK_MAGS_GENERATION( 

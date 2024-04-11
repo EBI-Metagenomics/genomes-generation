@@ -3,7 +3,6 @@
      Eukaryotes subworkflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { ALIGN                                      } from './alignment'
 include { ALIGN as ALIGN_BINS                        } from './alignment'
 include { BUSCO                                      } from '../../modules/local/busco/main'
 include { EUKCC as EUKCC_CONCOCT                     } from '../../modules/local/eukcc/main'
@@ -113,7 +112,7 @@ process FILTER_QUALITY {
 
 workflow EUK_MAGS_GENERATION {
     take:
-    assemblies_reads_bins  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder )
+    assemblies_reads_bins  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder, bam, bai )
     eukcc_db
     busco_db
     cat_db_folder
@@ -126,23 +125,20 @@ workflow EUK_MAGS_GENERATION {
     ch_log      = Channel.empty()
 
     /* split the inputs */
-    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins ->
-        assembly_and_reads: [ meta, assembly, reads ]
+    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins, bam, bai ->
+        assembly: [ meta, assembly ]
         reads: [ meta, reads ]
         bins_concoct: [ meta, concoct_bins ]
         bins_metabat: [ meta, metabat_bins ]
+        bams: [ meta, bam, bai ]
     }.set {
         input
     }
 
-    ALIGN( input.assembly_and_reads )
-
-    ch_versions = ch_versions.mix( ALIGN.out.versions )
-
     // -- concoct -- //
     binner1 = channel.value("concoct")
 
-    LINKTABLE_CONCOCT( ALIGN.out.assembly_bam.join( input.bins_concoct ), binner1 ) // output: tuple(meta, links.csv)
+    LINKTABLE_CONCOCT( input.assembly.join(bams).join(input.bins_concoct), binner1 ) // output: tuple(meta, links.csv)
 
     EUKCC_CONCOCT( binner1, LINKTABLE_CONCOCT.out.links_table.join ( input.bins_concoct ), eukcc_db )
 
@@ -152,7 +148,7 @@ workflow EUK_MAGS_GENERATION {
     // -- metabat2
     binner2 = channel.value("metabat2")
 
-    LINKTABLE_METABAT( ALIGN.out.assembly_bam.join( input.bins_metabat ), binner2 )
+    LINKTABLE_METABAT( input.assembly.join(bams).join(input.bins_metabat), binner2 )
 
     metabat_linktable_bins = LINKTABLE_METABAT.out.links_table.join( input.bins_metabat ).filter { meta, link, bins -> bins.size() > 0 }
 
