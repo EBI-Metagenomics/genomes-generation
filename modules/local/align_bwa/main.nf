@@ -29,64 +29,97 @@ process FEATURED_ALIGNMENT {
 
     /*
     This module aligns reads to the reference using specified arguments and produces output in the form of FASTQ.GZ, BAM and BAM.BAI files.
+    It also runs:
+     - depth generation using jgi_summarize_bam_contig_depths if get_depth=true
+     - concoct coverage table if get_concoct_table=true
     */
 
     label 'process_medium'
 
     tag "${meta.id} align to ${ref_fasta}"
 
-    container 'quay.io/microbiome-informatics/bwa_metabat:2.2.1_2.15'
+    container 'quay.io/microbiome-informatics/bwa_metabat_concoct:2.2.1_2.16_1.1.0'
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
     val(get_depth)
+    val(get_concoct_table)
+    val(bed)
 
     output:
-    tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bam
+    // tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bam
     path "versions.yml"                                                                                             , emit: versions
     tuple val(meta), path("*.txt.gz"), emit: depth
+    tuple val(meta), path("*.tsv"), emit: concoct_tsv
 
     script:
-    def input_reads = "";
-    if ( meta.single_end ) {
-        input_reads = "${reads[0]}";
-    } else {
-        input_reads = "${reads[0]} ${reads[1]}"
-    }
+
+    def prefix = task.ext.prefix ?: "${meta.id}"
 
     def samtools_args = task.ext.alignment_args
-    def prefix = task.ext.prefix ?: "${meta.id}"
+
     def jgi_summarize_bam_contig_depths_args = task.ext.jgi_summarize_bam_contig_depths_args ?: ''
+
+    def concoct_cut_up_fasta_args = task.ext.concoct_cut_up_fasta_args ?: ''
+    def concoct_bedfile    = bed ? "-b ${prefix}.bed" : ""
+    def concoct_prefix = task.ext.concoct_prefix ?: "concoct_${meta.id}"
+    def concoct_coverage_table_args       = task.ext.concoct_coverage_table_args ?: ''
 
     """
     mkdir -p output
-    echo "mapping files to host genome"
+    echo " ---> mapping files to host genome"
     bwa-mem2 mem -M \
       -t ${task.cpus} \
       ${ref_fasta} \
-      ${input_reads} | \
+      ${reads} | \
     samtools view -@ ${task.cpus} ${samtools_args} - | \
     samtools sort -@ ${task.cpus} -O bam - -o output/${meta.id}_sorted.bam
 
-    echo "samtools index sorted bam"
+    echo " ---> samtools index sorted bam"
     samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
 
     if [[ "$get_depth" == "true" ]]; then
-        echo "depth generation"
+        echo " ---> depth generation"
         jgi_summarize_bam_contig_depths \
             --outputDepth ${prefix}.txt \
             $jgi_summarize_bam_contig_depths_args \
             output/${meta.id}_sorted.bam
         bgzip --threads $task.cpus ${prefix}.txt
-    else:
+    else
         touch ${prefix}.txt.gz
     fi
+
+    if [[ "$get_concoct_table" == "true" ]]; then
+        echo " ---> uncompress fasta"
+        mkdir -p fasta_outdir
+        export target_file=\$(readlink -f $ref_fasta)
+        gunzip -c \$target_file > fasta_outdir/${ref_fasta.baseName}
+        echo "\$target_file uncompressed into fasta_outdir/${ref_fasta.baseName}"
+        echo " ---> concoct cut up fasta"
+        cut_up_fasta.py \
+            fasta_outdir/${ref_fasta.baseName} \
+            $concoct_cut_up_fasta_args \
+            $concoct_bedfile \
+            > ${concoct_prefix}.fasta
+
+        echo " ---> concoct coverage table"
+        concoct_coverage_table.py \
+            ${prefix}.bed \
+            output/${meta.id}_sorted.bam \
+            $concoct_coverage_table_args \
+            > ${concoct_prefix}.tsv
+    else
+        touch ${concoct_prefix}.tsv
+    fi
+
+    rm -rf output fasta_outdir
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bwa-mem2: \$(bwa-mem2 version 2> /dev/null)
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
         metabat2: \$( metabat2 --help 2>&1 | head -n 2 | tail -n 1| sed 's/.*\\:\\([0-9]*\\.[0-9]*\\).*/\\1/' )
+        concoct: \$(echo \$(concoct --version 2>&1) | sed 's/concoct //g' )
     END_VERSIONS
     """
 }

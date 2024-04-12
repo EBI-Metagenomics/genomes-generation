@@ -10,6 +10,9 @@ workflow ALIGN {
 
     take:
     assembly_and_reads // tuple (meta, assembly_fasta, [reads])
+    run_jgi_depth
+    run_concoct_table_generation
+    concoct_generate_bed_file
 
     main:
 
@@ -21,13 +24,14 @@ workflow ALIGN {
         .map { meta, assembly, reads -> [ meta, reads ] } \
         .join( INDEX_FASTA.out.fasta_with_index )
 
-    FEATURED_ALIGNMENT( reads_assembly_index, true )
+    FEATURED_ALIGNMENT( reads_assembly_index, run_jgi_depth, run_concoct_table_generation, concoct_generate_bed_file )
 
     ch_versions = ch_versions.mix( INDEX_FASTA.out.versions.first() )
     ch_versions = ch_versions.mix( FEATURED_ALIGNMENT.out.versions.first() )
 
     emit:
-    assembly_bam = FEATURED_ALIGNMENT.out.bam // [meta, assembly_fasta, bam, bai]
-    jgi_depth    = FEATURED_ALIGNMENT.out.depth  // [ meta, depth.txt.gz ]
-    versions     = ch_versions           // channel: [ versions.yml ]
+    // assembly_bam     = FEATURED_ALIGNMENT.out.bam // [meta, assembly_fasta, bam, bai]
+    jgi_depth        = FEATURED_ALIGNMENT.out.depth  // [ meta, depth.txt.gz ]
+    concoct_coverage = FEATURED_ALIGNMENT.out.concoct_tsv  // [ meta, concoct.tsv ]
+    versions         = ch_versions           // channel: [ versions.yml ]
 }

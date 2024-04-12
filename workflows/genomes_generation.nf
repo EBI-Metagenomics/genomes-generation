@@ -131,17 +131,17 @@ workflow GGP {
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
 
-    ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
+    ALIGN( assembly_and_reads, true, true, true ) // tuple (meta, fasta, [reads])
     ch_versions = ch_versions.mix( ALIGN.out.versions )
 
-    assembly = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, assembly_fasta]}
-    bams = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, bam, bai]}
+    // bams = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, bam, bai]}
     jgi_depth = ALIGN.out.jgi_depth
+    concoct_table = ALIGN.out.concoct_coverage
 
-    GUNZIP_ASSEMBLY(assembly)
+    GUNZIP_ASSEMBLY(tuple_assemblies)
 
     // ---- binning ---- //
-    BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(bams).join(jgi_depth) )
+    BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(jgi_depth).join(concoct_table) )
     ch_versions = ch_versions.mix( BINNING.out.versions )
 
     collectBinsFolder = { meta, bin_folder ->
@@ -150,7 +150,6 @@ workflow GGP {
     concoct_collected_bins = BINNING.out.concoct_bins.map( collectBinsFolder )
     metabat_collected_bins = BINNING.out.metabat_bins.map( collectBinsFolder )
     maxbin_collected_bins = BINNING.out.maxbin_bins.map( collectBinsFolder )
-    binning_depths = BINNING.out.metabat2depths
 
     if ( !params.skip_euk ) {
 
@@ -160,8 +159,6 @@ workflow GGP {
             concoct_collected_bins
         ).join(
             metabat_collected_bins
-        ).join(
-            bams
         )
 
         EUK_MAGS_GENERATION( 
@@ -185,7 +182,7 @@ workflow GGP {
         // input: tuple( meta, concoct, metabat, maxbin, depth_file)
         collected_binners_and_depth = concoct_collected_bins.join( maxbin_collected_bins, remainder: true ) \
             .join( metabat_collected_bins, remainder: true ) \
-            .join( binning_depths, remainder: true )
+            .join( jgi_depth, remainder: true )
 
         PROK_MAGS_GENERATION(
             collected_binners_and_depth,

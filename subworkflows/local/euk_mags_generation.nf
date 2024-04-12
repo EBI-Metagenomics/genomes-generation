@@ -7,8 +7,8 @@ include { ALIGN as ALIGN_BINS                        } from './alignment'
 include { BUSCO                                      } from '../../modules/local/busco/main'
 include { EUKCC as EUKCC_CONCOCT                     } from '../../modules/local/eukcc/main'
 include { EUKCC as EUKCC_METABAT                     } from '../../modules/local/eukcc/main'
-include { LINKTABLE as LINKTABLE_CONCOCT             } from '../../modules/local/eukcc/main'
-include { LINKTABLE as LINKTABLE_METABAT             } from '../../modules/local/eukcc/main'
+include { ALIGNMENT_LINKTABLE as LINKTABLE_CONCOCT   } from '../../modules/local/align_linktable/main'
+include { ALIGNMENT_LINKTABLE as LINKTABLE_METABAT   } from '../../modules/local/align_linktable/main'
 include { DREP                                       } from '../../modules/local/drep/main'
 include { DREP as DREP_MAGS                          } from '../../modules/local/drep/main'
 include { BUSCO_EUKCC_QC                             } from '../../modules/local/qc/main'
@@ -17,101 +17,14 @@ include { BAT_TAXONOMY_WRITER                        } from '../../modules/local
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../../modules/local/coverage_recycler/main'
 include { GZIP as GZIP_MAGS                          } from '../../modules/local/utils'
 include { GZIP as GZIP_BINS                          } from '../../modules/local/utils'
-
-
-process CONCATENATE_QUALITY_FILES {
-    tag "${meta.id}"
-
-    input:
-    tuple val(meta), path(input_files)
-    val output_name
-
-    output:
-    tuple val(meta), path("${meta.id}.${output_name}"), emit: concatenated_result
-
-    script:
-    """
-    echo "bin\tcompleteness\tcontamination\tncbi_lng" > "${meta.id}.${output_name}"
-    for i in ${input_files}; do
-        tail -n +2 \${i} > help_file
-        if [ -s help_file ]; then
-            grep -v "completeness" \${i} >> "${meta.id}.${output_name}"
-        fi
-    done
-    rm help_file
-    """
-}
-
-process MODIFY_QUALITY_FILE {
-
-    input:
-    path(quality_table_csv)
-    val output_name
-
-    output:
-    path("${output_name}"), emit: modified_result
-
-    script:
-    """
-    echo "genome,completeness,contamination" > ${output_name}
-    grep -v "completeness" ${quality_table_csv} | cut -f1-3 | tr '\t' ',' >> ${output_name} || true
-    """
-}
-
-process FILTER_QUALITY {
-    tag "${meta.id}"
-
-    label 'process_light'
-
-    input:
-    tuple val(meta), path(quality_file), path(concoct_bins, stageAs: "concoct_bins/*"), path(metabat_bins, stageAs: "metabat_bins/*"), path(concoct_bins_merged, stageAs: "concoct_bins_merged/*"), path(metabat_bins_merged, stageAs: "metabat_bins_merged/*")
-
-    output:
-    tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
-    path "progress.log"                                       , emit: progress_log
-
-    script:
-    """
-    mkdir -p output_genomes
-    touch quality_file.csv
-
-    echo "Prepare drep quality"
-    # prepare drep quality file
-    grep -v "completeness" ${quality_file} |\
-    awk '{{if(\$2>=50 && \$2<=100 && \$3>=0 && \$3<=5){{print \$0}}}}' |\
-    sort -k 2,3 -n | cut -f1 > filtered_genomes.txt || true
-
-    echo "bins count"
-    export BINS=\$(cat filtered_genomes.txt | wc -l)
-    echo "\$BINS"
-    if [ \$BINS -lt 2 ];
-    then
-        echo "No genomes"
-    else
-        for i in \$(ls concoct_bins | grep -w -f filtered_genomes.txt); do
-            cp concoct_bins/\${i} output_genomes; done
-        for i in \$(ls metabat_bins | grep -w -f filtered_genomes.txt); do
-            cp metabat_bins/\${i} output_genomes; done
-        for i in \$(ls concoct_bins_merged/merged_bins | grep -w -f filtered_genomes.txt); do
-            cp concoct_bins_merged/merged_bins/\${i} output_genomes; done
-        for i in \$(ls metabat_bins_merged/merged_bins | grep -w -f filtered_genomes.txt); do
-            cp metabat_bins_merged/merged_bins/\${i} output_genomes; done
-
-        echo "genome,completeness,contamination" > quality_file.csv
-        grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
-    fi
-
-    cat <<-END_LOGGING > progress.log
-    ${meta.id}\t${task.process}
-        concoct_bins: \$(ls concoct_bins | wc -l), metabat_bins: \$(ls metabat_bins | wc -l), concoct_bins_merged: \$(ls concoct_bins_merged/merged_bins | wc -l), metabat_bins_merged: \$(ls metabat_bins_merged/merged_bins | wc -l), output_genomes: \$(ls output_genomes | wc -l)
-    END_LOGGING
-    """
-}
+include { CONCATENATE_QUALITY_FILES                  } from '../../modules/local/euk_utils'
+include { MODIFY_QUALITY_FILE                        } from '../../modules/local/euk_utils'
+include { FILTER_QUALITY                             } from '../../modules/local/euk_utils'
 
 
 workflow EUK_MAGS_GENERATION {
     take:
-    assemblies_reads_bins  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder, bam, bai )
+    assemblies_reads_bins  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder )
     eukcc_db
     busco_db
     cat_db_folder
@@ -124,12 +37,11 @@ workflow EUK_MAGS_GENERATION {
     ch_log      = Channel.empty()
 
     /* split the inputs */
-    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins, bam, bai ->
+    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins ->
         assembly: [ meta, assembly ]
         reads: [ meta, reads ]
         bins_concoct: [ meta, concoct_bins ]
         bins_metabat: [ meta, metabat_bins ]
-        bams: [ meta, bam, bai ]
     }.set {
         input
     }
@@ -137,7 +49,7 @@ workflow EUK_MAGS_GENERATION {
     // -- concoct -- //
     binner1 = channel.value("concoct")
 
-    LINKTABLE_CONCOCT( input.assembly.join(bams).join(input.bins_concoct), binner1 ) // output: tuple(meta, links.csv)
+    LINKTABLE_CONCOCT( input.reads.join(input.assembly).join(input.bins_concoct), binner1 ) // output: tuple(meta, links.csv)
 
     EUKCC_CONCOCT( binner1, LINKTABLE_CONCOCT.out.links_table.join ( input.bins_concoct ), eukcc_db )
 
@@ -147,7 +59,7 @@ workflow EUK_MAGS_GENERATION {
     // -- metabat2
     binner2 = channel.value("metabat2")
 
-    LINKTABLE_METABAT( input.assembly.join(bams).join(input.bins_metabat), binner2 )
+    LINKTABLE_METABAT( input.reads.join(input.assembly).join(input.bins_metabat), binner2 )
 
     metabat_linktable_bins = LINKTABLE_METABAT.out.links_table.join( input.bins_metabat ).filter { meta, link, bins -> bins.size() > 0 }
 
@@ -221,7 +133,7 @@ workflow EUK_MAGS_GENERATION {
     bins_alignment_by_bins = bins_alignment.map( spreadBins ).transpose(by: [1])  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
 
     // ---- coverage generation ----- //
-    ALIGN_BINS( bins_alignment_by_bins ) // out: [meta, fasta, bam, bai]
+    ALIGN_BINS( bins_alignment_by_bins, true, false, false ) // out: [meta, fasta, bam, bai], depth calculation is turned on
     ch_versions = ch_versions.mix( ALIGN_BINS.out.versions )
 
     euks_depth = ALIGN_BINS.out.jgi_depth.map{ meta, depth -> depth }.collectFile(name: "euks_depth.txt.gz")

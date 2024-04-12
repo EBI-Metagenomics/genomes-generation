@@ -6,12 +6,12 @@ include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS  } from '../../modules/nf-core/me
 include { MAXBIN2                               } from '../../modules/nf-core/maxbin2/main'
 
 include { CONVERT_DEPTHS                        } from '../../modules/local/mag/convert_depths'
-include { FASTA_BINNING_CONCOCT                 } from '../nf-core/fasta_binning_concoct/main'
+include { CONCOCT_SUBWF                         } from './concoct-subwf'
 
 workflow BINNING {
 
     take:
-    assemblies_bams_depth  // channel: [ val(meta), path(assembly), path(bams), path(bais), depth ]
+    assemblies_depth_coverage  // channel: [ val(meta), path(assembly), depth, concoct_tsv ]
 
     main:
 
@@ -21,9 +21,9 @@ workflow BINNING {
     metabat_output = Channel.empty()
     concoct_output = Channel.empty()
 
-    assemblies_bams_depth.multiMap { meta, assembly, bam, bai, depth ->
+    assemblies_depth_coverage.multiMap { meta, assembly, depth, coverage ->
         assembly: [ meta, assembly ]
-        bams: [ meta, bam, bai ]
+        concoct_tsv: [ meta, coverage ]
         depth: [meta, depth]
     }.set {
         input
@@ -57,22 +57,14 @@ workflow BINNING {
 
     if ( !params.skip_concoct ) {
 
-        assemblies_bams.map { meta, assembly, bams, bais ->
-            [ meta + [binner: 'CONCOCT'], assembly, bams, bais ]
-        }.multiMap { meta_extended, assembly, bams, bais ->
-            bins: [ meta_extended, assembly ]
-            bams: [ meta_extended, bams, bais ]
-        }.set { ch_concoct_input }
+        CONCOCT_SUBWF( input.concoct_tsv.join(input.assembly) )
 
-        FASTA_BINNING_CONCOCT( input.assembly, input.bams )
+        concoct_output = CONCOCT_SUBWF.out.bins
 
-        concoct_output = FASTA_BINNING_CONCOCT.out.bins
-
-        ch_versions = ch_versions.mix( FASTA_BINNING_CONCOCT.out.versions.first() )
+        ch_versions = ch_versions.mix( CONCOCT_SUBWF.out.versions.first() )
     }
 
     emit:
-    metabat2depths   = depth
     maxbin_bins      = maxbin_output
     concoct_bins     = concoct_output
     metabat_bins     = metabat_output
