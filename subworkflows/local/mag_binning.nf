@@ -11,7 +11,7 @@ include { CONCOCT_SUBWF                         } from './concoct-subwf'
 workflow BINNING {
 
     take:
-    assemblies_depth_coverage  // channel: [ val(meta), path(assembly), depth, concoct_tsv ]
+    assemblies_depth_coverage  // channel: [ val(meta), path(assembly), depth, concoct_tsv, concoct_fasta ]
 
     main:
 
@@ -21,9 +21,9 @@ workflow BINNING {
     metabat_output = Channel.empty()
     concoct_output = Channel.empty()
 
-    assemblies_depth_coverage.multiMap { meta, assembly, depth, coverage ->
+    assemblies_depth_coverage.multiMap { meta, assembly, depth, coverage, concoct_fasta ->
         assembly: [ meta, assembly ]
-        concoct_tsv: [ meta, coverage ]
+        concoct_tsv: [ meta, coverage, concoct_fasta ]
         depth: [meta, depth]
     }.set {
         input
@@ -57,7 +57,7 @@ workflow BINNING {
 
     if ( !params.skip_concoct ) {
 
-        CONCOCT_SUBWF( input.concoct_tsv.join(input.assembly) )
+        CONCOCT_SUBWF( input.concoct_tsv )
 
         concoct_output = CONCOCT_SUBWF.out.bins
 

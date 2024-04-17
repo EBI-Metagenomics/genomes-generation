@@ -32,6 +32,6 @@ workflow ALIGN {
     emit:
     // assembly_bam     = FEATURED_ALIGNMENT.out.bam // [meta, assembly_fasta, bam, bai]
     jgi_depth        = FEATURED_ALIGNMENT.out.depth  // [ meta, depth.txt.gz ]
-    concoct_coverage = FEATURED_ALIGNMENT.out.concoct_tsv  // [ meta, concoct.tsv ]
+    concoct_data = FEATURED_ALIGNMENT.out.concoct_data  // [ meta, concoct.tsv ]
     versions         = ch_versions           // channel: [ versions.yml ]
 }

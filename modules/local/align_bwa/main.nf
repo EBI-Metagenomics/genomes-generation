@@ -38,7 +38,7 @@ process FEATURED_ALIGNMENT {
 
     tag "${meta.id} align to ${ref_fasta}"
 
-    container 'quay.io/microbiome-informatics/bwa_metabat_concoct:2.2.1_2.16_1.1.0'
+    container 'quay.io/microbiome-informatics/bwa-mem2-2.2.1_metabat2-2.15_concoct-1.1.0--8480102f227be647'
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
@@ -50,7 +50,7 @@ process FEATURED_ALIGNMENT {
     // tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bam
     path "versions.yml"                                                                                             , emit: versions
     tuple val(meta), path("*.txt.gz"), emit: depth
-    tuple val(meta), path("*.tsv"), emit: concoct_tsv
+    tuple val(meta), path("*.tsv"), path("concoct*.fasta"), emit: concoct_data
 
     script:
 
@@ -112,7 +112,7 @@ process FEATURED_ALIGNMENT {
         touch ${concoct_prefix}.tsv
     fi
 
-    rm -rf output fasta_outdir
+    rm -rf fasta_outdir output
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

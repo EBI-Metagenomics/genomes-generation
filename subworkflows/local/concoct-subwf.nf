@@ -5,7 +5,7 @@ include { CONCOCT_EXTRACTFASTABINS     } from '../../modules/nf-core/concoct/ext
 workflow CONCOCT_SUBWF {
 
     take:
-    ch_fasta_tsv // channel (mandatory): [ val(meta), fasta , tsv ]
+    ch_fasta_tsv // channel (mandatory): [ val(meta), tsv, fasta ]
 
     main:
     ch_versions = Channel.empty()
