@@ -57,7 +57,7 @@ workflow BINNING {
 
     if ( !params.skip_concoct ) {
 
-        CONCOCT_SUBWF( input.concoct_tsv )
+        CONCOCT_SUBWF( input.concoct_tsv.join(input.assembly) )
 
         concoct_output = CONCOCT_SUBWF.out.bins
 

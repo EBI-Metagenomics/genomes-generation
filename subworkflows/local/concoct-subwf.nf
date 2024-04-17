@@ -5,14 +5,12 @@ include { CONCOCT_EXTRACTFASTABINS     } from '../../modules/nf-core/concoct/ext
 workflow CONCOCT_SUBWF {
 
     take:
-    ch_fasta_tsv // channel (mandatory): [ val(meta), tsv, fasta ]
+    ch_fasta_tsv // channel (mandatory): [ val(meta), tsv, concoct_fasta, assembly_fasta ]
 
     main:
     ch_versions = Channel.empty()
 
-    ch_fasta = ch_fasta_tsv.map{ meta, fasta, tsv -> [meta, fasta] }
-
-    CONCOCT_CONCOCT( ch_fasta_tsv )
+    CONCOCT_CONCOCT( ch_fasta_tsv.map{ meta, tsv, concoct_fasta, assembly_fasta -> [meta, tsv, concoct_fasta] } )
 
     ch_versions = ch_versions.mix(CONCOCT_CONCOCT.out.versions.first())
 
@@ -20,8 +18,9 @@ workflow CONCOCT_SUBWF {
 
     ch_versions = ch_versions.mix( CONCOCT_MERGECUTUPCLUSTERING.out.versions.first())
 
-    ch_mergecutupclustering_for_extractfastabins = ch_fasta
-                                                    .join(CONCOCT_MERGECUTUPCLUSTERING.out.csv, failOnMismatch: true)
+    ch_mergecutupclustering_for_extractfastabins = ch_fasta_tsv.map{
+            meta, tsv, concoct_fasta, assembly_fasta -> [meta, assembly_fasta]
+            }.join(CONCOCT_MERGECUTUPCLUSTERING.out.csv, failOnMismatch: true)
 
     CONCOCT_EXTRACTFASTABINS ( ch_mergecutupclustering_for_extractfastabins )
 
