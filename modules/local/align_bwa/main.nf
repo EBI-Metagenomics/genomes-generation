@@ -118,7 +118,7 @@ process FEATURED_ALIGNMENT {
     "${task.process}":
         bwa-mem2: \$(bwa-mem2 version 2> /dev/null)
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        metabat2: \$( metabat2 --help 2>&1 | head -n 2 | tail -n 1 | sed -n 's/.*version \([^;]*\);.*/\1/p' )
+        metabat2: \$( metabat2 --help 2>&1 | head -n 2 | tail -n 1 | sed -n 's/.*version \\([^;]*\\);.*/\\1/p' )
         concoct: \$(echo \$(concoct --version 2>&1) | sed 's/concoct //g' )
     END_VERSIONS
     """
