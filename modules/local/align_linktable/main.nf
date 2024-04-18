@@ -62,8 +62,8 @@ process ALIGNMENT_LINKTABLE {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bwa-mem2: \$(bwa-mem2 version 2> /dev/null)
-        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
-        pysam: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+        biopython: \$(python3 -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+        pysam: \$(python3 -c "import pkg_resources; print(pkg_resources.get_distribution('pysam').version)")
     END_VERSIONS
     """
 }
