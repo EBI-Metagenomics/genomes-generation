@@ -21,7 +21,6 @@ process ALIGNMENT_LINKTABLE {
     path "versions.yml"                 , emit: versions
 
     script:
-
     def prefix = task.ext.prefix ?: "${meta.id}"
     def samtools_args = task.ext.alignment_args
 
@@ -31,7 +30,7 @@ process ALIGNMENT_LINKTABLE {
     echo " ---> index fasta"
     bwa-mem2 index ${ref_fasta}
 
-    echo " ---> mapping files to host genome"
+    echo " ---> mapping files to assembly"
     bwa-mem2 mem -M \
       -t ${task.cpus} \
       ${ref_fasta} \

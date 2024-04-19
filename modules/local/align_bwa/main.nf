@@ -47,10 +47,9 @@ process FEATURED_ALIGNMENT {
     val(bed)
 
     output:
-    // tuple val(meta), path(ref_fasta), path("output/${meta.id}_sorted.bam"), path("output/${meta.id}_sorted.bam.bai"), emit: bam
-    path "versions.yml"                                                                                             , emit: versions
-    tuple val(meta), path("*.txt.gz"), emit: depth
+    tuple val(meta), path("*.txt.gz")                     , emit: depth
     tuple val(meta), path("*.tsv"), path("concoct*.fasta"), emit: concoct_data
+    path "versions.yml"                                   , emit: versions
 
     script:
 
@@ -67,7 +66,7 @@ process FEATURED_ALIGNMENT {
 
     """
     mkdir -p output
-    echo " ---> mapping files to host genome"
+    echo " ---> mapping files to assembly"
     bwa-mem2 mem -M \
       -t ${task.cpus} \
       ${ref_fasta} \

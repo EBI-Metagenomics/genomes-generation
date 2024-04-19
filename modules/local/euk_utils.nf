@@ -48,7 +48,7 @@ process FILTER_QUALITY {
 
     output:
     tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
-    path "progress.log"                                       , emit: progress_log
+    path "progress.log"                                                , emit: progress_log
 
     script:
     """
@@ -56,7 +56,6 @@ process FILTER_QUALITY {
     touch quality_file.csv
 
     echo "Prepare drep quality"
-    # prepare drep quality file
     grep -v "completeness" ${quality_file} |\
     awk '{{if(\$2>=50 && \$2<=100 && \$3>=0 && \$3<=5){{print \$0}}}}' |\
     sort -k 2,3 -n | cut -f1 > filtered_genomes.txt || true
