@@ -22,6 +22,7 @@ process CONCATENATE_QUALITY_FILES {
 }
 
 process MODIFY_QUALITY_FILE {
+    tag "${output_name}"
 
     input:
     path(quality_table_csv)
@@ -68,13 +69,13 @@ process FILTER_QUALITY {
         echo "No genomes"
     else
         for i in \$(ls concoct_bins | grep -w -f filtered_genomes.txt); do
-            cp concoct_bins/\${i} output_genomes; done
+            mv concoct_bins/\${i} output_genomes; done
         for i in \$(ls metabat_bins | grep -w -f filtered_genomes.txt); do
-            cp metabat_bins/\${i} output_genomes; done
+            mv metabat_bins/\${i} output_genomes; done
         for i in \$(ls concoct_bins_merged/merged_bins | grep -w -f filtered_genomes.txt); do
-            cp concoct_bins_merged/merged_bins/\${i} output_genomes; done
+            mv concoct_bins_merged/merged_bins/\${i} output_genomes; done
         for i in \$(ls metabat_bins_merged/merged_bins | grep -w -f filtered_genomes.txt); do
-            cp metabat_bins_merged/merged_bins/\${i} output_genomes; done
+            mv metabat_bins_merged/merged_bins/\${i} output_genomes; done
 
         echo "genome,completeness,contamination" > quality_file.csv
         grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
