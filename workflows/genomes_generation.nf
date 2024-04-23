@@ -131,16 +131,17 @@ workflow GGP {
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
 
-    ALIGN( assembly_and_reads ) // tuple (meta, fasta, [reads])
+    ALIGN( assembly_and_reads, true, true, true ) // tuple (meta, fasta, [reads])
     ch_versions = ch_versions.mix( ALIGN.out.versions )
 
-    assembly = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, assembly_fasta]}
-    bams = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, bam, bai]}
+    // bams = ALIGN.out.assembly_bam.map{meta, assembly_fasta, bam, bai -> [meta, bam, bai]}
+    jgi_depth = ALIGN.out.jgi_depth
+    concoct_data = ALIGN.out.concoct_data
 
-    GUNZIP_ASSEMBLY(assembly)
+    GUNZIP_ASSEMBLY(tuple_assemblies)
 
     // ---- binning ---- //
-    BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(bams) )
+    BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(jgi_depth).join(concoct_data) )
     ch_versions = ch_versions.mix( BINNING.out.versions )
 
     collectBinsFolder = { meta, bin_folder ->
@@ -149,15 +150,12 @@ workflow GGP {
     concoct_collected_bins = BINNING.out.concoct_bins.map( collectBinsFolder )
     metabat_collected_bins = BINNING.out.metabat_bins.map( collectBinsFolder )
     maxbin_collected_bins = BINNING.out.maxbin_bins.map( collectBinsFolder )
-    binning_depths = BINNING.out.metabat2depths
 
     if ( !params.skip_euk ) {
 
         // ---- detect euk ---- //
         // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
-        euk_input = tuple_assemblies.join(
-            DECONTAMINATION.out.decontaminated_reads
-        ).join(
+        euk_input = assembly_and_reads.join(
             concoct_collected_bins
         ).join(
             metabat_collected_bins
@@ -184,7 +182,7 @@ workflow GGP {
         // input: tuple( meta, concoct, metabat, maxbin, depth_file)
         collected_binners_and_depth = concoct_collected_bins.join( maxbin_collected_bins, remainder: true ) \
             .join( metabat_collected_bins, remainder: true ) \
-            .join( binning_depths, remainder: true )
+            .join( jgi_depth, remainder: true )
 
         PROK_MAGS_GENERATION(
             collected_binners_and_depth,
