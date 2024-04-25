@@ -4,14 +4,14 @@ function FetchReadsLSF {
   echo 'Fetching reads on LSF...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
-  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/" --run-list ${CATALOGUE_PATH}/runs.tsv
+  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/ --run-list ${CATALOGUE_PATH}/runs.tsv"
 }
 
 function FetchReadsSlurm {
   echo 'Fetching reads on Slurm...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
-  sbatch -J fetch_reads_$READS_ACC --time=5-00:00:00 --mem=5G --mail-user=$USER@ebi.ac.uk --mail-type=ALL --wrap="bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/" --run-list ${CATALOGUE_PATH}/runs.tsv
+  sbatch -J fetch_reads_$READS_ACC --time=5-00:00:00 --mem=5G --mail-user=$USER@ebi.ac.uk --mail-type=ALL --wrap="bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/ --run-list ${CATALOGUE_PATH}/runs.tsv"
 }
 
 function FetchAssembliesLSF {
