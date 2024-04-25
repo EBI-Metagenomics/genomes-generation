@@ -104,6 +104,7 @@ if [[ $SKIP_FETCH == 'false' ]]; then
   else
     echo "Unknown execution value. Exit."
     exit 1
+  fi
 fi
 
 RunRenamingScript
@@ -117,6 +118,7 @@ if [[ $SKIP_FETCH == 'false' ]]; then
   else
     echo "Unknown execution value. Exit."
     exit 1
+  fi
 fi
 
 GenerateSamplesheet
