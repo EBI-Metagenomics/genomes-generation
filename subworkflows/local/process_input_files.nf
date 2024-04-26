@@ -36,7 +36,7 @@ workflow PROCESS_INPUT {
                                                             return result
                                                           }
 
-    result = CHANGE_DOT_TO_UNDERSCORE_CONTIGS.out.underscore_contigs.join(reads_changed)
+    result = MODIFY_CONTIGS.out.underscore_contigs.join(reads_changed)
 
     ch_versions = ch_versions.mix( ERR_TO_ERZ.out.versions.first() )
 
