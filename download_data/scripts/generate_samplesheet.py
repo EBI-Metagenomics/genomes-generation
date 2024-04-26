@@ -5,9 +5,40 @@ import argparse
 import glob
 import os
 import sys
+import requests
+import xmltodict
+import json
 
 from ena_portal_api.ena_handler import EnaApiHandler
 handler = EnaApiHandler()
+
+def load_xml(assembly):
+    retry_attempts = 3
+    retry_delay_min = 15
+    xml_url = "https://www.ebi.ac.uk/ena/browser/api/xml/{}".format(assembly)
+
+    for attempt in range(1, retry_attempts + 1):
+        r = requests.get(xml_url)
+        if not r.ok:
+            retry_delay = retry_delay_min * attempt
+            if r.status_code == 500:
+                print(f"Received HTTP 500 error for sample {assembly}. Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                continue
+            else:
+                print(f"Unable to fetch xml for sample {assembly}. Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                continue
+        if r.ok:
+            data_dict = xmltodict.parse(r.content)
+            json_dump = json.dumps(data_dict)
+            json_data = json.loads(json_dump)
+            return json_data
+        else:
+            print("Could not retrieve xml for accession", assembly)
+            print(r.text)
+            return None
+
 
 def get_erz_list(input_dir):
     erz_list = set()
@@ -24,6 +55,12 @@ def get_err_erz(erz_list, outfile_software):
             handler_request = handler.get_assembly(erz_acc)
             run_acc = handler_request["submitted_ftp"].strip().split('/')[-1].split('.')[0]
             assembly_software = handler_request["assembly_software"]
+            print(assembly_software)
+            if not assembly_software:
+                json_analysis = load_xml(erz_acc)
+                assembly_software = json_analysis["ANALYSIS_SET"]["ANALYSIS"]["ANALYSIS_TYPE"]["SEQUENCE_ASSEMBLY"]["PROGRAM"]
+                assembly_software = assembly_software.replace(" ", "_")
+                print(assembly_software)
             if not run_acc.startswith(('ERR', 'DRR', 'SRR')):
                 print('Invalid run name {} for assembly {}'.format(run_acc, erz_acc))
                 sys.exit(1)
