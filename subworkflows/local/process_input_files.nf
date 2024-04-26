@@ -2,8 +2,8 @@
 // Remove unwanted characters from the contigs
 //
 
-include { CHANGE_DOT_TO_UNDERSCORE_CONTIGS } from '../../modules/local/utils'
-include { ERR_TO_ERZ                       } from '../../modules/local/utils'
+include { MODIFY_CONTIGS } from '../../modules/local/utils'
+include { ERR_TO_ERZ     } from '../../modules/local/utils'
 
 workflow PROCESS_INPUT {
 
@@ -19,7 +19,7 @@ workflow PROCESS_INPUT {
 
     // --- MODIFY CONTIGS
     // change . to _
-    CHANGE_DOT_TO_UNDERSCORE_CONTIGS( contigs ) // tuple(meta, assembly)
+    MODIFY_CONTIGS( contigs ) // tuple(meta, assembly)
 
     // --- MODIFY READS
     // change ERR in reads to ERZ

@@ -55,7 +55,7 @@ process GZIP {
 /*
  * clean reads, change . to _ from contigs
 */
-process CHANGE_DOT_TO_UNDERSCORE_CONTIGS {
+process MODIFY_CONTIGS {
 
     label 'process_low'
     tag "${meta.id}"

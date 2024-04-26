@@ -1,32 +1,20 @@
 #!/usr/bin/env bash
 
-function FetchReadsLSF {
-  echo 'Fetching reads on LSF...'
+function FetchReads {
+  echo 'Fetching reads...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
-  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/ --run-list ${CATALOGUE_PATH}/runs.tsv"
+  bsub -I -q production "bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/" --run-list ${CATALOGUE_PATH}/runs.tsv
 }
 
-function FetchReadsSlurm {
-  echo 'Fetching reads on Slurm...'
-  . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
-  mitload fetchtool
-  sbatch -J fetch_reads_$READS_ACC --time=5-00:00:00 --mem=5G --mail-user=$USER@ebi.ac.uk --mail-type=ALL --wrap="bash fetch-reads-tool.sh -v -p $READS_ACC -d ${CATALOGUE_PATH}/Raw_reads/ --run-list ${CATALOGUE_PATH}/runs.tsv"
-}
 
-function FetchAssembliesLSF {
-  echo 'Fetching assemblies on LSF...'
+function FetchAssemblies {
+  echo 'Fetching assemblies...'
   . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
   mitload fetchtool
   bsub -I -q production "bash fetch-assemblies-tool.sh -v -p $SAMPLE -d ${CATALOGUE_PATH}/Assemblies/"
 }
 
-function FetchAssembliesSlurm {
-  echo 'Fetching assemblies on Slurm...'
-  . "/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/mitrc.sh"
-  mitload fetchtool
-  sbatch -J fetch_assemblies_$SAMPLE --time=5-00:00:00 --mem=5G --mail-user=$USER@ebi.ac.uk --mail-type=ALL --wrap="bash fetch-assemblies-tool.sh -v -p $SAMPLE -d ${CATALOGUE_PATH}/Assemblies/"
-}
 
 function RunRenamingScript {
   echo 'Starting renaming script...'
@@ -74,15 +62,13 @@ CATALOGUE_PATH_INPUT=""
 SKIP_FETCH="false" # By default fetch step included
 SCRIPT_PATH="$(readlink -f $0)"
 REPO_PATH="$(dirname $SCRIPT_PATH)"
-EXECUTION="slurm"
 
-while getopts 'a:r:c:f:e:' flag; do
+while getopts 'a:r:c:f:' flag; do
     case "${flag}" in
         a) SAMPLE="$OPTARG" ;;
         r) READS_ACC="$OPTARG" ;;
         c) CATALOGUE_PATH_INPUT="$OPTARG" ;;
         f) SKIP_FETCH="$OPTARG" ;;
-        e) EXECUTION="$OPTARG" ;;
         *) echo "Invalid option"; exit 1 ;;
     esac
 done
@@ -97,28 +83,14 @@ fi
 mkdir -p "$CATALOGUE_PATH"
 
 if [[ $SKIP_FETCH == 'false' ]]; then
-  if [[ $EXECUTION == 'lsf' ]]; then
-    FetchAssembliesLSF
-  elif [[ $EXECUTION == 'slurm' ]]; then
-    FetchAssembliesSlurm
-  else
-    echo "Unknown execution value. Exit."
-    exit 1
-  fi
+  FetchAssemblies
 fi
 
 RunRenamingScript
 Rename
 
 if [[ $SKIP_FETCH == 'false' ]]; then
-  if [[ $EXECUTION == 'lsf' ]]; then
-    FetchReadsLSF
-  elif [[ $EXECUTION == 'slurm' ]]; then
-    FetchReadsSlurm
-  else
-    echo "Unknown execution value. Exit."
-    exit 1
-  fi
+  FetchReads
 fi
 
 GenerateSamplesheet
