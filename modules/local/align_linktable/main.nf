@@ -18,6 +18,7 @@ process ALIGNMENT_LINKTABLE {
 
     output:
     tuple val(meta), path("*.links.csv"), emit: links_table
+    tuple val(meta), path("*.idxstats") , emit: idxstats
     path "versions.yml"                 , emit: versions
 
     script:
@@ -40,6 +41,9 @@ process ALIGNMENT_LINKTABLE {
 
     echo "samtools index sorted bam"
     samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
+
+    echo " ---> samtools idxstats sorted bam"
+    samtools idxstats --threads ${task.cpus-1} output/${meta.id}_sorted.bam > ${prefix}.idxstats
 
     echo "linktable"
     mkdir -p bins

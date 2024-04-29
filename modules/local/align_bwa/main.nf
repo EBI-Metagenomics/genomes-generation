@@ -49,6 +49,7 @@ process FEATURED_ALIGNMENT {
     output:
     tuple val(meta), path("*.txt.gz")                     , emit: depth
     tuple val(meta), path("*.tsv"), path("concoct*.fasta"), emit: concoct_data
+    tuple val(meta), path("*.idxstats")                   , emit: idxstats
     path "versions.yml"                                   , emit: versions
 
     script:
@@ -76,6 +77,9 @@ process FEATURED_ALIGNMENT {
 
     echo " ---> samtools index sorted bam"
     samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
+
+    echo " ---> samtools idxstats sorted bam"
+    samtools idxstats --threads ${task.cpus-1} output/${meta.id}_sorted.bam > ${prefix}.idxstats
 
     if [[ "$get_depth" == "true" ]]; then
         echo " ---> depth generation"
