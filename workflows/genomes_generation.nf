@@ -153,12 +153,13 @@ workflow GGP {
     if ( !params.skip_euk ) {
 
         // ---- detect euk ---- //
-        // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
+        // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder, depths ), dbs...
         euk_input = assembly_and_reads.join(
             concoct_collected_bins
         ).join(
             metabat_collected_bins
-        )
+        ).join(
+            jgi_depth, remainder: true )
 
         EUK_MAGS_GENERATION( 
             euk_input,
