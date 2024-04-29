@@ -179,6 +179,7 @@ workflow EUK_MAGS_GENERATION {
     taxonomy                  = BAT_TAXONOMY_WRITER.out.all_bin2classification
     samtools_idxstats_metabat = LINKTABLE_METABAT.out.idxstats
     samtools_idxstats_concoct = LINKTABLE_CONCOCT.out.idxstats
+    busco_short_summary       = BUSCO.out.busco_summary
     versions                  = ch_versions
     progress_log              = ch_log
 }
