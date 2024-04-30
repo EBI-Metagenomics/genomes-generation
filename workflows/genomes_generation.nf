@@ -57,7 +57,6 @@ assembly_software  = file(params.assembly_software_file)
 */
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
-include { PREPARE_TSV_FOR_UPLOADER    } from '../modules/local/genome_uploader/main'
 include { FINALIZE_LOGGING            } from '../modules/local/utils'
 include { GUNZIP as GUNZIP_ASSEMBLY   } from '../modules/local/utils'
 
@@ -71,9 +70,9 @@ include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
 include { ALIGN                } from '../subworkflows/local/alignment'
 include { EUK_MAGS_GENERATION  } from '../subworkflows/local/euk_mags_generation'
 include { PROK_MAGS_GENERATION } from '../subworkflows/local/prok_mags_generation'
-
 include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
 include { BINNING              } from '../subworkflows/local/mag_binning'
+include { PREPARE_UPLOAD_FILES } from '../subworkflows/local/prepare_upload'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,7 +208,7 @@ workflow GGP {
         exit(1)
     }
     else {
-        PREPARE_TSV_FOR_UPLOADER(
+        PREPARE_UPLOAD_FILES(
             euk_genomes.ifEmpty([]),
             prok_genomes.ifEmpty([]),
             assembly_software,
@@ -219,9 +218,8 @@ workflow GGP {
             coverage_proks.ifEmpty([]),
             rna.ifEmpty([]),
             taxonomy_euks.ifEmpty([]),
-            taxonomy_proks.ifEmpty([])
-        )
-        ch_versions = ch_versions.mix( PREPARE_TSV_FOR_UPLOADER.out.versions )
+            taxonomy_proks.ifEmpty([]))
+        ch_versions = ch_versions.mix( PREPARE_UPLOAD_FILES.out.versions )
     }
 
     CUSTOM_DUMPSOFTWAREVERSIONS (

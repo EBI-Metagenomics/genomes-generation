@@ -51,8 +51,7 @@ If this the first time running nextflow please refer to [this page](https://www.
 
 ### Required reference databases
 
-You need to download the mentioned databases and add them to `config/nf_dbs.config`. 
-See the example `config/nf_codon_dbs.config`.
+You need to download the mentioned databases and add them to [config/dbs.config](config/dbs.config).
 
 Don't forget to add this configuration to the main `.nextflow.config`.
 
@@ -69,15 +68,15 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 
 If you use EBI cluster:
 1) Get your Raw reads and Assembly study accessions;
-2) Download data from ENA, [rename](download_data/rename-erz.py) assembly files and [generate](download_data/generate_samplesheet.py) input samplesheet:
+2) Download data from ENA, [get assembly and run_accessions](download_data/scripts/rename-erz.py) and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet:
 ```commandline
 bash download_data/fetch_data.sh \
     -a assembly_study_accession \
     -r reads_study_accession \
-    -c `pwd`/my_catalogue \
+    -c `pwd`/assembly_study_accession \
     -f "false"
 ```
-Otherwise, download your data and keep format as recommended in Sample sheet example section.
+Otherwise, download your data and keep format as recommended in Sample sheet example section below.
 
 ## Run
 
@@ -96,9 +95,9 @@ nextflow run ebi-metagenomics/genomes-generation \
 
 Each row corresponds to a specific dataset with information such as an identifier for the row, the file path to the assembly, and paths to the raw reads files (fastq_1 and fastq_2). Additionally, the assembly_accession column contains ERZ-specific accessions associated with the assembly. 
 
-| id         | assembly                                  | fastq_1                             | fastq_2                             | assembly_accession |
-|------------|-------------------------------------------|-------------------------------------|-------------------------------------|--------------------|
-| SRR1631112 | /path/to/SRR1631112.fasta                | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
+| id         | assembly                  | fastq_1                             | fastq_2                             | assembly_accession |
+|------------|---------------------------|-------------------------------------|-------------------------------------|--------------------|
+| SRR1631112 | /path/to/ERZ1031893.fasta | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
 
 
 There is example [here](assets/samplesheet_example.csv)
@@ -107,6 +106,9 @@ There is example [here](assets/samplesheet_example.csv)
 
 Id column is RUN accession \
 Assembly software is a tool that was used to assemble RUN into assembly (ERZ).
+
+_If you ran `download_data/fetch_data.sh` that file already exists in catalogue folder under name `per_run_assembly.tsv`.
+Otherwise, [script](download_data/scripts/generate_samplesheet.py) can be helpful to collect that information from ENA._ 
 
 | id         | assembly_software  |
 |------------|--------------------|

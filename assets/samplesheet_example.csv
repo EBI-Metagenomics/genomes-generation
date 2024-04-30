@@ -1,2 +1,2 @@
 id,assembly,fastq_1,fastq_2,assembly_accession
-SRR1631112,/path/SRR1631112.fasta,/path/SRR1631112_1.fastq.gz,/path/SRR1631112_2.fastq.gz,ERZ1031893
+SRR1631112,/path/ERZ1031893.fasta,/path/SRR1631112_1.fastq.gz,/path/SRR1631112_2.fastq.gz,ERZ1031893

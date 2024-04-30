@@ -1,12 +1,10 @@
 /*
  * Binning with MetaBAT2, MaxBin2 and Concoct
  */
-include { METABAT2_METABAT2                     } from '../../modules/nf-core/metabat2/metabat2/main'
-include { METABAT2_JGISUMMARIZEBAMCONTIGDEPTHS  } from '../../modules/nf-core/metabat2/jgisummarizebamcontigdepths/main'
-include { MAXBIN2                               } from '../../modules/nf-core/maxbin2/main'
-
-include { CONVERT_DEPTHS                        } from '../../modules/local/mag/convert_depths'
-include { CONCOCT_SUBWF                         } from './concoct-subwf'
+include { METABAT2_METABAT2 } from '../../modules/nf-core/metabat2/metabat2/main'
+include { MAXBIN2           } from '../../modules/nf-core/maxbin2/main'
+include { CONVERT_DEPTHS    } from '../../modules/local/mag/convert_depths'
+include { CONCOCT_SUBWF     } from './concoct-subwf'
 
 workflow BINNING {
 
