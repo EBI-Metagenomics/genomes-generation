@@ -76,7 +76,7 @@ bash download_data/fetch_data.sh \
     -c `pwd`/assembly_study_accession \
     -f "false"
 ```
-Otherwise, download your data and keep format as recommended in Sample sheet example section down.
+Otherwise, download your data and keep format as recommended in Sample sheet example section below.
 
 ## Run
 
