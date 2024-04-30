@@ -110,7 +110,7 @@ workflow GGP {
     }
     assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
 
-    FASTQC (assembly_and_runs.map{ meta, _ , reads -> [meta, reads] }
+    FASTQC (assembly_and_runs.map{ meta, _ , reads -> [meta, reads] })
     ch_versions = ch_versions.mix(FASTQC.out.versions)
 
     // ---- pre-processing ---- //
