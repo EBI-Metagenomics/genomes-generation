@@ -12,7 +12,7 @@ process FASTQC {
 
     output:
     tuple val(meta), path("*.html"), emit: html
-    tuple val(meta), path("*.zip") , emit: zip
+    tuple val(meta), path("*.zip"),  emit: zip
     path  "versions.yml"           , emit: versions
 
     when:

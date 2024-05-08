@@ -43,8 +43,7 @@ process MULTIQC {
 
     stub:
     """
-    mkdir multiqc_data
-    touch multiqc_plots
+    mkdir multiqc_data multiqc_plots
     touch multiqc_report.html
 
     cat <<-END_VERSIONS > versions.yml
