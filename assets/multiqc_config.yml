@@ -18,10 +18,14 @@ run_modules:
   - fastqc
   - fastp
   - samtools
+  - busco
 
 ## Module order
 top_modules:
+  - "fastqc"
   - "fastp"
+  - "samtools"
+  - "busco"
 
 ## File name cleaning
 extra_fn_clean_exts:
