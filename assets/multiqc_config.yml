@@ -21,11 +21,19 @@ run_modules:
   - busco
 
 ## Module order
-top_modules:
-  - "fastqc"
-  - "fastp"
-  - "samtools"
-  - "busco"
+module_order:
+  - fastqc
+  - fastp
+  - samtools:
+      name: Samtools. Alignment reads on assembly
+      path_filters: "*.assembly.idxstats"
+  - samtools:
+      name: Samtools. CONCOCT bins alignment on assembly
+      path_filters: "*.concoct.idxstats"
+  - samtools:
+      name: Samtools. MetaBAT2 bins alignment on assembly
+      path_filters: "*.metabat2.idxstats"
+  - busco
 
 ## File name cleaning
 extra_fn_clean_exts:

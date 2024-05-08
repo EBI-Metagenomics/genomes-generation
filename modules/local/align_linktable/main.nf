@@ -43,7 +43,7 @@ process ALIGNMENT_LINKTABLE {
     samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
 
     echo " ---> samtools idxstats sorted bam"
-    samtools idxstats --threads ${task.cpus-1} output/${meta.id}_sorted.bam > ${prefix}.idxstats
+    samtools idxstats --threads ${task.cpus-1} output/${meta.id}_sorted.bam > ${prefix}.${binner}.idxstats
 
     echo "linktable"
     mkdir -p bins

@@ -79,7 +79,7 @@ process FEATURED_ALIGNMENT {
     samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
 
     echo " ---> samtools idxstats sorted bam"
-    samtools idxstats --threads ${task.cpus-1} output/${meta.id}_sorted.bam > ${prefix}.idxstats
+    samtools idxstats --threads ${task.cpus-1} output/${meta.id}_sorted.bam > ${prefix}.assembly.idxstats
 
     if [[ "$get_depth" == "true" ]]; then
         echo " ---> depth generation"
