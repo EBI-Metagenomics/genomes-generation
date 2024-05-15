@@ -25,13 +25,13 @@ module_order:
   - fastqc
   - fastp
   - samtools:
-      name: Samtools. Alignment reads on assembly
+      name: Samtools - Stats from reads aligned to the assembly
       path_filters: "*.assembly.idxstats"
   - samtools:
-      name: Samtools. CONCOCT bins alignment on assembly
+      name: Samtools - Stats from CONCOCT bins aligned to the assembly
       path_filters: "*.concoct.idxstats"
   - samtools:
-      name: Samtools. MetaBAT2 bins alignment on assembly
+      name: Samtools - Stats from MetaBAT2 bins aligned to the assembly
       path_filters: "*.metabat2.idxstats"
   - busco
 
