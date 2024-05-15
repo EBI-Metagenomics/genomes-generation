@@ -144,7 +144,7 @@ process ALIGNMENT_DECONTAMINATION {
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
 
     output:
-    tuple val(meta), path("*{_1,_2,_interleaved}.fq.gz"), emit: reads
+    tuple val(meta), path("*{_1,_2,_interleaved}.decont.fq.gz"), emit: reads
     path "versions.yml",              emit: versions
 
     script:
@@ -162,7 +162,7 @@ process ALIGNMENT_DECONTAMINATION {
             $reads \
             | samtools view -@ ${task.cpus} ${samtools_args} - \
             | samtools sort -@ ${task.cpus} -n -O bam - \
-            | samtools bam2fq ${bam2fq_args} -@ $task.cpus - | gzip --no-name > ${prefix}_interleaved.fq.gz
+            | samtools bam2fq ${bam2fq_args} -@ $task.cpus - | gzip --no-name > ${prefix}_interleaved.decont.fq.gz
     else
         bwa-mem2 \
             mem \
@@ -172,7 +172,7 @@ process ALIGNMENT_DECONTAMINATION {
             $reads \
             | samtools view -@ ${task.cpus} ${samtools_args} - \
             | samtools sort -@ ${task.cpus} -n -O bam - \
-            | samtools bam2fq ${bam2fq_args} -@ ${task.cpus} -1 ${prefix}_1.fq.gz -2 ${prefix}_2.fq.gz -0 /dev/null -s /dev/null
+            | samtools bam2fq ${bam2fq_args} -@ ${task.cpus} -1 ${prefix}_1.decont.fq.gz -2 ${prefix}_2.decont.fq.gz -0 /dev/null -s /dev/null
     fi
 
     cat <<-END_VERSIONS > versions.yml
