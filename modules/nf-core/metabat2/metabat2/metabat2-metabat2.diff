@@ -45,7 +45,7 @@ Changes in module 'nf-core/metabat2/metabat2'
  
      metabat2 \\
          $args \\
-@@ -35,14 +38,33 @@
+@@ -35,14 +38,34 @@
          $depth_file \\
          -t $task.cpus \\
          --saveCls \\
@@ -71,7 +71,8 @@ Changes in module 'nf-core/metabat2/metabat2'
 +            original_name=\$(basename \${i})
 +            new_filename=\${original_name#*-}
 +            digit=\${new_filename#*.}
-+            new_name="${meta.id}_metabat_bins/MetaBAT2_v\${version}-${meta.id}_bin.\${digit}"
++            digit_without_extension=\${digit%.*}
++            new_name="${meta.id}_metabat_bins/${meta.id}_metabat2_\${digit_without_extension}.fa"
 +            mv \${i} \${new_name}
 +        done
 +    fi

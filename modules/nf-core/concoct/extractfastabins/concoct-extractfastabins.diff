@@ -1,14 +1,14 @@
 Changes in module 'nf-core/concoct/extractfastabins'
 --- modules/nf-core/concoct/extractfastabins/main.nf
 +++ modules/nf-core/concoct/extractfastabins/main.nf
-@@ -4,18 +4,28 @@
+@@ -4,24 +4,34 @@
  
      conda "bioconda::concoct=1.1.0"
      container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
 -        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py311h245ed52_4':
 -        'biocontainers/concoct:1.1.0--py311h245ed52_4' }"
 +        'https://depot.galaxyproject.org/singularity/concoct:1.1.0--py38h7be5676_2':
-+        'biocontainers/concoct:1.1.0--py38h7be5676_2' }"
++        'quay.io/biocontainers/concoct:1.1.0--py38h7be5676_2' }"
  
      input:
      tuple val(meta), path(original_fasta), path(csv)
@@ -34,25 +34,37 @@ Changes in module 'nf-core/concoct/extractfastabins'
  
      script:
      def args   = task.ext.args ?: ''
-@@ -31,13 +41,26 @@
+     prefix = task.ext.prefix ?: "${meta.id}"
+     """
+-    mkdir ${prefix}
++    mkdir -p ${prefix} ${meta.id}_concoct_bins
  
-     ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
-     for i in ${prefix}/*.fa; do
+     extract_fasta_bins.py \\
+         $args \\
+@@ -29,15 +39,28 @@
+         $csv \\
+         --output_path ${prefix}
+ 
+-    ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
+-    for i in ${prefix}/*.fa; do
 -        mv \${i} \${i/\\///${prefix}_}
 -        gzip \${i/\\///${prefix}_}
-+        mv \${i} \${i/\\///${prefix}_bin.}
-     done
-+
-+    version=\$(echo \$(concoct --version 2>&1) | sed 's/concoct //g')
-+
-+    mkdir -p ${meta.id}_concoct_bins
-+    if [ -z "\$(ls -A ${prefix}/*.fa)" ]; then
-+        echo "Folder is empty"
+-    done
++    export BINS=\$(ls ${prefix} | wc -l)
++    if [ \$BINS -eq 0 ]; then
++        echo "Result folder is empty"
 +    else
++        ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
++        ## renames 1.fa to accession_bin.1.fa
++        for i in ${prefix}/*.fa; do
++            mv \${i} \${i/\\///${prefix}_bin.}
++        done
++
 +        for i in ${prefix}/*.fa; do
 +            original_name=\$(basename \${i})
-+            new_filename=\${original_name#*-}
-+            new_name="${meta.id}_concoct_bins/CONCOCT_v\${version}-\${new_filename}"
++            original_name_without_extension=\${original_name%.*}
++            name_with_binner=\${original_name_without_extension//bin./concoct_}
++            new_name="${meta.id}_concoct_bins/\${name_with_binner}.fa"
 +            mv \${i} \${new_name}
 +        done
 +    fi
