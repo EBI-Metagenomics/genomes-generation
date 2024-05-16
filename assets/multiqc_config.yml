@@ -15,18 +15,32 @@ export_plots: true
 data_format: "yaml"
 
 run_modules:
+  - fastqc
   - fastp
+  - samtools
+  - busco
 
 ## Module order
-top_modules:
-  - "fastp"
+module_order:
+  - fastqc
+  - fastp
+  - samtools:
+      name: Samtools - Stats from reads aligned to the assembly
+      path_filters: "*.assembly.idxstats"
+  - samtools:
+      name: Samtools - Stats from CONCOCT bins aligned to the assembly
+      path_filters: "*.concoct.idxstats"
+  - samtools:
+      name: Samtools - Stats from MetaBAT2 bins aligned to the assembly
+      path_filters: "*.metabat2.idxstats"
+  - busco
 
 ## File name cleaning
 extra_fn_clean_exts:
   - "_fastp"
 
 ## Prettification
-custom_logo: "mgnify_light.png"
+custom_logo: "mgnify_logo.png"
 custom_logo_url: https://github.com/ebi-metagenomics/genomes-generation/
 custom_logo_title: "ebi-metagenomics/genomes-generation"
 

@@ -9,7 +9,7 @@ process BUSCO {
     path busco_db
 
     output:
-    path "*.short_summary.specific.txt", emit: busco_summary
+    path "short_summary.specific*.txt", emit: busco_summary
     path "versions.yml"                , emit: versions
 
     script:
@@ -22,7 +22,7 @@ process BUSCO {
             --download_path ${busco_db} \
             -c ${task.cpus}
 
-    cp out/short_summary.specific*.out.txt "${bin.baseName}.short_summary.specific.txt"
+    mv out/short_summary.specific*.out.txt "short_summary.specific_${bin.baseName}.txt"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

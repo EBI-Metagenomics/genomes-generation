@@ -3,7 +3,6 @@
      Eukaryotes subworkflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { ALIGN as ALIGN_BINS                        } from './alignment'
 include { BUSCO                                      } from '../../modules/local/busco/main'
 include { EUKCC as EUKCC_CONCOCT                     } from '../../modules/local/eukcc/main'
 include { EUKCC as EUKCC_METABAT                     } from '../../modules/local/eukcc/main'
@@ -24,7 +23,7 @@ include { FILTER_QUALITY                             } from '../../modules/local
 
 workflow EUK_MAGS_GENERATION {
     take:
-    assemblies_reads_bins  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder )
+    assemblies_reads_bins  // tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder, metabat_depths )
     eukcc_db
     busco_db
     cat_db_folder
@@ -37,11 +36,12 @@ workflow EUK_MAGS_GENERATION {
     ch_log      = Channel.empty()
 
     /* split the inputs */
-    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins ->
+    assemblies_reads_bins.multiMap { meta, assembly, reads, concoct_bins, metabat_bins, depths ->
         assembly: [ meta, assembly ]
         reads: [ meta, reads ]
         bins_concoct: [ meta, concoct_bins ]
         bins_metabat: [ meta, metabat_bins ]
+        metabat_depths: depths
     }.set {
         input
     }
@@ -119,24 +119,9 @@ workflow EUK_MAGS_GENERATION {
 
     ch_versions = ch_versions.mix( DREP_MAGS.out.versions.first() )
 
-    // -- coverage -- //
-    bins_alignment = DREP.out.dereplicated_genomes.join( input.reads ) // tuple(meta, drep_genomes, [reads]),...
-
-    spreadBins = { record ->
-        if (record[1] instanceof List) {
-            return record
-        } else {
-            return tuple(record[0], [record[1]], record[2])
-        }
-    }
-
-    bins_alignment_by_bins = bins_alignment.map( spreadBins ).transpose(by: [1])  // tuple(meta, MAG1, [reads]); tuple(meta, MAG2, [reads])
-
     // ---- coverage generation ----- //
-    ALIGN_BINS( bins_alignment_by_bins, true, false, false ) // out: [meta, fasta, bam, bai], depth calculation is turned on
-    ch_versions = ch_versions.mix( ALIGN_BINS.out.versions )
 
-    euks_depth = ALIGN_BINS.out.jgi_depth.map{ meta, depth -> depth }.collectFile(name: "euks_depth.txt.gz")
+    euks_depth = input.metabat_depths.collectFile(name: "euks_depth.txt.gz")
 
     COVERAGE_RECYCLER_EUK(
         DREP_MAGS.out.dereplicated_genomes,
@@ -188,10 +173,13 @@ workflow EUK_MAGS_GENERATION {
     ch_log = ch_log.mix( DREP_MAGS.out.progress_log )
 
     emit:
-    genomes = GZIP_MAGS.out.compressed.collect()
-    stats = BUSCO_EUKCC_QC.out.eukcc_final_qc
-    coverage = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ meta, coverage_file -> coverage_file }.collect()
-    taxonomy = BAT_TAXONOMY_WRITER.out.all_bin2classification
-    versions = ch_versions
-    progress_log = ch_log
+    genomes                   = GZIP_MAGS.out.compressed.collect()
+    stats                     = BUSCO_EUKCC_QC.out.eukcc_final_qc
+    coverage                  = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ meta, coverage_file -> coverage_file }.collect()
+    taxonomy                  = BAT_TAXONOMY_WRITER.out.all_bin2classification
+    samtools_idxstats_metabat = LINKTABLE_METABAT.out.idxstats
+    samtools_idxstats_concoct = LINKTABLE_CONCOCT.out.idxstats
+    busco_short_summary       = BUSCO.out.busco_summary
+    versions                  = ch_versions
+    progress_log              = ch_log
 }

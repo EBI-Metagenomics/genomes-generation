@@ -30,7 +30,8 @@ workflow ALIGN {
     ch_versions = ch_versions.mix( FEATURED_ALIGNMENT.out.versions.first() )
 
     emit:
-    jgi_depth        = FEATURED_ALIGNMENT.out.depth  // [ meta, depth.txt.gz ]
-    concoct_data     = FEATURED_ALIGNMENT.out.concoct_data  // [ meta, concoct.tsv ]
-    versions         = ch_versions           // channel: [ versions.yml ]
+    jgi_depth         = FEATURED_ALIGNMENT.out.depth  // [ meta, depth.txt.gz ]
+    concoct_data      = FEATURED_ALIGNMENT.out.concoct_data  // [ meta, concoct.tsv ]
+    samtools_idxstats = FEATURED_ALIGNMENT.out.idxstats
+    versions          = ch_versions           // channel: [ versions.yml ]
 }

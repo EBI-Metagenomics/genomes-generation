@@ -1,0 +1,72 @@
+Changes in module 'nf-core/multiqc'
+--- modules/nf-core/multiqc/meta.yml
++++ modules/nf-core/multiqc/meta.yml
+@@ -1,5 +1,4 @@
+-# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+-name: MultiQC
++name: multiqc
+ description: Aggregate results from bioinformatics analyses across many samples into a single report
+ keywords:
+   - QC
+@@ -56,4 +55,4 @@
+   - "@abhi18av"
+   - "@bunop"
+   - "@drpatelh"
+-  - "@jfy133"
++  - "@jfy133"
+--- modules/nf-core/multiqc/environment.yml
++++ modules/nf-core/multiqc/environment.yml
+@@ -1,6 +1,7 @@
++name: multiqc
+ channels:
+   - conda-forge
+   - bioconda
+   - defaults
+ dependencies:
+-  - bioconda::multiqc=1.17
++  - bioconda::multiqc=1.21
+--- modules/nf-core/multiqc/main.nf
++++ modules/nf-core/multiqc/main.nf
+@@ -3,8 +3,8 @@
+ 
+     conda "${moduleDir}/environment.yml"
+     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+-        'https://depot.galaxyproject.org/singularity/multiqc:1.17--pyhdfd78af_0' :
+-        'biocontainers/multiqc:1.17--pyhdfd78af_0' }"
++        'https://depot.galaxyproject.org/singularity/multiqc:1.21--pyhdfd78af_0' :
++        'biocontainers/multiqc:1.21--pyhdfd78af_0' }"
+ 
+     input:
+     path  multiqc_files, stageAs: "?/*"
+@@ -25,12 +25,14 @@
+     def args = task.ext.args ?: ''
+     def config = multiqc_config ? "--config $multiqc_config" : ''
+     def extra_config = extra_multiqc_config ? "--config $extra_multiqc_config" : ''
++    def logo = multiqc_logo ? /--cl-config 'custom_logo: "${multiqc_logo}"'/ : ''
+     """
+     multiqc \\
+         --force \\
+         $args \\
+         $config \\
+         $extra_config \\
++        $logo \\
+         .
+ 
+     cat <<-END_VERSIONS > versions.yml
+@@ -41,8 +43,7 @@
+ 
+     stub:
+     """
+-    touch multiqc_data
+-    touch multiqc_plots
++    mkdir multiqc_data multiqc_plots
+     touch multiqc_report.html
+ 
+     cat <<-END_VERSIONS > versions.yml
+@@ -50,4 +51,4 @@
+         multiqc: \$( multiqc --version | sed -e "s/multiqc, version //g" )
+     END_VERSIONS
+     """
+-}
++}
+************************************************************

@@ -24,9 +24,9 @@ if (params.help) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
-ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.fromPath("$projectDir/assets/mgnify_logo.png")
+ch_multiqc_config                     = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+ch_multiqc_custom_config              = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+ch_multiqc_logo                       = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.fromPath("$projectDir/assets/mgnify_logo.png")
 ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
 /*
@@ -56,6 +56,8 @@ assembly_software  = file(params.assembly_software_file)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { FASTQC as FASTQC_BEFORE     } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_AFTER      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { FINALIZE_LOGGING            } from '../modules/local/utils'
 include { GUNZIP as GUNZIP_ASSEMBLY   } from '../modules/local/utils'
@@ -109,6 +111,10 @@ workflow GGP {
     }
     assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
 
+    // --- check input reads quality --- //
+    FASTQC_BEFORE (assembly_and_runs.map{ meta, _ , reads -> [meta, reads] })
+    ch_versions = ch_versions.mix(FASTQC_BEFORE.out.versions)
+
     // ---- pre-processing ---- //
     PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
 
@@ -124,8 +130,10 @@ workflow GGP {
     // --- decontamination ---- //
     // We need a tuple as the alignment and decontamination module needs the input like that
     DECONTAMINATION( QC_AND_MERGE_READS.out.reads, ref_genome, ref_genome_index )
-
     ch_versions = ch_versions.mix( DECONTAMINATION.out.versions )
+
+    // --- check filtered reads quality --- //
+    FASTQC_AFTER ( DECONTAMINATION.out.decontaminated_reads )
 
     // --- align reads to assemblies ---- //
     assembly_and_reads = tuple_assemblies.join( DECONTAMINATION.out.decontaminated_reads )
@@ -153,12 +161,13 @@ workflow GGP {
     if ( !params.skip_euk ) {
 
         // ---- detect euk ---- //
-        // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder ), dbs...
+        // input: tuple( meta, assembly_file, [raw_reads], concoct_folder, metabat_folder, depths ), dbs...
         euk_input = assembly_and_reads.join(
             concoct_collected_bins
         ).join(
             metabat_collected_bins
-        )
+        ).join(
+            jgi_depth, remainder: true )
 
         EUK_MAGS_GENERATION( 
             euk_input,
@@ -233,7 +242,6 @@ workflow GGP {
     // MODULE: MultiQC
     //
 
-
     workflow_summary    = WorkflowGenomesGeneration.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
@@ -244,16 +252,20 @@ workflow GGP {
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix( CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect() )
-    // TODO: MultiQC 1.17 doesn't support how we are running fastp
-    //       should be fixed in the next release -> https://github.com/ewels/MultiQC/issues/2162
-    // ch_multiqc_files = ch_multiqc_files.mix( QC_AND_MERGE_READS.out.mqc.map { map, json -> json }.collect().ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( FASTQC_BEFORE.out.zip.collect{it[1]}.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( FASTQC_AFTER.out.zip.collect{it[1]}.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( QC_AND_MERGE_READS.out.mqc.map { map, json -> json }.collect().ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( ALIGN.out.samtools_idxstats.collect{ it[1] }.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( EUK_MAGS_GENERATION.out.samtools_idxstats_metabat.collect{ it[1] }.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( EUK_MAGS_GENERATION.out.samtools_idxstats_concoct.collect{ it[1] }.ifEmpty([]) )
+    ch_multiqc_files = ch_multiqc_files.mix( EUK_MAGS_GENERATION.out.busco_short_summary.collect{ it[1] }.ifEmpty([]) )
 
-    // MULTIQC(
-    //     ch_multiqc_files.collect(),
-    //     ch_multiqc_config.toList(),
-    //     ch_multiqc_custom_config.toList(),
-    //     ch_multiqc_logo.toList()
-    // )
-    // multiqc_report = MULTIQC.out.report.toList()
+    MULTIQC(
+         ch_multiqc_files.collect(),
+         ch_multiqc_config.toList(),
+         ch_multiqc_custom_config.toList(),
+         ch_multiqc_logo.toList()
+    )
+    multiqc_report = MULTIQC.out.report.toList()
 
 }
