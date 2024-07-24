@@ -115,15 +115,23 @@ workflow GGP {
     FASTQC_BEFORE (assembly_and_runs.map{ meta, _ , reads -> [meta, reads] })
     ch_versions = ch_versions.mix(FASTQC_BEFORE.out.versions)
 
-    // ---- pre-processing ---- //
-    PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
+    def input_assemblies_and_runs
+    if ( params.skip_preprocessing_input ) {
+        println('skipping pre-processing')
+        input_assemblies_and_reads = assembly_and_runs
+    }
+    else {
+        // ---- pre-processing ---- //
+        PROCESS_INPUT( assembly_and_runs ) // output: [ meta, assembly, [raw_reads] ]
+        ch_versions = ch_versions.mix( PROCESS_INPUT.out.versions )
+        input_assemblies_and_reads = PROCESS_INPUT.out.assembly_and_reads
+    }
 
-    ch_versions = ch_versions.mix( PROCESS_INPUT.out.versions )
-
-    tuple_assemblies = PROCESS_INPUT.out.assembly_and_reads.map{ meta, assembly, _ -> [meta, assembly] }
+    tuple_assemblies = input_assemblies_and_reads.map{ meta, assembly, _ -> [meta, assembly] }
+    tuple_reads = input_assemblies_and_reads.map { meta, _, reads -> [meta, reads] }
 
     // --- trimming reads ---- //
-    QC_AND_MERGE_READS( PROCESS_INPUT.out.assembly_and_reads.map { meta, _, reads -> [meta, reads] } )
+    QC_AND_MERGE_READS( tuple_reads )
 
     ch_versions = ch_versions.mix( QC_AND_MERGE_READS.out.versions )
 
