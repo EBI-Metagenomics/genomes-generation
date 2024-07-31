@@ -115,7 +115,6 @@ workflow GGP {
     FASTQC_BEFORE (assembly_and_runs.map{ meta, _ , reads -> [meta, reads] })
     ch_versions = ch_versions.mix(FASTQC_BEFORE.out.versions)
 
-    def input_assemblies_and_runs
     if ( params.skip_preprocessing_input ) {
         println('skipping pre-processing')
         input_assemblies_and_reads = assembly_and_runs
