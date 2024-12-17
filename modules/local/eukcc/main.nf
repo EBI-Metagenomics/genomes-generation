@@ -84,6 +84,8 @@ process EUKCC {
     if [ \$BINS -eq 0 ]; then
         echo "No bins in input"
     else
+        set +e
+
         eukcc folder \
             --improve_percent 10 \
             --n_combine 1 \
@@ -96,10 +98,24 @@ process EUKCC {
             --out ${binner}_${meta.id}_merged_bins \
             --prefix "${meta.id}_${binner}_merged." \
             bins
-        echo "EukCC finished"
+        EUKCC_EXITCODE="\$?"
 
-        mv ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-        mv ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+        if [ "\$EUKCC_EXITCODE" == "0" ]; then
+            echo "EukCC finished"
+            mv ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
+            mv ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+            exit 0
+        fi
+
+        if [ "\$EUKCC_EXITCODE" == "204" ]; then
+            echo "Metaeuk returned zero proteins"
+            exit 0
+        else:
+            exit \$EUKCC_EXITCODE
+        fi
+
+        set -e
+
     fi
 
     cat <<-END_VERSIONS > versions.yml
