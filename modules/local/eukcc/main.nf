@@ -55,13 +55,16 @@ accession_merged.0.fa      accession_bin.12.fachild:accession_bin.9.fa
 
 merged_bins/
 accession_merged.0.fa
+
+--- Exit codes workaround:
+if exit code is 204 - metaeuk return empty faa -> no results for eukcc
 */
 process EUKCC {
 
     label 'process_medium'
     tag "${meta.id} ${binner}"
 
-    container 'quay.io/microbiome-informatics/eukcc:2.1.2'
+    container 'quay.io/microbiome-informatics/eukcc:2.1.3'
 
     input:
     val binner
