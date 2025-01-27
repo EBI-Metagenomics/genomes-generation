@@ -58,8 +58,8 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 - [BUSCO](https://busco.ezlab.org/)
 - [CAT](https://github.com/dutilh/CAT)
 - [CheckM](https://github.com/Ecogenomics/CheckM)
-- [EukCC](https://github.com/algbio/EukCC)
-- [GUNC](https://github.com/CK7/GUNC)
+- [EukCC](https://github.com/EBI-Metagenomics/EukCC)
+- [GUNC](https://github.com/grp-bork/gunc)
 - [GTDB-Tk](https://github.com/Ecogenomics/GTDBTk) + ar53_metadata_r*.tsv, bac120_metadata_r*.tsv from [here](https://data.ace.uq.edu.au/public/gtdb/data/releases/)
 - [Rfam](https://ftp.ebi.ac.uk/pub/databases/metagenomics/genomes-pipeline/rfam_14.9/rfams_cms/) 
 - The reference genome of your choice for decontamination, as a .fasta.
