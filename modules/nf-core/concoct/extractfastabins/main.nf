@@ -1,6 +1,6 @@
 process CONCOCT_EXTRACTFASTABINS {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_medium'
 
     conda "bioconda::concoct=1.1.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

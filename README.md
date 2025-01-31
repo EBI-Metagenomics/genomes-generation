@@ -58,11 +58,11 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 - [BUSCO](https://busco.ezlab.org/)
 - [CAT](https://github.com/dutilh/CAT)
 - [CheckM](https://github.com/Ecogenomics/CheckM)
-- [EukCC](https://github.com/algbio/EukCC)
-- [GUNC](https://github.com/CK7/GUNC)
-- [GTDB-Tk](https://github.com/Ecogenomics/GTDBTk) + ar53_metadata_r214.tsv, bac120_metadata_r214.tsv from [here](https://data.ace.uq.edu.au/public/gtdb/data/releases/)
-- [Rfam](https://www.rfam.org/)
-- The reference genome of your choice for decontamination, as a .fasta.
+- [EukCC](https://github.com/EBI-Metagenomics/EukCC)
+- [GUNC](https://github.com/grp-bork/gunc)
+- [GTDB-Tk](https://github.com/Ecogenomics/GTDBTk) + ar53_metadata_r*.tsv, bac120_metadata_r*.tsv from [here](https://data.ace.uq.edu.au/public/gtdb/data/releases/)
+- [Rfam](https://ftp.ebi.ac.uk/pub/databases/metagenomics/genomes-pipeline/rfam_14.9/rfams_cms/)
+- The reference genome of your choice for decontamination. Example, human genome [hg38](https://ftp.ebi.ac.uk/pub/databases/metagenomics/pipeline-5.0/ref-dbs/hg38/)
 
 ## Data download
 
@@ -92,6 +92,7 @@ nextflow run ebi-metagenomics/genomes-generation \
 
 ### Optional arguments
 
+- `--xlarge (default=false)`: use high-memory config for big studies. _Study maybe considered as **big** if it has more than 300 runs. In addition, if study has less number of runs but they are very deeply sequenced it also makes sense to try that option._ 
 - `--skip_preprocessing_input (default=false)`: skip input data pre-processing step that renames ERZ-fasta files to ERR-run accessions. Useful if you process data not from ENA
 - `--skip_prok (default=false)`: do not generate prokaryotic MAGs
 - `--skip_euk (default=false)`: do not generate eukaryotic MAGs
