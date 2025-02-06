@@ -124,7 +124,7 @@ process EUKCC {
             cat <<-END_LOGGING > progress.log
             ${meta.id}\t${task.process}\t${binner}
                 bins: \$(ls bins | wc -l), merged: \$(ls ${binner}_${meta.id}_merged_bins/merged_bins | wc -l)
-            END_LOGGING
+    END_LOGGING
             exit 0
         else:
             exit \$EUKCC_EXITCODE
