@@ -8,7 +8,7 @@ process COVERAGE_RECYCLER {
         'quay.io/biocontainers/biopython:1.75' }"
 
     input:
-    tuple val(meta), path(genomes, stageAs: "genomes_dir/*")
+    tuple val(meta), path(genomes, stageAs: "genomes_dir")
     path metabat_depth
 
     output:

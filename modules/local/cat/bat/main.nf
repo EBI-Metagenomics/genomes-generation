@@ -1,6 +1,6 @@
 process BAT {
 
-    label 'process_high'
+    label 'process_high_cpu'
     tag "${bin}"
 
     container 'quay.io/biocontainers/cat:5.2.3--hdfd78af_1'

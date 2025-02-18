@@ -1,0 +1,66 @@
+#set dir structure
+mkdir bin_upload
+cd bin_upload/
+mkdir genomes
+mkdir depths
+
+#copy over all bins
+cd genomes/
+cp ../../bins/eukaryotes/*RR*/** .
+cd ..
+
+#remove mags which are already uploaded
+cat ../genomes_drep/eukaryotes/dereplicated_genomes.txt | cut -d'.' -f1 > mags.txt
+cd genomes/
+while read line; do rm $line'.fa.gz'; done<../mags.txt
+cd ..
+
+#list runs and genomes
+ls genomes/ | cut -d'_' -f1 | sort -u > runs.txt
+ls genomes/ | sed 's/.gz//g' > genomes.txt
+
+#get assembly sw per run
+while read line; do grep $line ../per_run_assembly.tsv; done<runs.txt > assembly_software.txt
+
+#get eukcc stats
+while read line; do grep $line ../intermediate_steps/eukaryotes/eukcc/stats/*.csv; done<genomes.txt | cut -d':' -f2 > eukcc.tsv
+echo "genome,completeness,contamination" > eukcc_final_qc.csv
+cut -f 1,2,3 eukcc.tsv | sed 's/\t/,/g' >> eukcc_final_qc.csv
+
+#unzip genomes
+cd genomes/
+for x in *.gz; do gunzip $x; done
+cd ..
+
+#fetch runs
+mitload fetchtool
+mkdir reads
+while read line; do sbatch -t 1:00:00 --mem=20G -p production -o 'fetch_'$line'.out' -J 'fetch_'$line --wrap="sh fetch-reads-tool.sh -v -ru $line -d reads/"; done<runs.txt
+
+#move reads into genomes dir and run mapping
+cd genomes/
+mv ../reads/**/raw/** .  
+rm -rf ../reads/
+while read line; do sbatch -t 5:00:00 --mem=40G --cpus-per-task=8 -p production -o $line'_mapping.out' -J $line'_mapping' --wrap="sh bin_upload/mapping.sh $line"; done<../genomes.txt
+
+#merge depth files
+mv *.txt ../depths
+cd ../depths
+cat *.txt | grep -v contigLen | sort -u > euks_depth.txt
+gzip euks_depth.txt 
+cd ..
+
+#run the mini nf pipeline
+#remove the MAGs from the final file if not done already
+#upload to ENA
+
+cd ..
+mv bin_upload ../$PROJECT_bin_upload
+#remove project directory
+
+#zip genomes files
+
+#rename file paths e.g. 
+'s?/hps/software/users/rdf/metagenomics/service-team/users/vkale/genomes-generation/results/genomes_drep/eukaryotes/genomes/?/hps/nobackup/rdf/metagenomics/service-team/users/vkale/marine_mags/ERP134737_bin_upload/genomes/?g' final_table_for_uploader.tsv | sed 's?\.fa?.fa.gz?g' > final_table_for_uploader_modified_paths.tsv 
+
+#upload genomes
