@@ -91,6 +91,10 @@ process EUKCC {
     export BINS=\$(ls bins | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "No bins in input"
+        cat <<-END_LOGGING > progress.log
+        ${meta.id}\t${task.process}\t${binner}
+            bins: 0, merged: 0
+    END_LOGGING
     else
         set +e
 
