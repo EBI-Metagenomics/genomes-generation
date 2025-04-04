@@ -9,11 +9,6 @@ cd genomes/
 cp ../../bins/eukaryotes/*RR*/** .
 cd ..
 
-#remove mags which are already uploaded
-cat ../genomes_drep/eukaryotes/dereplicated_genomes.txt | cut -d'.' -f1 > mags.txt
-cd genomes/
-while read line; do rm $line'.fa.gz'; done<../mags.txt
-cd ..
 
 #list runs and genomes
 ls genomes/ | cut -d'_' -f1 | sort -u > runs.txt
