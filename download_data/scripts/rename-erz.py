@@ -16,7 +16,7 @@ def main(input_dir, outfile):
     with open(outfile, 'w') as file_out:
         for erz_acc in erz_list:
             ftp_loc = handler.get_assembly(erz_acc)["submitted_ftp"]
-            run_acc = ftp_loc.strip().split('/')[-1].split('.')[0]
+            run_acc = ftp_loc.strip().split('/')[-1].split('.')[0].split("_")[0]
             if not run_acc.startswith(('ERR', 'DRR', 'SRR')):
                 print('Invalid run name {} for assembly {}'.format(run_acc, erz_acc))
                 sys.exit(1)
