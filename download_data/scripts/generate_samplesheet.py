@@ -53,7 +53,7 @@ def get_err_erz(erz_list, outfile_software):
     with open(outfile_software, 'w') as file_software:
         for erz_acc in erz_list:
             handler_request = handler.get_assembly(erz_acc)
-            run_acc = handler_request["submitted_ftp"].strip().split('/')[-1].split('.')[0]
+            run_acc = handler_request["submitted_ftp"].strip().split('/')[-1].split('.')[0].split('_')[0]
             assembly_software = handler_request["assembly_software"]
             print(assembly_software)
             if not assembly_software:
