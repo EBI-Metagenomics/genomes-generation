@@ -61,7 +61,7 @@ if exit code is 204 - metaeuk return empty faa -> no results for eukcc
 */
 process EUKCC {
 
-    label 'process_medium'
+    label 'process_long'
     tag "${meta.id} ${binner}"
 
     container 'quay.io/microbiome-informatics/eukcc:2.1.3'
