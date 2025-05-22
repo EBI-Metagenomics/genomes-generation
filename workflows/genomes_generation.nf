@@ -1,33 +1,37 @@
-include { validateParameters; paramsHelp; paramsSummaryLog; fromSamplesheet; paramsSummaryMap } from 'plugin/nf-validation'
-
-def summary_params = paramsSummaryMap(workflow)
-
-// Print help message, supply typical command line usage for the pipeline
-if (params.help) {
-   log.info paramsHelp("nextflow run my_pipeline --input input_file.csv")
-   exit 0
-}
-
-validateParameters()
-
-
-log.info paramsSummaryLog(workflow)
-
-if (params.help) {
-   log.info paramsHelp("nextflow run ebi-metagenomics/genomes-generation --help")
-   exit 0
-}
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CONFIG FILES
+    IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-ch_multiqc_config                     = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-ch_multiqc_custom_config              = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
-ch_multiqc_logo                       = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.fromPath("$projectDir/assets/mgnify_logo.png")
-ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
+include { paramsSummaryMap    } from 'plugin/nf-schema'  // for multiqc
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    MODULES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { FASTQC as FASTQC_BEFORE     } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_AFTER      } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { FINALIZE_LOGGING            } from '../modules/local/utils'
+include { GUNZIP as GUNZIP_ASSEMBLY   } from '../modules/local/utils'
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    SUBWORKFLOWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+include { PROCESS_INPUT        } from '../subworkflows/local/process_input_files'
+include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
+include { ALIGN                } from '../subworkflows/local/alignment'
+include { EUKCC_MERGE          } from '../subworkflows/local/eukcc_merge'
+include { EUK_MAGS_GENERATION  } from '../subworkflows/local/euk_mags_generation'
+include { PROK_MAGS_GENERATION } from '../subworkflows/local/prok_mags_generation'
+include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
+include { BINNING              } from '../subworkflows/local/mag_binning'
+include { PREPARE_UPLOAD_FILES } from '../subworkflows/local/prepare_upload'
 
 /*
 ~~~~~~~~~~~~~~~~~~
@@ -44,38 +48,10 @@ busco_db           = file(params.busco_db, checkIfExists: true)
 gtdbtk_db          = file(params.gtdbtk_db, checkIfExists: true)
 rfam_rrna_models   = file(params.rfam_rrna_models, checkIfExists: true)
 
-ref_genome         = file(params.ref_genome)
-ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
+ref_genome         = file(params.ref_genome, checkIfExists: true)
+ref_genome_index   = file("${ref_genome.parent}/*.fa*.*")
 
-assembly_software  = file(params.assembly_software_file)
-
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    MODULES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
-include { FASTQC as FASTQC_BEFORE     } from '../modules/nf-core/fastqc/main'
-include { FASTQC as FASTQC_AFTER      } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
-include { FINALIZE_LOGGING            } from '../modules/local/utils'
-include { GUNZIP as GUNZIP_ASSEMBLY   } from '../modules/local/utils'
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     Subworkflows
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-include { PROCESS_INPUT        } from '../subworkflows/local/process_input_files'
-include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
-include { ALIGN                } from '../subworkflows/local/alignment'
-include { EUKCC_MERGE          } from '../subworkflows/local/eukcc_merge'
-include { EUK_MAGS_GENERATION  } from '../subworkflows/local/euk_mags_generation'
-include { PROK_MAGS_GENERATION } from '../subworkflows/local/prok_mags_generation'
-include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
-include { BINNING              } from '../subworkflows/local/mag_binning'
-include { PREPARE_UPLOAD_FILES } from '../subworkflows/local/prepare_upload'
+assembly_software  = file(params.assembly_software_file, checkIfExists: true)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,9 +60,14 @@ include { PREPARE_UPLOAD_FILES } from '../subworkflows/local/prepare_upload'
 */
 
 // Info required for completion summary
-def multiqc_report    = []
+
 
 workflow GGP {
+
+    take:
+    samplesheet
+
+    main:
 
     ch_versions    = Channel.empty()
     ch_log         = Channel.empty()
@@ -110,7 +91,7 @@ workflow GGP {
             return tuple(meta + [single_end: false], assembly, [fq1, fq2])
         }
     }
-    assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
+    assembly_and_runs = samplesheet.map(groupReads) // [ meta, assembly_file, [raw_reads] ]
 
     // --- check input reads quality --- //
     FASTQC_BEFORE (assembly_and_runs.map{ meta, _ , reads -> [meta, reads] })
@@ -165,7 +146,7 @@ workflow GGP {
             ].findAll { it.value }  // Filter out null values
         }
 
-        bin_ch = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupBins) // concoct: [ meta, bin_folder, bin_depth ] for each binner if not null 
+        bin_ch = samplesheet.map(groupBins) // concoct: [ meta, bin_folder, bin_depth ] for each binner if not null
     
         // separate channels for each binner
         def extractBins = { bin_ch, binner ->
@@ -187,7 +168,13 @@ workflow GGP {
     }
     else {
         // ---- binning ---- //
+        //TODO review compression
+        GUNZIP_ASSEMBLY(tuple_assemblies)
         BINNING( GUNZIP_ASSEMBLY.out.uncompressed.join(jgi_depth).join(concoct_data) )
+        // TODO: review
+        concoct_collected_bins = BINNING.out.concoct_bins.map( collectBinsFolder )
+        metabat_collected_bins = BINNING.out.metabat_bins.map( collectBinsFolder )
+        maxbin_collected_bins = BINNING.out.maxbin_bins.map( collectBinsFolder )
         ch_versions = ch_versions.mix( BINNING.out.versions )
 
         metabat_bins = assembly_and_runs
@@ -312,6 +299,12 @@ workflow GGP {
     // MODULE: MultiQC
     //
 
+    ch_multiqc_config                     = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+    ch_multiqc_custom_config              = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+    ch_multiqc_logo                       = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.fromPath("$projectDir/assets/mgnify_logo.png")
+    ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
+
+    def summary_params = paramsSummaryMap(workflow)
     workflow_summary    = WorkflowGenomesGeneration.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
@@ -330,6 +323,7 @@ workflow GGP {
     // ch_multiqc_files = ch_multiqc_files.mix( EUK_MAGS_GENERATION.out.samtools_idxstats_concoct.collect{ it[1] }.ifEmpty([]) )
     ch_multiqc_files = ch_multiqc_files.mix( EUK_MAGS_GENERATION.out.busco_short_summary.collect{ it[1] }.ifEmpty([]) )
 
+    def multiqc_report    = []
     MULTIQC(
          ch_multiqc_files.collect(),
          ch_multiqc_config.toList(),

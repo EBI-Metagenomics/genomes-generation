@@ -1,15 +1,17 @@
 /*
- * Binning with MetaBAT2, MaxBin2 and Concoct
+ * Binning with MetaBAT2, MaxBin2 and CONCOCT
  */
-include { METABAT2_METABAT2 } from '../../modules/nf-core/metabat2/metabat2/main'
-include { MAXBIN2           } from '../../modules/nf-core/maxbin2/main'
-include { CONVERT_DEPTHS    } from '../../modules/local/mag/convert_depths'
-include { CONCOCT_SUBWF     } from './concoct-subwf'
+include { INDEX_FASTA        } from '../../modules/local/bwa_mem2/index'
+include { FEATURED_ALIGNMENT } from '../../modules/local/bwa_mem2/binning_alignment'
+include { METABAT2_METABAT2  } from '../../modules/nf-core/metabat2/metabat2/main'
+include { MAXBIN2            } from '../../modules/nf-core/maxbin2/main'
+include { CONVERT_DEPTHS     } from '../../modules/local/mag/convert_depths'
+include { CONCOCT_SUBWF      } from './concoct-subwf'
 
 workflow BINNING {
 
     take:
-    assemblies_depth_coverage  // channel: [ val(meta), path(assembly), depth, concoct_tsv, concoct_fasta ]
+    assembly_and_reads  // channel: [ val(meta), path(assembly), depth, concoct_tsv, concoct_fasta ]
 
     main:
 
@@ -18,6 +20,28 @@ workflow BINNING {
     // optional //
     metabat_output = Channel.empty()
     concoct_output = Channel.empty()
+    maxbin_output  = Channel.empty()
+
+    /*
+    * --- create index for assembly.fasta ---
+    */
+    INDEX_FASTA( assembly_and_reads.map { meta, assembly, reads -> [meta, assembly]} )
+    ch_versions = ch_versions.mix( INDEX_FASTA.out.versions )
+
+    /*
+    * ---
+    * optional args: run_jgi_depth = true
+    *                run_concoct_table_generation = true
+    *                concoct_generate_bed_file = true
+    */
+    FEATURED_ALIGNMENT(
+        assembly_and_reads.map { meta, assembly, reads -> [ meta, reads ] }.join( INDEX_FASTA.out.fasta_with_index ),
+        true,
+        true,
+        true
+    )
+    ch_versions = ch_versions.mix( FEATURED_ALIGNMENT.out.versions )
+
 
     assemblies_depth_coverage.multiMap { meta, assembly, depth, coverage, concoct_fasta ->
         assembly: [ meta, assembly ]
