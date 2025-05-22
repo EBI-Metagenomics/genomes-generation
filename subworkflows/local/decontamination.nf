@@ -1,9 +1,10 @@
 /*
-    ~~~~~~~~~~~~~~~~~~
-     Run subworkflow
-    ~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     Decontamination subworkflow
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { ALIGNMENT_DECONTAMINATION    } from '../../modules/local/align_bwa/main'
+include { ALIGNMENT_DECONTAMINATION    } from '../../modules/local/bwa_mem2/decontamination/main'
+
 
 workflow DECONTAMINATION {
     take:
@@ -14,16 +15,22 @@ workflow DECONTAMINATION {
     main:
 
     ch_versions = Channel.empty()
-
-    to_align = reads.map { meta, reads -> 
-        [ meta, reads, ref_genome, ref_genome_index ]
+    if ( params.skip_decontamination ) {
+        println('skipping decontamination')
+        decontaminated_reads = reads
+    }
+    else {
+        /*
+        * decontaminate with bwa-mem2
+        */
+        ALIGNMENT_DECONTAMINATION(
+           reads.map { meta, reads -> [ meta, reads, ref_genome, ref_genome_index ] }
+        )
+        ch_versions = ch_versions.mix(ALIGNMENT_DECONTAMINATION.out.versions.first())
+        decontaminated_reads = ALIGNMENT_DECONTAMINATION.out.reads
     }
 
-    ALIGNMENT_DECONTAMINATION( to_align )
-
-    ch_versions = ch_versions.mix(ALIGNMENT_DECONTAMINATION.out.versions.first())
-
     emit:
-    decontaminated_reads = ALIGNMENT_DECONTAMINATION.out.reads
-    versions = ch_versions                          // channel: [ versions.yml ]
+    decontaminated_reads = decontaminated_reads
+    versions             = ch_versions
 }

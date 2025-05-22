@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
   "title": ". pipeline parameters",
   "description": "",
@@ -41,7 +41,7 @@
         },
         "bins": {
           "type": "boolean",
-          "description": "Pregenerated bins provided in the sample file"
+          "description": "Pre-generated bins provided in the sample file"
         },
         "assembly_software_file": {
           "type": "string",
@@ -58,6 +58,36 @@
           "format": "directory-path",
           "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
           "fa_icon": "fas fa-folder-open"
+        }
+      }
+    },
+    "skipping_steps_options": {
+      "title": "Skip steps of pipeline",
+      "type": "object",
+      "description": "Skipping not necessary steps",
+      "default": "",
+      "properties": {
+        "skip_preprocessing_input": {
+          "type": "boolean",
+          "description": "Skip input data pre-processing step that renames ERZ-fasta files to ERR-run accessions. Do not skip that step if you process data from ENA!",
+          "default": false
+        },
+        "skip_decontamination": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip decontamination on reference genome"
+        },
+        "skip_maxbin2": {
+          "type": "boolean",
+          "description": "Skip Max Bin 2 binning"
+        },
+        "skip_metabat2": {
+          "type": "boolean",
+          "description": "Skip MetaBAT 2 binning"
+        },
+        "skip_concoct": {
+          "type": "boolean",
+          "description": "Skip CONCOCT binning"
         }
       }
     },
@@ -139,18 +169,6 @@
         "skip_prok": {
           "type": "boolean",
           "description": "Skip the prokaryotes MAGs generation subworkflow"
-        },
-        "skip_maxbin2": {
-          "type": "boolean",
-          "description": "Skip Max Bin 2 binning"
-        },
-        "skip_metabat2": {
-          "type": "boolean",
-          "description": "Skip MetaBAT 2 binning"
-        },
-        "skip_concoct": {
-          "type": "boolean",
-          "description": "Skip CONCOCT binning"
         },
         "metabat2_rng_seed": {
           "type": "integer",
@@ -317,6 +335,9 @@
   "allOf": [
     {
       "$ref": "#/definitions/input_output_options"
+    },
+    {
+      "$ref": "#/definitions/skipping_steps_options"
     },
     {
       "$ref": "#/definitions/quality_control"
