@@ -113,16 +113,25 @@ workflow GGP {
     * --- reads decontamination ----
     * skip that step with --skip_decontamination
     */
+    reference_genome         = file(params.ref_genome, checkIfExists: true)
+    reference_genome_index   = file("${reference_genome.parent}/*.fa*.*")
     DECONTAMINATION(
         QC_AND_MERGE_READS.out.reads,
-        file(params.ref_genome, checkIfExists: true),
-        file("params.ref_genome.parent/*.fa*.*")
+        reference_genome,
+        reference_genome_index
     )
     ch_versions = ch_versions.mix( DECONTAMINATION.out.versions )
 
     // --- check filtered reads quality --- //
     FASTQC (
         DECONTAMINATION.out.decontaminated_reads
+    )
+
+    /*
+    * --- binning ---
+    */
+    BINNING(
+        INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _ -> [meta, assembly] }.join(DECONTAMINATION.out.decontaminated_reads)
     )
 
     // for multiqc
