@@ -22,7 +22,7 @@ process FEATURED_ALIGNMENT {
     output:
     tuple val(meta), path("*.txt.gz")                     , emit: depth
     tuple val(meta), path("*.tsv"), path("concoct*.fasta"), emit: concoct_data
-    tuple val(meta), path("*.idxstats")                   , emit: idxstats
+    tuple val(meta), path("*.idxstats")                   , emit: idxstidxstatsats
     path "versions.yml"                                   , emit: versions
 
     script:
