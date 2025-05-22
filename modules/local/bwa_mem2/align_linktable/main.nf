@@ -14,7 +14,6 @@ process ALIGNMENT_LINKTABLE {
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(bins, stageAs: "bins/*"), path(depth)
-    val(binner)
 
     output:
     tuple val(meta), path("*.links.csv"), emit: links_table
@@ -43,18 +42,18 @@ process ALIGNMENT_LINKTABLE {
     samtools index -@ ${task.cpus} output/${meta.id}_sorted.bam
 
     echo " ---> samtools idxstats sorted bam"
-    samtools idxstats --threads ${task.cpus} output/${meta.id}_sorted.bam > ${prefix}.${binner}.idxstats
+    samtools idxstats --threads ${task.cpus} output/${meta.id}_sorted.bam > ${prefix}.idxstats
 
     echo "linktable"
     mkdir -p bins
     export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "Bins directory is empty"
-        touch ${meta.id}.${binner}.links.csv
+        touch ${meta.id}.links.csv
     else
         ggp_binlinks.py --ANI 99 \
         --within 1500 \
-        --out ${meta.id}.${binner}.links.csv \
+        --out ${meta.id}.links.csv \
         --debug \
         --bindir bins \
         --bam output/${meta.id}_sorted.bam

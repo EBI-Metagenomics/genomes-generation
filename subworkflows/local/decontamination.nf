@@ -24,7 +24,7 @@ workflow DECONTAMINATION {
         * decontaminate with bwa-mem2
         */
         ALIGNMENT_DECONTAMINATION(
-           reads.map { meta, reads -> [ meta, reads, ref_genome, ref_genome_index ] }
+           reads.map { meta, reads_item -> [ meta, reads_item, ref_genome, ref_genome_index ] }
         )
         ch_versions = ch_versions.mix(ALIGNMENT_DECONTAMINATION.out.versions.first())
         decontaminated_reads = ALIGNMENT_DECONTAMINATION.out.reads

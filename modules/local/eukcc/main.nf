@@ -62,26 +62,25 @@ if exit code is 204 - metaeuk return empty faa -> no results for eukcc
 process EUKCC {
 
     label 'process_long'
-    tag "${meta.id} ${binner}"
+    tag "${meta.id} ${bins.baseName}"
 
     container 'quay.io/microbiome-informatics/eukcc:2.1.3'
 
     input:
     tuple val(meta), path(links), path(bins)
-    val(binner)
     path eukcc_db
 
     output:
-    tuple val(meta), path("${binner}_${meta.id}_merged_bins/merged_bins"),    emit: eukcc_merged_bins
-    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                  emit: eukcc_csv
-    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),            emit: eukcc_merged_csv
+    tuple val(meta), path("${meta.id}_merged_bins/merged_bins"),    emit: eukcc_merged_bins
+    tuple val(meta), path("${meta.id}.eukcc.csv"),                  emit: eukcc_csv
+    tuple val(meta), path("${meta.id}.merged_bins.csv"),            emit: eukcc_merged_csv
     path "versions.yml",                                                      emit: versions
     path "progress.log",                                                      emit: progress_log
 
     script:
     """
-    mkdir -p bins ${binner}_${meta.id}_merged_bins
-    touch ${meta.id}_${binner}.eukcc.csv ${meta.id}_${binner}.merged_bins.csv
+    mkdir -p bins ${meta.id}_merged_bins/merged_bins
+    touch ${meta.id}.eukcc.csv ${meta.id}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -93,7 +92,7 @@ process EUKCC {
         echo "No bins in input"
         mkdir -p ${binner}_${meta.id}_merged_bins/merged_bins
         cat <<-END_LOGGING > progress.log
-        ${meta.id}\t${task.process}\t${binner}
+        ${meta.id}\t${task.process}\t${bins.baseName}
             bins: 0, merged: 0
     END_LOGGING
     else
@@ -108,15 +107,15 @@ process EUKCC {
             --min_links 100 \
             --suffix .fa \
             --db ${eukcc_db} \
-            --out ${binner}_${meta.id}_merged_bins \
-            --prefix "${meta.id}_${binner}_merged." \
+            --out ${meta.id}_merged_bins \
+            --prefix "${meta.id}_merged." \
             bins
         EUKCC_EXITCODE="\$?"
 
         if [ "\$EUKCC_EXITCODE" == "0" ]; then
             echo "EukCC finished"
-            mv ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-            mv ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+            mv ${meta.id}_merged_bins/eukcc.csv ${meta.id}.eukcc.csv
+            mv ${meta.id}_merged_bins/merged_bins.csv ${meta.id}.merged_bins.csv
         fi
 
         if [ "\$EUKCC_EXITCODE" == "204" ]; then
@@ -129,8 +128,8 @@ process EUKCC {
 
         if [ "\$EUKCC_EXITCODE" == "0" ] || [ "\$EUKCC_EXITCODE" == "204" ]; then
             cat <<-END_LOGGING > progress.log
-            ${meta.id}\t${task.process}\t${binner}
-                bins: \$(ls bins | wc -l), merged: \$(ls ${binner}_${meta.id}_merged_bins/merged_bins | wc -l)
+            ${meta.id}\t${task.process}\t${bins.baseName}
+                bins: \$(ls bins | wc -l), merged: \$(ls ${meta.id}_merged_bins/merged_bins | wc -l)
     END_LOGGING
             exit 0
         else:
