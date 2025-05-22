@@ -16,20 +16,32 @@ include { CONCOCT_SUBWF               } from './concoct-subwf'
 workflow BINNING {
 
     take:
-    assembly_and_reads  // channel: [ val(meta), path(assembly), [reads] ]
+    run_concoct  // channel: [ val(meta), path(assembly), [reads]]
+    run_metabat
+    run_maxbin
 
     main:
 
     ch_versions = Channel.empty()
-    // optional //
-    metabat_output = Channel.empty()
-    concoct_output = Channel.empty()
-    maxbin_output  = Channel.empty()
+
+    // filter nulls
+    input_concoct_bins = run_concoct.filter { it != null }
+    input_maxbin_bins = run_maxbin.filter { it != null }
+    input_metabat_bins = run_metabat.filter { it != null }
+
+    // Create a unified channel of all samples that need binning
+    // This ensures each unique sample is only processed once for common steps
+    all_binning_samples = input_concoct_bins
+        .mix(input_maxbin_bins)
+        .mix(input_metabat_bins)
+        .unique { meta, _assembly, _reads -> meta.id } // Remove duplicates based on sample ID
 
     /*
-    * --- create index for assembly.fasta ---
+    // Run common pre-binning steps for all samples that require any binning
     */
-    INDEX_FASTA( assembly_and_reads.map { meta, assembly, reads -> [meta, assembly]} )
+    INDEX_FASTA(
+        all_binning_samples.map { meta, assembly, _reads -> [meta, assembly] }
+    )
     ch_versions = ch_versions.mix( INDEX_FASTA.out.versions )
 
     /*
@@ -42,7 +54,7 @@ workflow BINNING {
     *         idxstats for multiqc
     */
     FEATURED_ALIGNMENT(
-        assembly_and_reads.map { meta, assembly, reads -> [ meta, reads ] }.join( INDEX_FASTA.out.fasta_with_index ),
+        all_binning_samples.map { meta, _assembly, reads -> [meta, reads] }.join( INDEX_FASTA.out.fasta_with_index ),
         true,
         true,
         true
@@ -53,16 +65,44 @@ workflow BINNING {
     * --- uncompress assembly fasta ---
     */
     GUNZIP_ASSEMBLY(
-        assembly_and_reads.map { meta, assembly, _ -> [ meta, assembly ] }
+        all_binning_samples.map { meta, assembly, _reads -> [meta, assembly] }
     )
 
     /*
-    * --- binning with MAXBIN2 ---
+    * --- binning with CONCOCT ---
+    * CONCOCT -> merge clusters -> extract fasta bins
+    * input: [ val(meta), concoct_tsv, concoct_fasta, assembly_fasta ]
     */
-    if ( !params.skip_maxbin2 ) {
+    CONCOCT_SUBWF(
+       FEATURED_ALIGNMENT.out.concoct_data
+        .join(GUNZIP_ASSEMBLY.out.uncompressed)
+        .join(input_concoct_bins)
+        .map{ meta, tsv, concoct_fasta, uncompressed_assembly, _assembly, _reads -> [meta, tsv, concoct_fasta, uncompressed_assembly]}
+    )
+    ch_versions = ch_versions.mix( CONCOCT_SUBWF.out.versions )
+
+    concoct_output = CONCOCT_SUBWF.out.bins
+
+    /*
+    * --- binning with METABAT2 ---
+    */
+    METABAT2_METABAT2 (
+        input_metabat_bins.map { meta, assembly, _reads -> [meta, assembly] }.join(FEATURED_ALIGNMENT.out.depth)
+    )
+    ch_versions = ch_versions.mix( METABAT2_METABAT2.out.versions )
+
+    metabat_output = METABAT2_METABAT2.out.fasta
+
+    /* 
+    * --- binning with MAXBIN2 ---
+    * only used for prokaryotic MAGs
+    */
+    maxbin_output  = Channel.empty()
+
+    if ( !params.skip_prok ) {
         // convert metabat2 depth files to maxbin2
         CONVERT_DEPTHS (
-            assembly_and_reads.map { meta, assembly, _ -> [ meta, assembly ] }.join(FEATURED_ALIGNMENT.out.depth)
+            input_maxbin_bins.map { meta, assembly, _reads -> [meta, assembly] }.join(FEATURED_ALIGNMENT.out.depth)
         )
         ch_versions = ch_versions.mix( CONVERT_DEPTHS.out.versions )
 
@@ -77,39 +117,11 @@ workflow BINNING {
 
         maxbin_output = MAXBIN2.out.binned_fastas
     }
-
-    /*
-    * --- binning with METABAT2 ---
-    */
-    if ( !params.skip_metabat2 ) {
-
-        METABAT2_METABAT2 (
-            assembly_and_reads.map { meta, assembly, _ -> [ meta, assembly ] }.join(FEATURED_ALIGNMENT.out.depth)
-        )
-        ch_versions = ch_versions.mix( METABAT2_METABAT2.out.versions )
-
-        metabat_output = METABAT2_METABAT2.out.fasta
-    }
-
-    /*
-    * --- binning with CONCOCT ---
-    */
-    if ( !params.skip_concoct ) {
-        /*
-        * CONCOCT -> merge clusters -> extract fasta bins
-        * input: [ val(meta), concoct_tsv, concoct_fasta, assembly_fasta ]
-        */
-        CONCOCT_SUBWF(
-           FEATURED_ALIGNMENT.out.concoct_data.join(assembly_and_reads.map { meta, assembly, _ -> [ meta, assembly ] })
-        )
-        ch_versions = ch_versions.mix( CONCOCT_SUBWF.out.versions )
-
-        concoct_output = CONCOCT_SUBWF.out.bins
-    }
-
+    
     emit:
     maxbin_bins      = maxbin_output
     concoct_bins     = concoct_output
     metabat_bins     = metabat_output
+    jgi_depth        = FEATURED_ALIGNMENT.out.depth
     versions         = ch_versions
 }

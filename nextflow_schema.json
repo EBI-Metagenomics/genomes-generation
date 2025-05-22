@@ -39,7 +39,7 @@
           "help_text": "You will need to create a design file with information about the assemblies, raw reads running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row.",
           "fa_icon": "fas fa-file-csv"
         },
-        "bins": {
+        "bins_provided": {
           "type": "boolean",
           "description": "Pre-generated bins provided in the sample file"
         },
@@ -76,18 +76,6 @@
           "type": "boolean",
           "default": false,
           "description": "Skip decontamination on reference genome"
-        },
-        "skip_maxbin2": {
-          "type": "boolean",
-          "description": "Skip Max Bin 2 binning"
-        },
-        "skip_metabat2": {
-          "type": "boolean",
-          "description": "Skip MetaBAT 2 binning"
-        },
-        "skip_concoct": {
-          "type": "boolean",
-          "description": "Skip CONCOCT binning"
         }
       }
     },
@@ -216,6 +204,12 @@
         "version": {
           "type": "boolean",
           "description": "Display version and exit.",
+          "fa_icon": "fas fa-question-circle",
+          "hidden": true
+        },
+        "monochrome_logs": {
+          "type": "boolean",
+          "description": "Display monochrome logs.",
           "fa_icon": "fas fa-question-circle",
           "hidden": true
         },

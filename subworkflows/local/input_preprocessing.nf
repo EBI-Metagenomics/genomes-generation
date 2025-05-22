@@ -16,8 +16,8 @@ workflow INPUT_PREPROCESSING {
 
     ch_versions = Channel.empty()
 
-    reads = input_data.map { meta, _, runs -> [meta, runs] }
-    contigs = input_data.map { meta, assembly, _ -> [meta, assembly] }
+    reads = input_data.map { meta, assembly, reads -> [meta, reads] }
+    contigs = input_data.map { meta, assembly, reads_item -> [meta, assembly] }
 
     //
     // --- check input reads quality ---
@@ -58,12 +58,12 @@ workflow INPUT_PREPROCESSING {
 
         // this process returns list of reads if they are PE and path for SE
         // it is required for next step FASTP that SE reads should be also in list
-        reads_changed = ERR_TO_ERZ.out.modified_reads.map{ meta, reads ->
+        reads_changed = ERR_TO_ERZ.out.modified_reads.map{ meta, reads_item ->
                                                                 result = [meta]
                                                                 if (!meta.single_end) {
-                                                                    result.add(reads) }
+                                                                    result.add(reads_item) }
                                                                 else {
-                                                                    result.add([reads]) }
+                                                                    result.add([reads_item]) }
                                                                 return result
                                                               }
 

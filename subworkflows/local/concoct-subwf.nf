@@ -1,6 +1,6 @@
-include { CONCOCT_CONCOCT              } from '../../modules/nf-core/concoct/concoct/main.nf'
-include { CONCOCT_MERGECUTUPCLUSTERING } from '../../modules/nf-core/concoct/mergecutupclustering/main.nf'
-include { CONCOCT_EXTRACTFASTABINS     } from '../../modules/nf-core/concoct/extractfastabins/main.nf'
+include { CONCOCT_CONCOCT              } from '../../modules/nf-core/concoct/concoct'
+include { CONCOCT_MERGECUTUPCLUSTERING } from '../../modules/nf-core/concoct/mergecutupclustering'
+include { CONCOCT_EXTRACTFASTABINS     } from '../../modules/nf-core/concoct/extractfastabins'
 
 workflow CONCOCT_SUBWF {
 

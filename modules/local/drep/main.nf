@@ -16,7 +16,7 @@ process DREP {
             mode: params.publish_dir_mode,
             failOnError: true,
             pattern: "dereplicated_genomes.txt",
-            when: { ${meta.id} == "aggregated" },
+            when: { "${meta.id}" == "aggregated" },
     )
 
     input:
