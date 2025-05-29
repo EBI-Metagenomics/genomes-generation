@@ -8,7 +8,7 @@ function FilterRuns {
   --mem=5G \
   --mail-user=$USER@ebi.ac.uk \
   --mail-type=ALL \
-  --wrap="bash ${REPO_PATH}/scripts/run_filter_script.sh -a $ASSEMBLY_STUDY_ACC -r $READS_STUDY_ACC -c $CATALOGUE_PATH -b ${SCIENTIFIC_NAME} -f ${FILTER_METAT}" | awk '{print $NF}')
+  --wrap="bash ${REPO_PATH}/scripts/run_filter_script.sh -a $ASSEMBLY_STUDY_ACC -r $READS_STUDY_ACC -c $CATALOGUE_PATH -b '${SCIENTIFIC_NAME}' -f ${FILTER_METAT}" | awk '{print $NF}')
   echo "Submitted FilterRuns $filter_job_id"
 }
 
@@ -51,7 +51,7 @@ export ASSEMBLY_STUDY_ACC=""
 export READS_STUDY_ACC=""
 export CATALOGUE_PATH_INPUT=""
 export SCIENTIFIC_NAME=""
-export FILTER_METAT="true"
+export FILTER_METAT=""
 export SKIP_FETCH="false" # By default fetch step included
 export SCRIPT_PATH="$(readlink -f $0)"
 export REPO_PATH="$(dirname $SCRIPT_PATH)"

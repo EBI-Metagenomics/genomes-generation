@@ -39,7 +39,7 @@ fi
 
 echo "Generate assemblies and runs filtered list"
 
-echo python3 ${REPO_PATH}/filter_runs.py "${args[@]}"
+python3 ${REPO_PATH}/filter_runs.py "${args[@]}"
 
 cut -f1 "${CATALOGUE_PATH_INPUT}/runs_assemblies.tsv" > ${CATALOGUE_PATH_INPUT}/runs.tsv
 cut -f2 "${CATALOGUE_PATH_INPUT}/runs_assemblies.tsv" > ${CATALOGUE_PATH_INPUT}/assemblies.tsv

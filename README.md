@@ -66,15 +66,21 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 
 ## Data download
 
-If you use EBI cluster:
+If you use ENA data:
 1) Get your Raw reads and Assembly study accessions;
-2) Download data from ENA, get assembly and run_accessions and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet:
+2) Download data: get assemblies and runs from ENA and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet.csv and software.tsv; 
+
+Additional filters:
+- filter out METATRANSCRIPTOMIC runs specify `-t` (GGP currently does not support metaT)
+- filter by scientific_name use `-b SCIENTIFIC_NAME` (like in ENA records)
 ```commandline
 bash download_data/fetch_data.sh \
     -a assembly_study_accession \
     -r reads_study_accession \
     -c `pwd`/assembly_study_accession \
-    -f "false"
+    -f "false" \
+    -b "marine sediment metagenome" \
+    -t 
 ```
 Otherwise, download your data and keep format as recommended in Sample sheet example section below.
 
