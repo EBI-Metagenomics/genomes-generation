@@ -68,7 +68,7 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 
 If you use EBI cluster:
 1) Get your Raw reads and Assembly study accessions;
-2) Download data from ENA, [get assembly and run_accessions](download_data/scripts/rename-erz.py) and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet:
+2) Download data from ENA, get assembly and run_accessions and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet:
 ```commandline
 bash download_data/fetch_data.sh \
     -a assembly_study_accession \
