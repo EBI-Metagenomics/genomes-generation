@@ -8,6 +8,8 @@ import sys
 import requests
 import xmltodict
 import json
+import time
+
 
 from ena_portal_api.ena_handler import EnaApiHandler
 handler = EnaApiHandler()
@@ -55,12 +57,10 @@ def get_err_erz(erz_list, outfile_software):
             handler_request = handler.get_assembly(erz_acc)
             run_acc = handler_request["submitted_ftp"].strip().split('/')[-1].split('.')[0].split('_')[0]
             assembly_software = handler_request["assembly_software"]
-            print(assembly_software)
             if not assembly_software:
                 json_analysis = load_xml(erz_acc)
                 assembly_software = json_analysis["ANALYSIS_SET"]["ANALYSIS"]["ANALYSIS_TYPE"]["SEQUENCE_ASSEMBLY"]["PROGRAM"]
                 assembly_software = assembly_software.replace(" ", "_" if "v" in assembly_software else "_v")
-                print(assembly_software)
             if not run_acc.startswith(('ERR', 'DRR', 'SRR')):
                 print('Invalid run name {} for assembly {}'.format(run_acc, erz_acc))
                 sys.exit(1)
