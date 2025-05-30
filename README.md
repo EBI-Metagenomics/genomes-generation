@@ -66,23 +66,25 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 
 ## Data download
 
+**! By default GGP filters out AMPLICON runs and metaT runs.**
+
 If you use ENA data:
 1) Get your Raw reads and Assembly study accessions;
 2) Download data: get assemblies and runs from ENA and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet.csv and software.tsv; 
 
 Additional filters:
-- filter out METATRANSCRIPTOMIC runs specify `-t` (GGP currently does not support metaT)
-- filter by scientific_name use `-b SCIENTIFIC_NAME` (like in ENA records)
+- filter by scientific_name use `-b SCIENTIFIC_NAME` (like in ENA records) comma separated list
+- allow METATRANSCRIPTOMIC runs with `-t` (use that argument if you are sure that ENA mislabeled library_source)
 ```commandline
 bash download_data/fetch_data.sh \
     -a assembly_study_accession \
     -r reads_study_accession \
     -c `pwd`/assembly_study_accession \
     -f "false" \
-    -b "marine sediment metagenome" \
-    -t 
+    [-b "marine sediment metagenome,sediment metagenome"] \
+    [-t "true"]
 ```
-Otherwise, download your data and keep format as recommended in Sample sheet example section below.
+Otherwise, download your data and keep format as recommended in Samplesheet example section below.
 
 ## Run
 
@@ -109,7 +111,7 @@ nextflow run ebi-metagenomics/genomes-generation \
 
 ## Pipeline input data
 
-### Sample sheet example
+### Samplesheet example
 
 Each row corresponds to a specific dataset with information such as an identifier for the row, the file path to the assembly, and paths to the raw reads files (fastq_1 and fastq_2). Additionally, the assembly_accession column contains ERZ-specific accessions associated with the assembly. 
 

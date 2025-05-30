@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export SCIENTIFIC_NAME=""
-export FILTER_METAT=""
+export ALLOW_METAT=""
 
 while getopts 'a:r:c:b:f:' flag; do
     case "${flag}" in
@@ -9,7 +9,7 @@ while getopts 'a:r:c:b:f:' flag; do
         r) RAW_READS_STUDY_ACC="$OPTARG" ;;
         c) CATALOGUE_PATH_INPUT="$OPTARG" ;;
         b) SCIENTIFIC_NAME="$OPTARG" ;;
-        f) FILTER_METAT="$OPTARG" ;;
+        f) ALLOW_METAT="$OPTARG" ;;
         *) echo "Invalid option"; exit 1 ;;
     esac
 done
@@ -32,9 +32,9 @@ if [ -n "$SCIENTIFIC_NAME" ]; then
   args+=(--scientific-name "$SCIENTIFIC_NAME")
 fi
 
-if [ -n "$FILTER_METAT" ]; then
-  echo "Filtering is on"
-  args+=(--filter-out-metat)
+if [ -n "$ALLOW_METAT" ]; then
+  echo "Keeping metaT is on"
+  args+=(--keep-metat)
 fi
 
 echo "Generate assemblies and runs filtered list"

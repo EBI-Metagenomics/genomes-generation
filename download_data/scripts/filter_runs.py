@@ -17,25 +17,35 @@ def parse_args():
                         help='Raw reads study accession')
     parser.add_argument('-o', '--outdir', required=False, default='outdir',
                         help='Output directory')
-    parser.add_argument('--filter-out-metat', action='store_true')
-    parser.add_argument('--scientific-name', required=False,
-                        help='Only runs with specified scientific_name would be included')
+    parser.add_argument('--keep-metat', action='store_true')
+    parser.add_argument('--scientific-name', required=False, nargs="+",
+                        help='Only runs with specified scientific_name(s) would be included')
     return parser.parse_args()
 
 
 def main(args):
+    allowed_library_source = ['METAGENOMIC']
+    scientific_name = []
+    # if argument came from bash script it is interpreted as list of one item
+    if ',' in args.scientific_name[0]:
+        scientific_name = args.scientific_name[0].split(',')
+        scientific_name = [s.strip() for s in scientific_name]
+    # if argument was used directly in script it is correct list of items
+    elif args.scientific_name:
+        scientific_name = args.scientific_name
     raw_reads_study = args.raw_reads_study
     runs = handler.get_study_runs(raw_reads_study, fields='scientific_name,library_source,library_strategy')
     list_runs = []
     for run in runs:
         if run['library_strategy'] == 'AMPLICON':
             continue
-        if args.scientific_name:
-            if run['scientific_name'] != args.scientific_name:
+        if scientific_name:
+            if run['scientific_name'] not in scientific_name:
                 continue
-        if args.filter_out_metat:
-            if run['library_source'] != 'METAGENOMIC':
-                continue
+        if args.keep_metat:
+            allowed_library_source.append('METATRANSCRIPTOMIC')
+        if run['library_source'] not in allowed_library_source:
+            continue
         list_runs.append(run['run_accession'])
 
     assembly_study = args.assembly_study
