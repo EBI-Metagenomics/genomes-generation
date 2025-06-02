@@ -3,7 +3,6 @@
  */
 include { INDEX_FASTA                 } from '../../modules/local/bwa_mem2/index'
 include { FEATURED_ALIGNMENT          } from '../../modules/local/bwa_mem2/binning_alignment'
-include { GUNZIP as GUNZIP_ASSEMBLY   } from '../../modules/local/utils'
 include { METABAT2_METABAT2           } from '../../modules/nf-core/metabat2/metabat2/main'
 include { MAXBIN2                     } from '../../modules/nf-core/maxbin2/main'
 include { CONVERT_DEPTHS              } from '../../modules/local/mag/convert_depths'
@@ -19,6 +18,7 @@ workflow BINNING {
     run_concoct  // channel: [ val(meta), path(assembly), [reads]]
     run_metabat
     run_maxbin
+    run_depth
 
     main:
 
@@ -28,12 +28,14 @@ workflow BINNING {
     input_concoct_bins = run_concoct.filter { it != null }
     input_maxbin_bins = run_maxbin.filter { it != null }
     input_metabat_bins = run_metabat.filter { it != null }
+    input_depth = run_depth.filter { it != null }
 
     // Create a unified channel of all samples that need binning
     // This ensures each unique sample is only processed once for common steps
     all_binning_samples = input_concoct_bins
         .mix(input_maxbin_bins)
         .mix(input_metabat_bins)
+        .mix(input_depth)
         .unique { meta, _assembly, _reads -> meta.id } // Remove duplicates based on sample ID
 
     /*
@@ -62,20 +64,13 @@ workflow BINNING {
     ch_versions = ch_versions.mix( FEATURED_ALIGNMENT.out.versions )
 
     /*
-    * --- uncompress assembly fasta ---
-    */
-    GUNZIP_ASSEMBLY(
-        all_binning_samples.map { meta, assembly, _reads -> [meta, assembly] }
-    )
-
-    /*
     * --- binning with CONCOCT ---
     * CONCOCT -> merge clusters -> extract fasta bins
     * input: [ val(meta), concoct_tsv, concoct_fasta, assembly_fasta ]
     */
     CONCOCT_SUBWF(
        FEATURED_ALIGNMENT.out.concoct_data
-        .join(GUNZIP_ASSEMBLY.out.uncompressed)
+        .join(all_binning_samples.map { meta, assembly, _reads -> [meta, assembly] })
         .join(input_concoct_bins)
         .map{ meta, tsv, concoct_fasta, uncompressed_assembly, _assembly, _reads -> [meta, tsv, concoct_fasta, uncompressed_assembly]}
     )

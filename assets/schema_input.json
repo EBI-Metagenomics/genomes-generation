@@ -37,30 +37,20 @@
               "default": null,
               "description": "Folder of pre-generated concoct bins"
             },
-            "concoct_depth": {
-              "type": "string",
-              "default": null,
-              "description": "coverage depth for concoct generated bins"
-            },
             "metabat_bins": {
               "type": "string",
               "default": null,
               "description": "Folder of pre-generated metabat bins"
-            },
-            "metabat_depth": {
-              "type": "string",
-              "default": null,
-              "description": "coverage depth for metabat generated bins"
             },
             "maxbins_bins": {
               "type": "string",
               "default": null,
               "description": "Folder of pre-generated metabat bins"
             },
-            "maxbins_depth": {
+            "jgi_depth": {
               "type": "string",
               "default": null,
-              "description": "coverage depth for maxbins generated bins"
+              "description": "coverage depth calculated with jgi tool"
             }
         },
         "required": ["id", "assembly", "fastq_1", "assembly_accession"]
