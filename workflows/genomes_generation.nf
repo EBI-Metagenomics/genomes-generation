@@ -335,72 +335,18 @@ workflow GGP {
 }
 
 -------
-    /*
-    * --- pre-processing input files ---
-    * skip that step with --skip_preprocessing_input
-    * change ERR to ERZ in reads
-    * change . to _ in assembly files
-    */
-    INPUT_PREPROCESSING(
-        input.assembly_and_runs
-    )
-    ch_versions = ch_versions.mix(INPUT_PREPROCESSING.out.versions)
 
-    /*
-    * --- trimming reads ----
-    * merge step is regulated with --merge_pairs (default: false)
-    */
-    QC_AND_MERGE_READS(
-        INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, _1, reads -> [meta, reads] }
-    )
-    ch_versions = ch_versions.mix( QC_AND_MERGE_READS.out.versions )
-
-    /*
-    * --- reads decontamination ----
-    * skip that step with --skip_decontamination
-    */
-    reference_genome         = file(params.ref_genome, checkIfExists: true)
-    reference_genome_index   = file("${reference_genome.parent}/*.fa*.*")
-    DECONTAMINATION(
-        QC_AND_MERGE_READS.out.reads,
-        reference_genome,
-        reference_genome_index
-    )
-    ch_versions = ch_versions.mix( DECONTAMINATION.out.versions )
-
-    // --- check filtered reads quality --- //
-    FASTQC (
-        DECONTAMINATION.out.decontaminated_reads
-    )
-    ch_versions = ch_versions.mix( FASTQC.out.versions )
 
     processed_assemblies_and_reads = INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
         .join(DECONTAMINATION.out.decontaminated_reads)
 
-    /*
-    * --- binning ---
-    */
+
     BINNING(
         processed_assemblies_and_reads
     )
-    ch_versions = ch_versions.mix( BINNING.out.versions )
+    
 
-    /*
-    * --- MAGs generation ---
-    */ 
-    if ( !params.skip_euk ) {
-        EUK_MAGS_GENERATION(
-            processed_assemblies_and_reads,
-            BINNING.out.concoct_bins,
-            BINNING.out.metabat_bins,
-            BINNING.out.jgi_depth,
-        )
-        ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
-    }
+    
 
 
-    // for multiqc
-    // binning samtools for multiqc
-    // TODO return fastqc from INPUT_PREPROCESSING
-    // TODO return fastqc result after decontamination
-    // TODO return ALIGN samtools stats
+ 

@@ -26,7 +26,7 @@ include { GUNZIP as GUNZIP_ASSEMBLY   } from '../modules/local/utils'
 include { BINNING              } from '../subworkflows/local/binning'
 include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
 //include { EUKCC_MERGE          } from '../subworkflows/local/eukcc_merge'
-include { EUK_MAGS_GENERATION  } from '../subworkflows/local/eukaryotic_mags_generation'
+include { EUK_MAGS_GENERATION  } from './eukaryotic_mags_generation'
 include { INPUT_PREPROCESSING  } from '../subworkflows/local/input_preprocessing'
 //include { PREPARE_UPLOAD_FILES } from '../subworkflows/local/prepare_upload'
 //include { PROK_MAGS_GENERATION } from '../subworkflows/local/prok_mags_generation'
@@ -77,55 +77,143 @@ workflow GGP {
     /*
     * ---- combine data for reads, contigs and bins ----
     */
-    samplesheet.multiMap{ meta, assembly, fq1, fq2, concoctf, concoctd, metabatf, metabatd, maxbinf, maxbind ->
+    samplesheet.multiMap{ meta, assembly, fq1, fq2, concoct, metabat, maxbin, depth ->
         def is_single_end = (fq2 == [])
         def reads = is_single_end ? [fq1] : [fq1, fq2]
         assembly_and_reads : tuple(meta + [single_end: is_single_end], assembly, reads)
-        concoct: concoctf && concoctd ? tuple(meta + [single_end: is_single_end], concoctf, concoctd) : null
-        metabat: metabatf && metabatd ? tuple(meta + [single_end: is_single_end], metabatf, metabatd) : null
-        maxbin: maxbinf && maxbind ? tuple(meta + [single_end: is_single_end], maxbinf, maxbind) : null
+        concoct: concoct ? tuple(meta + [single_end: is_single_end], concoct) : null
+        metabat: metabat ? tuple(meta + [single_end: is_single_end], metabat) : null
+        maxbin: maxbin ? tuple(meta + [single_end: is_single_end], maxbin) : null
+        jgi_depth: depth ? tuple(meta + [single_end: is_single_end], depth) : null
     }.set {
         input
     }
     concoct_sample_ids = input.concoct.filter { it != null }
-        .map { meta, f, d -> meta.id }
+        .map { meta, f -> meta.id }
         .collect()
         .ifEmpty([])
     metabat_sample_ids = input.metabat.filter { it != null }
-        .map { meta, f, d -> meta.id }
+        .map { meta, f -> meta.id }
         .collect()
         .ifEmpty([])
     maxbin_sample_ids = input.maxbin.filter { it != null }
-        .map { meta, f, d -> meta.id }
+        .map { meta, f -> meta.id }
+        .collect()
+        .ifEmpty([])
+    depth_sample_ids = input.jgi_depth.filter { it != null }
+        .map { meta, d -> meta.id }
         .collect()
         .ifEmpty([])
 
-    tool_availability = input.assembly_and_reads
+    // -------------------- WORKFLOW --------------------
+    /*
+    * --- pre-processing input files ---
+    * skip that step with --skip_preprocessing_input
+    * change ERR to ERZ in reads
+    * change . to _ in assembly files
+    */
+    INPUT_PREPROCESSING(
+        input.assembly_and_reads
+    )
+    ch_versions = ch_versions.mix(INPUT_PREPROCESSING.out.versions)
+
+    /*
+    * --- trimming reads ----
+    * merge step is regulated with --merge_pairs (default: false)
+    */
+    QC_AND_MERGE_READS(
+        INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, _1, reads -> [meta, reads] }
+    )
+    ch_versions = ch_versions.mix( QC_AND_MERGE_READS.out.versions )
+
+    /*
+    * --- reads decontamination ----
+    * skip that step with --skip_decontamination
+    */
+    reference_genome         = file(params.ref_genome, checkIfExists: true)
+    reference_genome_index   = file("${reference_genome.parent}/*.fa*.*")
+    DECONTAMINATION(
+        QC_AND_MERGE_READS.out.reads,
+        reference_genome,
+        reference_genome_index
+    )
+    ch_versions = ch_versions.mix( DECONTAMINATION.out.versions )
+
+    // --- check filtered reads quality --- //
+    FASTQC (
+        DECONTAMINATION.out.decontaminated_reads
+    )
+    ch_versions = ch_versions.mix( FASTQC.out.versions )
+
+    // --- make data strucrute for binning
+    tool_availability = INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
+        .join(DECONTAMINATION.out.decontaminated_reads)
         .combine(concoct_sample_ids.map { [it] })
         .combine(metabat_sample_ids.map { [it] })
         .combine(maxbin_sample_ids.map { [it] })
-        .map { meta, assembly, reads, concoct_list, metabat_list, maxbin_list ->
-            def tools_to_run = []
-            if (concoct_list.contains(meta.id)) tools_to_run.add('concoct')
-            if (metabat_list.contains(meta.id)) tools_to_run.add('metabat')
-            if (maxbin_list.contains(meta.id)) tools_to_run.add('maxbin')
-            return [meta, assembly, reads, tools_to_run]
+        .combine(depth_sample_ids.map { [it] })
+        .map { meta, assembly, reads, concoct_list, metabat_list, maxbin_list, depth_list ->
+            def tools_presented = []
+            if (concoct_list.contains(meta.id)) tools_presented.add('concoct')
+            if (metabat_list.contains(meta.id)) tools_presented.add('metabat')
+            if (maxbin_list.contains(meta.id)) tools_presented.add('maxbin')
+            if (depth_list.contains(meta.id)) tools_presented.add('depth')
+            return [meta, assembly, reads, tools_presented]
         }
 
     tool_availability
         .multiMap { meta, assembly, reads, tools ->
             run_concoct: !tools.contains('concoct') ? [meta, assembly, reads] : null
+            include_concoct: tools.contains('concoct') ? [meta, assembly, reads] : null
             run_metabat: !tools.contains('metabat') ? [meta, assembly, reads] : null  
+            include_metabat: tools.contains('metabat') ? [meta, assembly, reads] : null  
             run_maxbin: !tools.contains('maxbin') ? [meta, assembly, reads] : null
+            include_maxbin: tools.contains('maxbin') ? [meta, assembly, reads] : null
+            run_depth: !tools.contains('depth') ? [meta, assembly, reads] : null
         }
         .set { branched_for_tools }
-
     //branched_for_tools.run_maxbin.filter { it != null }
 
+    /*
+    * --- binning ---
+    */
     BINNING(
         branched_for_tools.run_concoct,
         branched_for_tools.run_metabat,
         branched_for_tools.run_maxbin,
+        branched_for_tools.run_depth,
     )
+    ch_versions = ch_versions.mix( BINNING.out.versions )
+
+
+    existing_concoct = branched_for_tools.include_concoct.join(input.concoct).filter { it != null }.map{meta, assembly, reads, bins -> [meta, bins]}
+    existing_maxbin = branched_for_tools.include_maxbin.join(input.maxbin).filter { it != null }.map{meta, assembly, reads, bins -> [meta, bins]}
+    existing_metabat = branched_for_tools.include_metabat.join(input.metabat).filter { it != null }.map{meta, assembly, reads, bins -> [meta, bins]}
+    concoct_bins = existing_concoct.mix(BINNING.out.concoct_bins)
+    maxbin_bins = existing_maxbin.mix(BINNING.out.maxbin_bins)
+    metabat_bins = existing_metabat.mix(BINNING.out.metabat_bins)
+    concoct_bins.view()
+    maxbin_bins.view()
+    metabat_bins.view()
+
+
+    /*
+    * --- MAGs generation ---
+    */ 
+    //if ( !params.skip_euk ) {
+    //    EUK_MAGS_GENERATION(
+    //        INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
+    //        .join(DECONTAMINATION.out.decontaminated_reads)
+    //       .join(concoct_bins)
+    //        .join(metabat_bins)
+    //        .join(DEPTH),
+    //    )
+    //    ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
+    //}
+    // for multiqc
+    // binning samtools for multiqc
+    // TODO return fastqc from INPUT_PREPROCESSING
+    // TODO return fastqc result after decontamination
+    // TODO return ALIGN samtools stats
 
 }

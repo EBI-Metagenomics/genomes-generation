@@ -3,8 +3,8 @@
     SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { EUKCC_MERGE as EUKCC_MERGE_CONCOCT          } from './eukcc_merge'
-include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from './eukcc_merge'
+include { EUKCC_MERGE as EUKCC_MERGE_CONCOCT          } from '../subworkflows/local/eukcc_merge'
+include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from '../subworkflows/local/eukcc_merge'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~
