@@ -64,30 +64,50 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 - [Rfam](https://ftp.ebi.ac.uk/pub/databases/metagenomics/genomes-pipeline/rfam_14.9/rfams_cms/)
 - The reference genome of your choice for decontamination. Example, human genome [hg38](https://ftp.ebi.ac.uk/pub/databases/metagenomics/pipeline-5.0/ref-dbs/hg38/)
 
-## Data download
+## Pipeline inputs
 
-If you use EBI cluster:
-1) Get your Raw reads and Assembly study accessions;
-2) Download data from ENA, [get assembly and run_accessions](download_data/scripts/rename-erz.py) and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet:
-```commandline
-bash download_data/fetch_data.sh \
-    -a assembly_study_accession \
-    -r reads_study_accession \
-    -c `pwd`/assembly_study_accession \
-    -f "false"
-```
-Otherwise, download your data and keep format as recommended in Sample sheet example section below.
+If you will use ENA data follow [instructions](input_generation/README.md). Otherwise, download your data and keep format as recommended in inputs description below.
 
-## Run
+
+### samplesheet.csv
+
+Each row corresponds to a specific dataset with information such as an `identifier` for the row, the file path to the assembly (`assembly`), and paths to the raw reads files (`fastq_1` and `fastq_2`). Additionally, the `assembly_accession` column contains associated assembly accessions. 
+
+| id         | assembly                  | fastq_1                             | fastq_2                             | assembly_accession |
+|------------|---------------------------|-------------------------------------|-------------------------------------|--------------------|
+| SRR1631112 | /path/to/ERZ1031893.fasta | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
+
+There is an example [here](assets/samplesheet_example.csv).
+
+### assembly_software.tsv
+
+`ID`: **run** accession \
+`Assembly_software`: tool that was used to assemble run into assembly.
+
+| id         | assembly_software  |
+|------------|--------------------|
+| SRR1631112 | Assembler_vVersion |
+
+### Metagenome
+Manually choose the most appropriate metagenome from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree. \
+For example, `marine metagenome`
+
+### Environment information
+Comma-separated environment parameters in format: 
+`"environment_biome,environment_feature,environment_material"` \
+For example, `marine sediments,subtropical gyre,sinking marine particle`
+
+
+## Run pipeline
 
 ```bash
 nextflow run ebi-metagenomics/genomes-generation \
--profile <complete_with_profile> \
---input samplesheet.csv \
---assembly_software_file software.tsv \
---metagenome "metagenome" \
---biomes "biome,feature,material" \
---outdir <FULL_PATH_TO_OUTDIR>
+-profile `specify profile(s)` \
+--input `samplesheet.csv` \
+--assembly_software_file `software.tsv` \
+--metagenome "chosen metagenome" \
+--biomes "chosen biome,chosen feature,chosen material" \
+--outdir `full path to output directory`
 ```
 
 ### Optional arguments
@@ -101,46 +121,14 @@ nextflow run ebi-metagenomics/genomes-generation \
 - `--skip_metabat2 (default=false)`: skip METABAT2 binner in binning process
 - `--merge_pairs (default=false)`: merge paired-end reads on QC step with fastp 
 
-## Pipeline input data
 
-### Sample sheet example
-
-Each row corresponds to a specific dataset with information such as an identifier for the row, the file path to the assembly, and paths to the raw reads files (fastq_1 and fastq_2). Additionally, the assembly_accession column contains ERZ-specific accessions associated with the assembly. 
-
-| id         | assembly                  | fastq_1                             | fastq_2                             | assembly_accession |
-|------------|---------------------------|-------------------------------------|-------------------------------------|--------------------|
-| SRR1631112 | /path/to/ERZ1031893.fasta | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
-
-
-There is example [here](assets/samplesheet_example.csv)
-
-### Assembly software
-
-Id column is RUN accession \
-Assembly software is a tool that was used to assemble RUN into assembly (ERZ).
-
-_If you ran `download_data/fetch_data.sh` that file already exists in catalogue folder under name `per_run_assembly.tsv`.
-Otherwise, [script](download_data/scripts/generate_samplesheet.py) can be helpful to collect that information from ENA._ 
-
-| id         | assembly_software  |
-|------------|--------------------|
-| SRR1631112 | Assembler_vVersion |
-
-### Metagenome
-Manually choose the most appropriate metagenome from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree.
-
-### Biomes
-Comma-separated environment parameters in format: 
-`"environment_biome,environment_feature,environment_material"`
-
-
-## Pipeline output
+## Pipeline results
 
 ### Upload
 
-Use `final_table_for_uploader.tsv` to upload your MAGs with [uploader](https://github.com/EBI-Metagenomics/genome_uploader).
+Use `final_table_for_uploader.tsv` to upload your MAGs to ENA with [uploader](https://github.com/EBI-Metagenomics/genome_uploader).
 
-There is example [here](assets/final_table_for_uploader.tsv).
+Example of [final_table_for_uploader.tsv](assets/final_table_for_uploader.tsv).
 
 ! _Do not modify existing output structure because that TSV file contains full paths to your genomes._
 
