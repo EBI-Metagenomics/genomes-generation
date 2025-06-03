@@ -80,7 +80,7 @@ process EUKCC {
 
     script:
     """
-    mkdir -p bins ${binner}_${meta.id}_merged_bins/merged_bins
+    mkdir -p bins ${binner}_${meta.id}_merged_bins
     touch ${meta.id}_${binner}.eukcc.csv ${meta.id}_${binner}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
@@ -121,6 +121,8 @@ process EUKCC {
         if [ "\$EUKCC_EXITCODE" == "204" ]; then
             echo "Metaeuk returned zero proteins"
         fi
+
+        mkdir -p ${binner}_${meta.id}_merged_bins/merged_bins
 
         set -e
 
