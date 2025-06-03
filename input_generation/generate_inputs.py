@@ -131,6 +131,7 @@ def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_nam
     if input_scientific_name:
         input_scientific_name = [s.strip() for s in input_scientific_name.split(',')]
     runs = handler.get_study_runs(raw_reads_study, fields='scientific_name,library_source,library_strategy,fastq_ftp')
+    print(f'Received {len(runs)} runs from {raw_reads_study}')
     list_runs = []
     run_paths = {}
     for run in runs:
@@ -145,12 +146,13 @@ def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_nam
             continue
         list_runs.append(run['run_accession'])
         run_paths[run['run_accession']] = run['fastq_ftp']
-    print(f'Received {len(list_runs)} runs')
+    print(f'Received {len(list_runs)} runs after filtering')
     assembly_run = {}
     assemblies = handler.get_study_assemblies(assembly_study, fields='submitted_ftp,generated_ftp')
+    print(f'Received {len(assemblies)} assemblies from {assembly_study}')
     with open(os.path.join(outdir, 'runs_assemblies.tsv'), 'w') as file_out:
         for assembly in assemblies:
-            retrieved_run = assembly['submitted_ftp'].split('/')[-1].split('.')[0]
+            retrieved_run = assembly['submitted_ftp'].split('/')[-1].split('.')[0].split('_')[0]
             if not retrieved_run.startswith(('ERR', 'DRR', 'SRR')):
                 print('Invalid run name {} for assembly {}'.format(run_acc, erz_acc))
                 sys.exit(1)
