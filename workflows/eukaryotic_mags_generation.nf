@@ -15,22 +15,26 @@ include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from '../subworkflows/lo
 
 workflow EUK_MAGS_GENERATION {
     take:
-    assemblies_and_reads
-    concoct_bins
-    metabat_bins
-    jgi_depth
+    input_data
 
     main:
 
     ch_versions = Channel.empty()
     ch_log      = Channel.empty()
 
+    input_data
+        .multiMap { meta, assemblies, reads, concoct, metabat, depth -> 
+            concoct_input: [meta, assemblies, reads, concoct, depth]
+            metabat_input: [meta, assemblies, reads, metabat, depth]
+        }
+        .set { input }
+
     /*
     * LINKTABLE and EUKCC for euk bin refinement for CONCOCT bins
     * input: tuple( meta, assembly_file, [raw_reads], bins, depths )
     */
     EUKCC_MERGE_CONCOCT(
-        assemblies_and_reads.join(concoct_bins).join(jgi_depth)
+        input.concoct_input
     )
     ch_versions = ch_versions.mix( EUKCC_MERGE_CONCOCT.out.versions )
 
@@ -39,7 +43,7 @@ workflow EUK_MAGS_GENERATION {
     * input: tuple( meta, assembly_file, [raw_reads], bins, depths )
     */
     EUKCC_MERGE_METABAT(
-        assemblies_and_reads.join(metabat_bins).join(jgi_depth)
+        input.metabat_input
     )
     ch_versions = ch_versions.mix( EUKCC_MERGE_METABAT.out.versions )
 

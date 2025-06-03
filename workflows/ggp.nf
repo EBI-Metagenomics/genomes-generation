@@ -170,6 +170,7 @@ workflow GGP {
             run_maxbin: !tools.contains('maxbin') ? [meta, assembly, reads] : null
             include_maxbin: tools.contains('maxbin') ? [meta, assembly, reads] : null
             run_depth: !tools.contains('depth') ? [meta, assembly, reads] : null
+            include_depth: tools.contains('depth') ? [meta, assembly, reads] : null
         }
         .set { branched_for_tools }
     //branched_for_tools.run_maxbin.filter { it != null }
@@ -185,31 +186,29 @@ workflow GGP {
     )
     ch_versions = ch_versions.mix( BINNING.out.versions )
 
+    existing_concoct = branched_for_tools.include_concoct.join(input.concoct).filter { it != null }.map{ meta, _1, _2, bins -> [meta, bins] }
+    existing_maxbin = branched_for_tools.include_maxbin.join(input.maxbin).filter { it != null }.map{ meta, _1, _2, bins -> [meta, bins] }
+    existing_metabat = branched_for_tools.include_metabat.join(input.metabat).filter { it != null }.map{ meta, _1, _2, bins -> [meta, bins] }
+    existing_depth = branched_for_tools.include_depth.join(input.jgi_depth).filter { it != null }.map{ meta, _1, _2, depth -> [meta, depth] }
 
-    existing_concoct = branched_for_tools.include_concoct.join(input.concoct).filter { it != null }.map{meta, assembly, reads, bins -> [meta, bins]}
-    existing_maxbin = branched_for_tools.include_maxbin.join(input.maxbin).filter { it != null }.map{meta, assembly, reads, bins -> [meta, bins]}
-    existing_metabat = branched_for_tools.include_metabat.join(input.metabat).filter { it != null }.map{meta, assembly, reads, bins -> [meta, bins]}
-    concoct_bins = existing_concoct.mix(BINNING.out.concoct_bins)
-    maxbin_bins = existing_maxbin.mix(BINNING.out.maxbin_bins)
-    metabat_bins = existing_metabat.mix(BINNING.out.metabat_bins)
-    concoct_bins.view()
-    maxbin_bins.view()
-    metabat_bins.view()
-
+    all_concoct_bins = existing_concoct.mix(BINNING.out.concoct_bins)
+    all_maxbin_bins = existing_maxbin.mix(BINNING.out.maxbin_bins)
+    all_metabat_bins = existing_metabat.mix(BINNING.out.metabat_bins)
+    all_jgi_depth = existing_depth.mix(BINNING.out.jgi_depth).groupTuple().map{ meta, depth_list -> [ meta, depth_list[0] ] }
 
     /*
     * --- MAGs generation ---
     */ 
-    //if ( !params.skip_euk ) {
-    //    EUK_MAGS_GENERATION(
-    //        INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
-    //        .join(DECONTAMINATION.out.decontaminated_reads)
-    //       .join(concoct_bins)
-    //        .join(metabat_bins)
-    //        .join(DEPTH),
-    //    )
-    //    ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
-    //}
+    if ( !params.skip_euk ) {
+        EUK_MAGS_GENERATION(
+            INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
+            .join(DECONTAMINATION.out.decontaminated_reads)
+            .join(all_concoct_bins)
+            .join(all_metabat_bins)
+            .join(all_jgi_depth)
+        )
+        ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
+    }
     // for multiqc
     // binning samtools for multiqc
     // TODO return fastqc from INPUT_PREPROCESSING
