@@ -147,7 +147,7 @@ def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_nam
         if input_scientific_name:
             if run['scientific_name'] not in input_scientific_name:
                 continue
-        if input_input_env_biomes:
+        if input_env_biome:
             if run['environment_biome'] not in input_input_env_biomes:
                 continue
         if keep_metat:
