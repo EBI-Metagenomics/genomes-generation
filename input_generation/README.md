@@ -5,8 +5,9 @@ If you are using ENA studies - use [generation script](input_generation/generate
 **! By default GGP filters out AMPLICON runs and metaT runs.**
 
 Additional filters:
-- filter by scientific_name use `-b SCIENTIFIC_NAME` (like in ENA records) comma separated list
-- allow METATRANSCRIPTOMIC runs with `--keep-metat` (use that argument if you are 100% sure that ENA has mislabeled runs `library_source`)
+- filter by **scientific_name** use `-b SCIENTIFIC_NAME` (like in ENA records) comma separated list
+- filter by **environment_biome** use `-e ENVIROMENT_BIOME` (like in ENA records) comma separated list
+- allow **METATRANSCRIPTOMIC** runs with `--keep-metat` (use that argument if you are 100% sure that ENA has mislabeled runs `library_source`)
 ```commandline
 python3 input_generation/generate_inputs.py \
     -a assembly_study_accession \
@@ -15,6 +16,7 @@ python3 input_generation/generate_inputs.py \
     [ --output-samplesheet input_samplesheet.csv ] \
     [ --assembly-software-filename input_software.tsv ] \
     [ -b "marine sediment metagenome,sediment metagenome" ] \
+    [ -e "cold marine sediment biome,warm marine sediment biome" ] \
     [ --keep-metat ]
 ```
 

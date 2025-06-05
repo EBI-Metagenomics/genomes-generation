@@ -28,6 +28,8 @@ def parse_args():
                         help='Name of output file for assembly software information', default="assembly_software.tsv")
     parser.add_argument('-b', '--scientific-name', required=False,
                         help='Comma separated list of scientific_name(s) that would be included')
+    parser.add_argument('-e', '--environment-biome', required=False,
+                        help='Comma separated list of environment_biome(s) that would be included')
     parser.add_argument('--keep-metat', action='store_true')
     return parser.parse_args()
 
@@ -126,11 +128,16 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
         file_out.write(line + '\n')
 
 
-def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_name, keep_metat, samplesheet_path):
+def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_name, input_env_biome, keep_metat, samplesheet_path):
     allowed_library_source = ['METAGENOMIC']
+    run_fields = 'library_source,library_strategy,fastq_ftp'
     if input_scientific_name:
         input_scientific_name = [s.strip() for s in input_scientific_name.split(',')]
-    runs = handler.get_study_runs(raw_reads_study, fields='scientific_name,library_source,library_strategy,fastq_ftp')
+        run_fields += ',scientific_name'
+    if input_env_biome:
+        run_fields += ',environment_biome'
+        input_input_env_biomes = [s.strip() for s in input_env_biome.split(',')]
+    runs = handler.get_study_runs(raw_reads_study, fields=run_fields)
     print(f'Received {len(runs)} runs from {raw_reads_study}')
     list_runs = []
     run_paths = {}
@@ -139,6 +146,9 @@ def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_nam
             continue
         if input_scientific_name:
             if run['scientific_name'] not in input_scientific_name:
+                continue
+        if input_input_env_biomes:
+            if run['environment_biome'] not in input_input_env_biomes:
                 continue
         if keep_metat:
             allowed_library_source.append('METATRANSCRIPTOMIC')
@@ -200,6 +210,7 @@ def main(args):
         assembly_study=args.assembly_study,
         outdir=args.outdir,
         input_scientific_name=args.scientific_name,
+        input_env_biome=args.environment_biome,
         keep_metat=args.keep_metat,
         samplesheet_path=samplesheet_path
     )
