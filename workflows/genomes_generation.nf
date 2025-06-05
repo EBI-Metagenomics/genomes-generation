@@ -74,7 +74,7 @@ include { EUK_MAGS_GENERATION  } from '../subworkflows/local/euk_mags_generation
 include { PROK_MAGS_GENERATION } from '../subworkflows/local/prok_mags_generation'
 include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
 include { BINNING              } from '../subworkflows/local/mag_binning'
-include { PREPARE_UPLOAD_FILES } from '../subworkflows/local/prepare_upload'
+include { UPLOAD_MAGS          } from '../subworkflows/local/upload'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,7 +224,7 @@ workflow GGP {
         exit(1)
     }
     else {
-        PREPARE_UPLOAD_FILES(
+        UPLOAD_MAGS(
             euk_genomes.ifEmpty([]),
             prok_genomes.ifEmpty([]),
             assembly_software,
@@ -235,7 +235,7 @@ workflow GGP {
             rna.ifEmpty([]),
             taxonomy_euks.ifEmpty([]),
             taxonomy_proks.ifEmpty([]))
-        ch_versions = ch_versions.mix( PREPARE_UPLOAD_FILES.out.versions )
+        ch_versions = ch_versions.mix( UPLOAD_MAGS.out.versions )
     }
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
