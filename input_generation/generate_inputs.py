@@ -109,6 +109,8 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
                     chosen_run_path = [pe_forward, pe_reversed]
                 else:
                     chosen_run_path = [se]
+            else:
+                chosen_run_path = [run_path[0]]
         else:
             print(f'no runs path {assembly}')
 
