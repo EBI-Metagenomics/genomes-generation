@@ -48,7 +48,7 @@ process PREPARE_TSV_FOR_UPLOADER {
         ${args_tax_proks} \
         --metagenome '$params.metagenome' \
         --biomes '${params.biomes}' \
-        --absolute-path "${launchDir}/$params.outdir"
+        --absolute-path "$params.outdir"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
