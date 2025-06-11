@@ -12,11 +12,6 @@
               "errorMessage": "Prefix, used for the file names (raw reads accession)",
               "meta": ["id"]
             },
-            "assembly": {
-              "type": "string",
-              "pattern": "^\\S+\\.(fa.gz|fasta.gz)$",
-              "errorMessage": "The assembly needs to be a fasta file."
-            },
             "fastq_1": {
               "type": "string",
               "pattern": "^\\S+\\.(fastq|fq|fq.gz|fastq.gz)$",
@@ -30,7 +25,18 @@
             "assembly_accession": {
               "type": "string",
               "errorMessage": "Assembly accession (ERZ)",
-              "meta": ["erz"]
+              "meta": ["assembly_accession"]
+            },
+            "assembly_fasta": {
+              "type": "string",
+              "pattern": "^\\S+\\.(fa.gz|fasta.gz)$",
+              "errorMessage": "The assembly needs to be a fasta file."
+            },
+            "assembler": {
+              "type": "string",
+              "default": null,
+              "description": "Tool that was used to perform assembly in format: Tool_vVersion",
+              "meta": ["assembler"]
             },
             "concoct_bins": {
               "type": "string",
@@ -53,6 +59,6 @@
               "description": "coverage depth calculated with jgi tool"
             }
         },
-        "required": ["id", "assembly", "fastq_1", "assembly_accession"]
+        "required": ["id", "fastq_1", "assembly_accession", "assembly_fasta"]
         }
 }
