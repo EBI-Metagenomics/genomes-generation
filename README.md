@@ -53,7 +53,7 @@ If this the first time running nextflow please refer to [this page](https://www.
 
 ### Required reference databases
 
-You need to download the mentioned databases and add them to [config/dbs.config](config/dbs.config).
+You need to download the mentioned databases and specify as inputs to parameters.
 
 Don't forget to add this configuration to the main `.nextflow.config`.
 
