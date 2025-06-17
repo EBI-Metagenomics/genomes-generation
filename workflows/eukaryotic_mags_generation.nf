@@ -82,8 +82,8 @@ workflow EUK_MAGS_GENERATION {
     // combine concoct, metabat bins with merged bins (if any)
     */
     FILTER_QUALITY( 
-        quality.join( input.bins_concoct ) 
-        .join( input.bins_metabat ) 
+        quality.join( input.concoct_input.map{meta, _assemblies, _reads, concoct, _depth -> [meta, concoct]} ) 
+        .join( input.metabat_input.map{meta, _assemblies, _reads, metabat, _depth -> [meta, metabat]} ) 
         .join( EUKCC_MERGE_CONCOCT.out.eukcc_merged_bins ) 
         .join( EUKCC_MERGE_METABAT.out.eukcc_merged_bins )
     )
@@ -122,7 +122,7 @@ workflow EUK_MAGS_GENERATION {
 
     COVERAGE_RECYCLER_EUK(
         DREP_MAGS.out.dereplicated_genomes,
-        input.metabat_depths.collectFile(name: "euks_depth.txt.gz")
+        input.concoct_input.map{_meta, _assemblies, _reads, _metabat, depth -> depth}.collectFile(name: "euks_depth.txt.gz")
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions)
 
