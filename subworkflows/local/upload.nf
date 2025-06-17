@@ -53,7 +53,7 @@ workflow UPLOAD_MAGS {
         }
         manifests_ch = CREATE_MANIFESTS_FOR_UPLOAD.out.manifests.flatten()
          .map { manifest ->
-            def prefix = manifest.name.replaceAll(/_\d+\.manifest$/, '')
+            def prefix = manifest.name.replaceAll(/\.manifest$/, '')
             [prefix, manifest]
          }
         combined_ch = mags_ch.join(manifests_ch)
