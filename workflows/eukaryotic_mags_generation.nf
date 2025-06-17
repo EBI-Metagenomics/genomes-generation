@@ -130,7 +130,10 @@ workflow EUK_MAGS_GENERATION {
     // -- BUSCO MAG --//
     drep_result = DREP_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
 
-    BUSCO( drep_result, params.busco_db )
+    BUSCO( 
+        drep_result, 
+        file(params.busco_db, checkIfExists: true)
+    )
     ch_versions = ch_versions.mix( BUSCO.out.versions)
 
     BUSCO_EUKCC_QC( 
@@ -144,8 +147,8 @@ workflow EUK_MAGS_GENERATION {
     // -- BAT --//
     BAT( 
         drep_result, 
-        params.cat_db_folder, 
-        params.cat_taxonomy_db 
+        file(params.cat_db_folder, checkIfExists: true), 
+        file(params.cat_taxonomy_db, checkIfExists: true) 
     )
     ch_versions = ch_versions.mix( BAT.out.versions)
 
