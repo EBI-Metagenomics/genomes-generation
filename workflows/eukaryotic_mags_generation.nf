@@ -81,11 +81,30 @@ workflow EUK_MAGS_GENERATION {
     // [meta, concoct_bins, metabat_bins, merged_concoct, merged_metabat]
     // combine concoct, metabat bins with merged bins (if any)
     */
-    FILTER_QUALITY( 
-        quality.join( input.concoct_input.map{meta, _assemblies, _reads, concoct, _depth -> [meta, concoct]} ) 
-        .join( input.metabat_input.map{meta, _assemblies, _reads, metabat, _depth -> [meta, metabat]} ) 
-        .join( EUKCC_MERGE_CONCOCT.out.eukcc_merged_bins ) 
+    eukcc_bins = input.concoct_input.map{meta, _assemblies, _reads, concoct, _depth -> [meta, concoct]} )
+        .join( input.metabat_input.map{meta, _assemblies, _reads, metabat, _depth -> [meta, metabat]} )
+        .join( EUKCC_MERGE_CONCOCT.out.eukcc_merged_bins )
         .join( EUKCC_MERGE_METABAT.out.eukcc_merged_bins )
+        .map { meta, concoct, metabat, eukcc_concoct, eukcc_metabat ->
+            // Collect all files from all folders
+            def all_files = []
+            [concoct, metabat, eukcc_concoct, eukcc_metabat].each { folder ->
+                if (folder && folder.exists()) {
+                    if (folder.isDirectory()) {
+                        folder.listFiles()?.each { file ->
+                            if (file.isFile()) all_files.add(file)
+                        }
+                    } else {
+                        all_files.add(folder)
+                    }
+                }
+            }
+        [meta, all_files]
+    }
+    eukcc_bins.view()
+
+    FILTER_QUALITY( 
+        quality.join( eukcc_bins )
     )
     bins = FILTER_QUALITY.out.qs50_filtered_genomes.map{ _meta, genomes, _quality -> genomes }.flatten()
 

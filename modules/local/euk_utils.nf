@@ -44,7 +44,7 @@ process FILTER_QUALITY {
     label 'process_light'
 
     input:
-    tuple val(meta), path(quality_file), path(concoct_bins, stageAs: "concoct_bins/"), path(metabat_bins, stageAs: "metabat_bins/"), path(merged_bins, stageAs: "merged_bins/")
+    tuple val(meta), path(quality_file), path(bins, stageAs: "input_bins/")
 
     output:
     tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
@@ -67,12 +67,8 @@ process FILTER_QUALITY {
     then
         echo "No genomes"
     else
-        for i in \$(ls concoct_bins | grep -w -f filtered_genomes.txt); do
-            mv concoct_bins/\${i} output_genomes; done
-        for i in \$(ls metabat_bins | grep -w -f filtered_genomes.txt); do
-            mv metabat_bins/\${i} output_genomes; done
-        for i in \$(ls merged_bins/merged_bins | grep -w -f filtered_genomes.txt); do
-            mv merged_bins/merged_bins/\${i} output_genomes; done
+        for i in \$(ls input_bins | grep -w -f filtered_genomes.txt); do
+            mv input_bins/\${i} output_genomes; done
 
         echo "genome,completeness,contamination" > quality_file.csv
         grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
@@ -80,7 +76,7 @@ process FILTER_QUALITY {
 
     cat <<-END_LOGGING > progress.log
     ${meta.id}\t${task.process}
-        concoct_bins: \$(ls concoct_bins | wc -l), metabat_bins: \$(ls metabat_bins | wc -l), merged_bins: \$(ls merged_bins/merged_bins | wc -l)
+        input_bins: \$(ls input_bins | wc -l)
     END_LOGGING
     """
 }
