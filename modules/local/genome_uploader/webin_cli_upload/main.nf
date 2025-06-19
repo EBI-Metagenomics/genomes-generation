@@ -3,7 +3,7 @@ process WEBIN_CLI_UPLOAD {
     label 'process_low'
     tag "${id}"
     stageInMode 'copy'
-    container "community.wave.seqera.io/library/ena-webin-cli:8.2.0--8c2d9cd28deedf87"
+    container "quay.io/biocontainers/ena-webin-cli:8.2.0--hdfd78af_0"
 
     input:
     tuple val(id), path(mag), path(manifest)
