@@ -81,7 +81,7 @@ workflow EUK_MAGS_GENERATION {
     // [meta, concoct_bins, metabat_bins, merged_concoct, merged_metabat]
     // combine concoct, metabat bins with merged bins (if any)
     */
-    eukcc_bins = input.concoct_input.map{meta, _assemblies, _reads, concoct, _depth -> [meta, concoct]} )
+    eukcc_bins = input.concoct_input.map{meta, _assemblies, _reads, concoct, _depth -> [meta, concoct]}
         .join( input.metabat_input.map{meta, _assemblies, _reads, metabat, _depth -> [meta, metabat]} )
         .join( EUKCC_MERGE_CONCOCT.out.eukcc_merged_bins )
         .join( EUKCC_MERGE_METABAT.out.eukcc_merged_bins )
@@ -99,8 +99,9 @@ workflow EUK_MAGS_GENERATION {
                     }
                 }
             }
-        [meta, all_files]
-    }
+            [meta, all_files]
+        }
+
     eukcc_bins.view()
 
     FILTER_QUALITY( 
