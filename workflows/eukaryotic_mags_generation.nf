@@ -102,8 +102,6 @@ workflow EUK_MAGS_GENERATION {
             [meta, all_files]
         }
 
-    eukcc_bins.view()
-
     FILTER_QUALITY( 
         quality.join( eukcc_bins )
     )
