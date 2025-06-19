@@ -28,16 +28,16 @@ process EUKCC {
     path eukcc_db
 
     output:
-    tuple val(meta), path("${meta.id}_merged_bins/merged_bins"),    emit: eukcc_merged_bins
-    tuple val(meta), path("${meta.id}.eukcc.csv"),                  emit: eukcc_csv
-    tuple val(meta), path("${meta.id}.merged_bins.csv"),            emit: eukcc_merged_csv
-    path "versions.yml",                                                      emit: versions
-    path "progress.log",                                                      emit: progress_log
+    tuple val(meta), path("${bins.baseName}_merged_bins/merged_bins"),    emit: eukcc_merged_bins
+    tuple val(meta), path("${bins.baseName}.eukcc.csv"),                  emit: eukcc_csv
+    tuple val(meta), path("${bins.baseName}.merged_bins.csv"),            emit: eukcc_merged_csv
+    path "versions.yml",                                                  emit: versions
+    path "progress.log",                                                  emit: progress_log
 
     script:
     """
-    mkdir -p bins ${meta.id}_merged_bins/merged_bins
-    touch ${meta.id}.eukcc.csv ${meta.id}.merged_bins.csv
+    mkdir -p bins ${bins.baseName}_merged_bins/merged_bins
+    touch ${bins.baseName}.eukcc.csv ${bins.baseName}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -64,29 +64,29 @@ process EUKCC {
             --min_links 100 \
             --suffix .fa \
             --db ${eukcc_db} \
-            --out ${meta.id}_merged_bins \
-            --prefix "${meta.id}_merged." \
+            --out ${bins.baseName}_merged_bins \
+            --prefix "${bins.baseName}_merged." \
             bins
         EUKCC_EXITCODE="\$?"
 
         if [ "\$EUKCC_EXITCODE" == "0" ]; then
             echo "EukCC finished"
-            mv ${meta.id}_merged_bins/eukcc.csv ${meta.id}.eukcc.csv
-            mv ${meta.id}_merged_bins/merged_bins.csv ${meta.id}.merged_bins.csv
+            mv ${bins.baseName}_merged_bins/eukcc.csv ${bins.baseName}.eukcc.csv
+            mv ${bins.baseName}_merged_bins/merged_bins.csv ${bins.baseName}.merged_bins.csv
         fi
 
         if [ "\$EUKCC_EXITCODE" == "204" ]; then
             echo "Metaeuk returned zero proteins"
         fi
 
-        mkdir -p ${meta.id}_merged_bins/merged_bins
+        mkdir -p ${bins.baseName}_merged_bins/merged_bins
 
         set -e
 
         if [ "\$EUKCC_EXITCODE" == "0" ] || [ "\$EUKCC_EXITCODE" == "204" ]; then
             cat <<-END_LOGGING > progress.log
             ${meta.id}\t${task.process}\t${bins.baseName}
-                bins: \$(ls bins | wc -l), merged: \$(ls ${meta.id}_merged_bins/merged_bins | wc -l)
+                bins: \$(ls bins | wc -l), merged: \$(ls ${bins.baseName}_merged_bins/merged_bins | wc -l)
     END_LOGGING
             exit 0
         else:
