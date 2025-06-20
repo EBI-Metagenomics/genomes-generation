@@ -88,7 +88,9 @@ def load_xml(assembly):
 def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
     with open(samplesheet, 'a') as file_out:
         if assembly_path:
-            transformed_assembly, _ = transform_ftp_to_s3(assembly_path)
+            # TODO: return when s3 will work with -resume
+            #transformed_assembly, _ = transform_ftp_to_s3(assembly_path)
+            transformed_assembly = assembly_path
         else:
             print(f'no assembly path {assembly}')
         chosen_run_path = []
@@ -116,7 +118,9 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
 
         transformed_runs = []
         for item in chosen_run_path:
-            transformed_path, _ = transform_ftp_to_s3(item)
+            # TODO: return when s3 will work with -resume
+            # transformed_path, _ = transform_ftp_to_s3(item)
+            transformed_path = item
             transformed_runs.append(transformed_path)
 
         line = f"{run},{transformed_assembly},"
