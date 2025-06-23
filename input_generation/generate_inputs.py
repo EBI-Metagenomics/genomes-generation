@@ -34,20 +34,17 @@ def parse_args():
     return parser.parse_args()
 
 
-def transform_ftp_to_s3(ftp_path: str) -> Tuple[str, str]:
+def transform_paths(ftp_path: str) -> Tuple[str, str]:
     """
-    Transforms an FTP path to a FIRE S3 object key, it also returns if it's public or private.
-
-    :param ftp_path: The FTP path of the file to be transformed.
-    :type ftp_path: str
-    :return: A tuple containing the S3 object key and the corresponding bucket name.
-    :rtype: Tuple[str, str]
-    :raises ValueError: If the FTP path does not match the expected format.
+    Transforms an FTP path according to privacy, it also returns if it's public or private. There are some limitations.
+    Use https:// for public (-resume nextflow works for https:// but not for ftp and s3)
+    Use FIRE S3 object key for private data (-resume is broken for S3 paths)
     """
     if ftp_path.startswith("ftp.sra.ebi.ac.uk/vol1/"):
-        s3_key = ftp_path.replace("ftp.sra.ebi.ac.uk/vol1/", "s3://era-public/")
+        #s3_key = ftp_path.replace("ftp.sra.ebi.ac.uk/vol1/", "s3://era-public/")
+        https_key = 'https://' + ftp_path
         print(f"Detected a public file for FTP path: {ftp_path}")
-        return s3_key, 'public'
+        return https_key, 'public'
     elif ftp_path.startswith("ftp.dcc-private.ebi.ac.uk/vol1/"):
         s3_key = ftp_path.replace("ftp.dcc-private.ebi.ac.uk/vol1/", "s3://era-private/")
         print(f"Detected a private file for FTP path: {ftp_path}")
@@ -56,6 +53,7 @@ def transform_ftp_to_s3(ftp_path: str) -> Tuple[str, str]:
         raise ValueError(
             f"Invalid FTP path: {ftp_path}. Must start with 'ftp.sra.ebi.ac.uk/vol1/' or 'ftp.dcc-private.ebi.ac.uk/vol1/'."
         )
+
 
 def load_xml(assembly):
     retry_attempts = 3
@@ -88,9 +86,8 @@ def load_xml(assembly):
 def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
     with open(samplesheet, 'a') as file_out:
         if assembly_path:
-            # TODO: return when s3 will work with -resume
-            #transformed_assembly, _ = transform_ftp_to_s3(assembly_path)
-            transformed_assembly = assembly_path
+            # TODO: return s3 when nextflow will work with -resume
+            transformed_assembly, _ = transform_paths(assembly_path)
         else:
             print(f'no assembly path {assembly}')
         chosen_run_path = []
@@ -119,8 +116,7 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
         transformed_runs = []
         for item in chosen_run_path:
             # TODO: return when s3 will work with -resume
-            # transformed_path, _ = transform_ftp_to_s3(item)
-            transformed_path = item
+            transformed_path, _ = transform_paths(item)
             transformed_runs.append(transformed_path)
 
         line = f"{run},{transformed_assembly},"
