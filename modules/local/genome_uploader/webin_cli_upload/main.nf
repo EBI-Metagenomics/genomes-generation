@@ -9,7 +9,8 @@ process WEBIN_CLI_UPLOAD {
     tuple val(id), path(mag), path(manifest)
 
     output:
-    tuple val(id), path("*manifest.report") , emit: webin_report
+    tuple val(id), path("webin-cli.report") , emit: webin_report
+    tuple val(id), env(success_status)      , emit: upload_status
     path "versions.yml"                     , emit: versions
 
     script:
@@ -24,6 +25,12 @@ process WEBIN_CLI_UPLOAD {
       -userName='$params.webin_account' \
       -password='$params.webin_password' \
       -submit
+
+    if grep -q "submission has been completed successfully" webin-cli.report; then
+        export success_status="true"
+    else
+        export success_status="false"
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

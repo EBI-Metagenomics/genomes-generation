@@ -34,6 +34,5 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       --password '$params.webin_password' \
       --out results \
       ${args}
-
     """
 }

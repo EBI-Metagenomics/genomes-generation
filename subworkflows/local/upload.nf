@@ -3,7 +3,6 @@
 //
 
 include { CREATE_MANIFESTS_FOR_UPLOAD } from '../../modules/local/genome_uploader/create_manifests'
-include { CHECK_WEBIN_SUCCESS         } from '../../modules/local/genome_uploader/check_webin_success'
 include { PREPARE_TSV_FOR_UPLOADER    } from '../../modules/local/genome_uploader/generate_table_for_upload/main'
 include { WEBIN_CLI_UPLOAD            } from '../../modules/local/genome_uploader/webin_cli_upload'
 
@@ -61,19 +60,34 @@ workflow UPLOAD_MAGS {
         WEBIN_CLI_UPLOAD(combined_ch)
         ch_versions = ch_versions.mix( WEBIN_CLI_UPLOAD.out.versions )
 
-        CHECK_WEBIN_SUCCESS(WEBIN_CLI_UPLOAD.out.webin_report)
         // Count successes using channel operators
-        success_count = CHECK_WEBIN_SUCCESS.out.results
+        success_count = WEBIN_CLI_UPLOAD.out.upload_status
            .map { sample_id, status -> status == "true" ? 1 : 0 }
            .sum()
            .view { count -> "✅ Total successful submissions: ${count}" }
 
         // Count total submissions
-        total_count = CHECK_WEBIN_SUCCESS.out.results
+        total_count = WEBIN_CLI_UPLOAD.out.upload_status
            .count()
            .view { count -> "📊 Total submissions processed: ${count}" }
 
-    }
+        // Generate summary report file
+        WEBIN_CLI_UPLOAD.out.upload_status
+            .map { sample_id, status -> status == "true" ? 1 : 0 }
+            .sum()
+            .combine(
+                WEBIN_CLI_UPLOAD.out.upload_status.count()
+            )
+            .map { success_count, total_count ->
+                """ENA Submission Summary Report
+        Generated: ${new Date()}
+        Total successful submissions: ${success_count}
+        Total submissions processed: ${total_count}
+        Status: ${success_count == total_count ? 'ALL SUBMISSIONS SUCCESSFUL' : 'SOME SUBMISSIONS FAILED'}
+        """
+            }
+            .collectFile(name: 'ena_submission_summary.txt', storeDir: "${params.outdir}/upload")
+            }
 
     emit:
     versions = ch_versions
