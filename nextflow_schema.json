@@ -101,6 +101,11 @@
           "default": true,
           "description": "if uploading TPA (Third PArty) generated genomes"
         },
+        "upload_force": {
+          "type": "boolean",
+          "default": false,
+          "description": "forces reset of submission xml and ENA backup"
+        },
         "upload_mags": {
           "type": "boolean",
           "default": true,

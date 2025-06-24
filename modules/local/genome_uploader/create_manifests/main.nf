@@ -20,6 +20,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     def mags_arg = params.upload_mags ? "--mags" : ""
     def bins_arg = params.upload_bins ? "--bins" : ""
     def tpa      = params.upload_tpa  ? "--tpa"  : ""
+    def force    = params.upload_force  ? "--force"  : ""
     def args     = task.ext.args ?: ''
 
     """
@@ -30,6 +31,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${mags_arg} \
       ${bins_arg} \
       ${tpa} \
+      ${force} \
       --webin '$params.webin_account' \
       --password '$params.webin_password' \
       --out results \
