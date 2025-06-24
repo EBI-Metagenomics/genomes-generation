@@ -6,11 +6,13 @@ process WEBIN_CLI_UPLOAD {
     container "quay.io/biocontainers/ena-webin-cli:8.2.0--hdfd78af_0"
 
     input:
+    secret 'WEBIN_ACCOUNT'
+    secret 'WEBIN_PASSWORD'
     tuple val(id), path(mag), path(manifest)
 
     output:
     tuple val(id), path("webin-cli.report") , emit: webin_report
-    tuple val(id), env(success_status)      , emit: upload_status
+    tuple val(id), env('SUCCESS_STATUS')    , emit: upload_status
     path "versions.yml"                     , emit: versions
 
     script:
@@ -22,14 +24,14 @@ process WEBIN_CLI_UPLOAD {
     ena-webin-cli \
       -context=genome \
       -manifest=${id}_updated_manifest.manifest \
-      -userName='$params.webin_account' \
-      -password='$params.webin_password' \
+      -userName='\$WEBIN_ACCOUNT' \
+      -password='\$WEBIN_PASSWORD' \
       -submit
 
     if grep -q "submission has been completed successfully" webin-cli.report; then
-        export success_status="true"
+        export SUCCESS_STATUS="true"
     else
-        export success_status="false"
+        export SUCCESS_STATUS="false"
     fi
 
     cat <<-END_VERSIONS > versions.yml

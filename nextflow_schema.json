@@ -81,16 +81,6 @@
       "description": "genome_uploader supported options for automatic mags upload",
       "default": "",
       "properties": {
-        "webin_account": {
-          "type": "string",
-          "default": "",
-          "description": "Webin account id in format (Webin-XXX)"
-        },
-        "webin_password": {
-          "type": "string",
-          "default": "",
-          "description": "password for Webin account"
-        },
         "centre_name": {
           "type": "string",
           "default": "",
