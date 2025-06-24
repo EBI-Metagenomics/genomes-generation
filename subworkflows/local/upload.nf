@@ -3,10 +3,6 @@
 //
 
 include { CREATE_MANIFESTS_FOR_UPLOAD } from '../../modules/local/genome_uploader/create_manifests'
-<<<<<<< HEAD
-=======
-include { CHECK_WEBIN_SUCCESS         } from '../../modules/local/genome_uploader/check_webin_success'
->>>>>>> 3abfa9f9aa7b2e1677dcfad5c77b7997c5b511e5
 include { PREPARE_TSV_FOR_UPLOADER    } from '../../modules/local/genome_uploader/generate_table_for_upload/main'
 include { WEBIN_CLI_UPLOAD            } from '../../modules/local/genome_uploader/webin_cli_upload'
 
