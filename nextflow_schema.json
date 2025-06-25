@@ -10,11 +10,11 @@
       "type": "object",
       "fa_icon": "fas fa-terminal",
       "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["project", "samplesheet", "outdir"],
+      "required": ["ena_assembly_study_accession", "samplesheet", "outdir"],
       "properties": {
-        "project": {
+        "ena_assembly_study_accession": {
           "type": "string",
-          "description": "The MAGs project name, used to create an isolated workdir",
+          "description": "Assembly study accession - used to upload MAGs",
           "fa_icon": "fas fa-ad"
         },
         "metagenome": {
@@ -74,6 +74,57 @@
           "description": "Minimum contig size in bp. Contigs smaller that this will be discarded"
         }
       }
+    },
+    "mags_upload": {
+      "title": "MAGs uploader arguments",
+      "type": "object",
+      "description": "genome_uploader supported options for automatic mags upload",
+      "default": "",
+      "properties": {
+        "centre_name": {
+          "type": "string",
+          "default": "",
+          "description": "name of the centre generating and uploading genomes"
+        },
+        "upload_tpa": {
+          "type": "boolean",
+          "default": true,
+          "description": "if uploading TPA (Third PArty) generated genomes"
+        },
+        "upload_force": {
+          "type": "boolean",
+          "default": false,
+          "description": "forces reset of submission xml and ENA backup"
+        },
+        "upload_mags": {
+          "type": "boolean",
+          "default": true,
+          "description": "Upload MAGs (Metagenome-Assembled Genomes)"
+        },
+        "upload_bins": {
+          "type": "boolean",
+          "default": false,
+          "description": "Upload bins"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "webin_account": { "type": "string" },
+            "webin_password": { "type": "string" },
+            "centre_name": { "type": "string" },
+            "upload_tpa": { "type": "boolean" },
+            "upload_mags": { "const": true },
+            "upload_bins": { "const": false }
+          }
+        },
+        {
+          "properties": {
+            "upload_mags": { "const": false },
+            "upload_bins": { "const": false }
+          }
+        }
+      ]
     },
     "prokaryotes_mags_generation": {
       "title": "Prokaryotes MAGs generation",
