@@ -5,28 +5,21 @@
   "description": "",
   "type": "object",
   "definitions": {
-    "input_output_options": {
-      "title": "Input/output options",
+    "input_options": {
+      "title": "Input options",
       "type": "object",
       "fa_icon": "fas fa-terminal",
-      "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["ena_assembly_study_accession", "samplesheet", "outdir"],
+      "description": "Define pipeline input arguments.",
       "properties": {
         "ena_assembly_study_accession": {
           "type": "string",
-          "description": "Assembly study accession - used to upload MAGs",
+          "description": "Assembly study accession (ENA specific feature, used to fetch assemblies and upload MAGs)",
           "fa_icon": "fas fa-ad"
         },
-        "metagenome": {
+        "ena_raw_reads_study_accession": {
           "type": "string",
-          "description": "Metagenome from ENA list for upload",
+          "description": "Raw reads study accession (ENA specific feature, used to fetch reads from ENA)",
           "fa_icon": "fas fa-ad"
-        },
-        "biomes": {
-          "type": "string",
-          "description": "Biome in format: environment_biome,environment_feature,environment_material",
-          "fa_icon": "fas fa-ad",
-          "pattern": "^[a-z\\s]+,[a-z\\s]+,[a-z\\s-]+$"
         },
         "samplesheet": {
           "type": "string",
@@ -38,21 +31,37 @@
           "description": "Path to comma-separated file containing information about the assemblies, raw reads with the prefix to be used.",
           "help_text": "You will need to create a design file with information about the assemblies, raw reads running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row.",
           "fa_icon": "fas fa-file-csv"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["ena_assembly_study_accession", "ena_raw_reads_study_accession"],
+          "not": {
+            "required": ["samplesheet"]
+          }
         },
-        "assembly_software_file": {
-          "type": "string",
-          "format": "file-path",
-          "exists": true,
-          "mimetype": "text/tsv",
-          "pattern": "^\\S+\\.tsv$",
-          "description": "Path to tab-separated file containing run_accession and assembly software that was used for assembly.",
-          "help_text": "The easiest way to create that file is to take run_accession, assembly_accession and assembler info (Assembler_vVERSION from backlog DB.",
-          "fa_icon": "fas fa-file-tsv"
-        },
+        {
+          "required": ["samplesheet"],
+          "not": {
+            "anyOf": [
+              {"required": ["ena_assembly_study_accession"]},
+              {"required": ["ena_raw_reads_study_accession"]}
+            ]
+          }
+        }
+      ]
+    },
+    "output_options": {
+      "title": "Output options",
+      "type": "object",
+      "fa_icon": "fas fa-terminal",
+      "description": "Define where the pipeline should save output data.",
+      "required": ["outdir"],
+      "properties": {
         "outdir": {
           "type": "string",
           "format": "directory-path",
-          "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+          "description": "The output directory where the results will be saved. That value should be an absolute path.",
           "fa_icon": "fas fa-folder-open"
         }
       }
@@ -81,6 +90,17 @@
       "description": "genome_uploader supported options for automatic mags upload",
       "default": "",
       "properties": {
+        "metagenome": {
+          "type": "string",
+          "description": "Metagenome from ENA list for upload",
+          "fa_icon": "fas fa-ad"
+        },
+        "biomes": {
+          "type": "string",
+          "description": "Biome in format: environment_biome,environment_feature,environment_material",
+          "fa_icon": "fas fa-ad",
+          "pattern": "^[a-z\\s]+,[a-z\\s]+,[a-z\\s-]+$"
+        },
         "centre_name": {
           "type": "string",
           "default": "",
@@ -110,8 +130,8 @@
       "oneOf": [
         {
           "properties": {
-            "webin_account": { "type": "string" },
-            "webin_password": { "type": "string" },
+            "metagenome": { "type": "string" },
+            "biomes": { "type": "boolean" },
             "centre_name": { "type": "string" },
             "upload_tpa": { "type": "boolean" },
             "upload_mags": { "const": true },
@@ -125,6 +145,26 @@
           }
         }
       ]
+    },
+    "samplesheet_generation": {
+      "title": "Generate input samplesheet from ENA raw_reads and assembly studies",
+      "type": "object",
+      "description": "ENA specific function",
+      "default": "",
+      "properties": {
+        "filter_samplesheet_by_scientific_name": {
+          "type": "string",
+          "description": "Comma separated list of scientific_name(s) that would be included"
+        },
+        "filter_samplesheet_by_environment_biome": {
+          "type": "string",
+          "description": "Comma separated list of environment_biome(s) that would be included"
+        },
+        "keep_metat_runs_in_samplesheet": {
+          "type": "boolean",
+          "description": "Allow METATRANSCRIPTOMIC runs (use that argument if you are 100% sure that ENA has mislabeled runs library_source)"
+        }
+      }
     },
     "prokaryotes_mags_generation": {
       "title": "Prokaryotes MAGs generation",
@@ -312,7 +352,10 @@
   },
   "allOf": [
     {
-      "$ref": "#/definitions/input_output_options"
+      "$ref": "#/definitions/input_options"
+    },
+    {
+      "$ref": "#/definitions/output_options"
     },
     {
       "$ref": "#/definitions/quality_control"
