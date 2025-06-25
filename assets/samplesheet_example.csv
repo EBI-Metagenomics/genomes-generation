@@ -1,2 +1,3 @@
-id,assembly,fastq_1,fastq_2,assembly_accession
-SRR1631112,/path/ERZ1031893.fasta,/path/SRR1631112_1.fastq.gz,/path/SRR1631112_2.fastq.gz,ERZ1031893
+id,fastq_1,fastq_2,assembly_accession,assembly_fasta,assembler,concoct_bins,metabat_bins,maxbins_bins,jgi_depth
+RUN_ACCESSION1,/path/RUN_ACCESSION1_1.fastq.gz,/path/RUN_ACCESSION1_2.fastq.gz,ASSEMBLY_ACCESSION,/path/ASSEMBLY_ACCESSION1.fasta.gz,metaspades_v3.15.3,/path/CONCOCT_BINS1,/path/METABAT_BINS1,,
+RUN_ACCESSION2,/path/RUN_ACCESSION2_1.fastq.gz,/path/RUN_ACCESSION2_2.fastq.gz,ASSEMBLY_ACCESSION2,/path/ASSEMBLY_ACCESSION2.fasta.gz,,,,,,,

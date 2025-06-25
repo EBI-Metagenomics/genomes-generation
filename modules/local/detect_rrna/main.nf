@@ -12,7 +12,7 @@ process DETECT_RRNA {
         task.exitStatus {
             exitVal ->
                 // Retry on non-zero exit codes
-                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
+                return exitVal != 0 ? 'retry' : 'finish'
         }
         maxRetries 3  // Set the maximum number of retries
         sleep 10      // Set the delay between retries in seconds
