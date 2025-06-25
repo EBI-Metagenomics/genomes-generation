@@ -2,9 +2,10 @@
 // Change reads and assemblies input files if necessary
 //
 
-include { FASTQC         } from '../../modules/nf-core/fastqc/main'
-include { MODIFY_CONTIGS } from '../../modules/local/utils'
-include { ERR_TO_ERZ     } from '../../modules/local/utils'
+include { CHECK_AND_MODIFY_READS } from '../../modules/local/check_and_modify_reads'
+include { MODIFY_CONTIGS         } from '../../modules/local/modify_contigs'
+
+include { FASTQC                 } from '../../modules/nf-core/fastqc/main'
 
 
 workflow INPUT_PREPROCESSING {
@@ -47,18 +48,18 @@ workflow INPUT_PREPROCESSING {
         )
 
         /*
-        * --- MODIFY READS ( change ERR in reads to ERZ )
+        * --- MODIFY READS with SEQKIT ( change run_accession to assembly_accession and apply sanity check )
         *  input: tuple(meta, [reads]])
         *  output: tuple(meta, [modified_pe_reads]/modified_se_reads])
         */
-        ERR_TO_ERZ(
+        CHECK_AND_MODIFY_READS(
             reads
         )
-        ch_versions = ch_versions.mix( ERR_TO_ERZ.out.versions.first() )
+        ch_versions = ch_versions.mix( CHECK_AND_MODIFY_READS.out.versions.first() )
 
         // this process returns list of reads if they are PE and path for SE
         // it is required for next step FASTP that SE reads should be also in list
-        reads_changed = ERR_TO_ERZ.out.modified_reads.map{ meta, reads_item ->
+        reads_changed = CHECK_AND_MODIFY_READS.out.modified_reads.map{ meta, reads_item ->
                                                                 result = [meta]
                                                                 if (!meta.single_end) {
                                                                     result.add(reads_item) }

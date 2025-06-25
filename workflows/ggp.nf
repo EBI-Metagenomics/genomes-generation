@@ -77,7 +77,7 @@ workflow GGP {
     /*
     * ---- combine data for reads, contigs and bins ----
     */
-    samplesheet.multiMap{ meta, assembly, fq1, fq2, concoct, metabat, maxbin, depth ->
+    samplesheet.multiMap{ meta, fq1, fq2, assembly, concoct, metabat, maxbin, depth ->
         def is_single_end = (fq2 == [])
         def reads = is_single_end ? [fq1] : [fq1, fq2]
         assembly_and_reads : tuple(meta + [single_end: is_single_end], assembly, reads)

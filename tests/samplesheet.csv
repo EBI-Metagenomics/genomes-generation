@@ -1,0 +1,2 @@
+id,fastq_1,fastq_2,assembly_accession,assembly_fasta,assembler,concoct_bins,metabat_bins,maxbins_bins,jgi_depth
+SRR3960572,/Users/kates/Desktop/EBI/MGnify/pipelines/eukrecover/resources/malaspina/SRR3960572_1.fastq.gz,/Users/kates/Desktop/EBI/MGnify/pipelines/eukrecover/resources/malaspina/SRR3960572_2.fastq.gz,ERZ505209,/Users/kates/Desktop/EBI/MGnify/pipelines/eukrecover/resources/malaspina/ERZ505209.fasta.gz,metaspades_v3.15.3,,,,

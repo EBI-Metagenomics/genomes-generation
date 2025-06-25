@@ -1,0 +1,2 @@
+checkandmodifyreads:
+- "modules/local/check_and_modify_reads/**"
