@@ -4,15 +4,17 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { samplesheetToList         } from 'plugin/nf-schema'
-include { paramsHelp                } from 'plugin/nf-validation'
+include { paramsSummaryMap           } from 'plugin/nf-schema'
+include { samplesheetToList          } from 'plugin/nf-schema'
+include { paramsHelp                 } from 'plugin/nf-validation'
 
-include { UTILS_NFSCHEMA_PLUGIN     } from '../nf-core/utils_nfschema_plugin'
-include { completionEmail           } from '../nf-core/utils_nfcore_pipeline'
-include { completionSummary         } from '../nf-core/utils_nfcore_pipeline'
-include { UTILS_NFCORE_PIPELINE     } from '../nf-core/utils_nfcore_pipeline'
-include { UTILS_NEXTFLOW_PIPELINE   } from '../nf-core/utils_nextflow_pipeline'
+include { UTILS_NFSCHEMA_PLUGIN      } from '../nf-core/utils_nfschema_plugin'
+include { completionEmail            } from '../nf-core/utils_nfcore_pipeline'
+include { completionSummary          } from '../nf-core/utils_nfcore_pipeline'
+include { UTILS_NFCORE_PIPELINE      } from '../nf-core/utils_nfcore_pipeline'
+include { UTILS_NEXTFLOW_PIPELINE    } from '../nf-core/utils_nextflow_pipeline'
+
+include { GENERATE_INPUT_SAMPLESHEET } from '../../modules/local/generate_input_samplesheet'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,13 +28,13 @@ workflow PIPELINE_INITIALISATION {
     version           // boolean: Display version and exit
     validate_params   // boolean: Boolean whether to validate parameters against the schema at runtime
     monochrome_logs   // boolean: Do not use coloured log outputs
-    nextflow_cli_args //   array: List of positional nextflow CLI args
+    nextflow_cli_args //  array: List of positional nextflow CLI args
     outdir            //  string: The output directory where the results will be saved
-    input             //  string: Path to input samplesheet
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions    = Channel.empty()
+    ch_samplesheet = Channel.empty()
 
     //
     // Print help message, supply typical command line usage for the pipeline
@@ -69,9 +71,30 @@ workflow PIPELINE_INITIALISATION {
     )
 
     //
-    // Create channel from input file provided through input
+    // Create channel from samplesheet or generate samplesheet from ENA
     //
-    ch_samplesheet = Channel.fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
+    if (params.samplesheet) {
+        ch_samplesheet = Channel.fromList(
+           samplesheetToList(
+              params.samplesheet,
+              "${projectDir}/assets/schema_input.json"
+           )
+        )
+    }
+    else {
+        GENERATE_INPUT_SAMPLESHEET(
+            params.ena_assembly_study_accession,
+            params.ena_raw_reads_study_accession
+        )
+        ch_versions = ch_versions.mix( GENERATE_INPUT_SAMPLESHEET.out.versions )
+
+        ch_samplesheet = Channel.fromList(
+           samplesheetToList(
+              GENERATE_INPUT_SAMPLESHEET.out.samplesheet,
+              "${projectDir}/assets/schema_input.json"
+           )
+        )
+    }
 
 
     emit:
