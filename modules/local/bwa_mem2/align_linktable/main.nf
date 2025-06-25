@@ -13,7 +13,7 @@ process ALIGNMENT_LINKTABLE {
     container 'quay.io/microbiome-informatics/bwa_eukcc:2.2.1_2.0'
 
     input:
-    tuple val(meta), path(reads), path(ref_fasta), path(bins, stageAs: "bins"), path(depth)
+    tuple val(meta), path(reads), path(ref_fasta), path(bins), path(depth)
 
     output:
     tuple val(meta), path("*.links.csv"), emit: links_table
@@ -46,6 +46,8 @@ process ALIGNMENT_LINKTABLE {
 
     echo "linktable"
     mkdir -p bins
+    cp ${bins}/* bins/
+
     export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "Bins directory is empty"
