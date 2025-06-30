@@ -9,21 +9,16 @@ MGnify genomes generation pipeline (GGP) produces prokaryotic and eukaryotic MAG
 </p>
 
 
-This pipeline does not support co-binning.
+This pipeline **does not support co-binning** and was tested only on **short reads** yet.
 
 ## Pipeline summary
 
 The pipeline performs the following tasks:
 
-- Supports short reads.
-- Changes read headers to their corresponding assembly accessions (in the ERZ namespace).
 - Quality trims the reads, removes adapters [fastp](https://github.com/OpenGene/fastp).
-
-Afterward, the pipeline:
-
 - Runs a decontamination step using BWA to remove any host reads. By default, it uses the [hg39.fna](https://example.com/hg39.fna).
 - Bins the contigs using [Concoct](https://github.com/BinPro/CONCOCT), [MetaBAT2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6662567/) and [MaxBin2](https://flowcraft.readthedocs.io/en/latest/user/components/maxbin2.html).
-- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) bin_refinement compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
+- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) `bin_refinement` compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
 
 For prokaryotes:
 
@@ -43,19 +38,21 @@ For eukaryotes:
 
 Final steps: 
 
-- Tools versions are available in software_versions.yml 
-- Pipeline generates a tsv table for [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader)
-- TODO: finish MultiQC 
+- Tools versions are available in `software_versions.yml`
+- [MultiQC](https://seqera.io/multiqc/) report
 
-## Usage
+Optional steps:
 
-If this the first time running nextflow please refer to [this page](https://www.nextflow.io/index.html#GetStarted)
+- Upload MAGs to [ENA](https://www.ebi.ac.uk/ena/browser/home) using [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader). Applicable only for ENA related data.
+
+## Requirements
+
+- [Nextflow](https://www.nextflow.io/index.html#GetStarted)
+- Docker/Singularity
 
 ### Required reference databases
 
-You need to download the mentioned databases and specify as inputs to parameters.
-
-Don't forget to add this configuration to the main `.nextflow.config`.
+You need to download the mentioned databases and specify as inputs to parameters (check `.nextflow.config`).
 
 - [BUSCO](https://busco.ezlab.org/)
 - [CAT](https://github.com/dutilh/CAT)
@@ -73,32 +70,16 @@ If you will use ENA data follow [instructions](input_generation/README.md). Othe
 
 ### samplesheet.csv
 
-Each row corresponds to a specific dataset with information such as an `identifier` for the row, the file path to the assembly (`assembly`), and paths to the raw reads files (`fastq_1` and `fastq_2`). Additionally, the `assembly_accession` column contains associated assembly accessions. 
+Each row corresponds to a specific dataset with information such as row identifier `id`, the file path to the contigs file (`assembly`), and paths to the raw reads files (`fastq_1` and `fastq_2`). Additionally, the assembly identifier `assembly_accession` column. 
 
-| id         | assembly                  | fastq_1                             | fastq_2                             | assembly_accession |
-|------------|---------------------------|-------------------------------------|-------------------------------------|--------------------|
-| SRR1631112 | /path/to/ERZ1031893.fasta | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
+| id  | assembly                | fastq_1                 | fastq_2                 | assembly_accession |
+|-----|-------------------------|-------------------------|-------------------------|--------------------|
+| ID  | /path/to/ASSEMBLY.fasta | /path/to/RUN_1.fastq.gz | /path/to/RUN_2.fastq.gz | ASSEMBLY           |
 
 There is an example [here](assets/samplesheet_example.csv).
 
-### assembly_software.tsv
-
-`ID`: **run** accession \
-`Assembly_software`: tool that was used to assemble run into assembly.
-
-| id         | assembly_software  |
-|------------|--------------------|
-| SRR1631112 | Assembler_vVersion |
-
-### Metagenome
-Manually choose the most appropriate metagenome from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree. \
-For example, `marine metagenome`
-
-### Environment information
-Comma-separated environment parameters in format: 
-`"environment_biome,environment_feature,environment_material"` \
-For example, `marine sediments,subtropical gyre,sinking marine particle`
-
+> [!NOTE]
+> Check that [page](assets/upload_readme.md) for additional inputs if you want to **upload MAGs to ENA**.
 
 ## Run pipeline
 
@@ -106,16 +87,12 @@ For example, `marine sediments,subtropical gyre,sinking marine particle`
 nextflow run ebi-metagenomics/genomes-generation \
 -profile `specify profile(s)` \
 --input `samplesheet.csv` \
---assembly_software_file `software.tsv` \
---metagenome "chosen metagenome" \
---biomes "chosen biome,chosen feature,chosen material" \
 --outdir `full path to output directory`
 ```
 
 ### Optional arguments
 
-- `--xlarge (default=false)`: use high-memory config for big studies. _Study maybe considered as **big** if it has more than 300 runs. In addition, if study has less number of runs but they are very deeply sequenced it also makes sense to try that option._ 
-- `--skip_preprocessing_input (default=false)`: skip input data pre-processing step that renames ERZ-fasta files to ERR-run accessions. Useful if you process data not from ENA
+- `--skip_preprocessing_input (default=false)`: skip input data pre-processing step that renames contig files to ID accessions.
 - `--skip_prok (default=false)`: do not generate prokaryotic MAGs
 - `--skip_euk (default=false)`: do not generate eukaryotic MAGs
 - `--skip_concoct (default=false)`: skip CONCOCT binner in binning process
@@ -126,18 +103,9 @@ nextflow run ebi-metagenomics/genomes-generation \
 
 ## Pipeline results
 
-### Upload
-
-Use `final_table_for_uploader.tsv` to upload your MAGs to ENA with [uploader](https://github.com/EBI-Metagenomics/genome_uploader).
-
-Example of [final_table_for_uploader.tsv](assets/final_table_for_uploader.tsv).
-
-! _Do not modify existing output structure because that TSV file contains full paths to your genomes._
-
 ### Structure
 
 ```
-final_table_for_uploader.tsv
 unclassified_genomes.txt
 
 bins
