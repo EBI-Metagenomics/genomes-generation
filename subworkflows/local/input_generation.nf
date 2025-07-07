@@ -17,7 +17,7 @@ workflow INPUT_GENERATION {
     }
 
     if (params.samplesheet) {
-        assembly_and_runs = Channel.fromList(
+        samplesheet_ch = Channel.fromList(
            samplesheetToList(
               params.samplesheet,
               "${projectDir}/assets/schema_input.json"
@@ -38,8 +38,9 @@ workflow INPUT_GENERATION {
                 "${projectDir}/assets/schema_input.json"
             )
         }
-        assembly_and_runs = samplesheet_ch.map(groupReads)
     }
+
+    assembly_and_runs = samplesheet_ch.map(groupReads)
 
     // --- assembly software file ---
     if (params.assembly_software_file) {
