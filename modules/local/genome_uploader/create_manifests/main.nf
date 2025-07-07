@@ -23,6 +23,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     def bins_arg = params.upload_bins ? "--bins" : ""
     def tpa      = params.upload_tpa  ? "--tpa"  : ""
     def force    = params.upload_force  ? "--force"  : ""
+    def mode     = params.test_upload ? "" : "--live"
     def args     = task.ext.args ?: ''
 
     """
@@ -34,6 +35,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${bins_arg} \
       ${tpa} \
       ${force} \
+      ${mode} \
       --webin \$ENA_API_USER \
       --password \$ENA_API_PASSWORD \
       --out results \

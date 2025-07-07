@@ -16,6 +16,9 @@ process WEBIN_CLI_UPLOAD {
     path "versions.yml"                     , emit: versions
 
     script:
+
+    def mode     = params.test_upload ? "-test" : ""
+
     """
     # change FASTA path in manifest to current workdir
     export MAG_FULL_PATH=\$(readlink -f ${mag})
@@ -26,7 +29,8 @@ process WEBIN_CLI_UPLOAD {
       -manifest=${id}_updated_manifest.manifest \
       -userName='\$ENA_API_USER' \
       -password='\$ENA_API_PASSWORD' \
-      -submit
+      -submit \
+      ${mode}
 
     if grep -q "submission has been completed successfully" webin-cli.report; then
         export SUCCESS_STATUS="true"

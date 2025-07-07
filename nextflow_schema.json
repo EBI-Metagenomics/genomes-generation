@@ -116,6 +116,11 @@
           "default": "",
           "description": "name of the centre generating and uploading genomes"
         },
+        "test_upload": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use test server for upload, not live mode"
+        },
         "upload_tpa": {
           "type": "boolean",
           "default": true,
