@@ -138,7 +138,7 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
         else:
             print("wrong length of runs path")
         assembler = generate_software_input(assembly)
-        line += f"{assembly},{transformed_assembly},{assembler},,,,"
+        line += f"{assembly},{transformed_assembly},{assembler}"
         file_out.write(line + '\n')
 
 
@@ -201,8 +201,7 @@ def main(args):
     # add header to input samplesheet
     samplesheet_path = os.path.join(args.outdir, args.output_samplesheet)
     with open(samplesheet_path, 'w') as file_out:
-        file_out.write(','.join(['id', 'fastq_1', 'fastq_2', 'assembly_accession', 'assembly_fasta', 'assembler',
-                                 'concoct_bins', 'metabat_bins', 'maxbins_bins', 'jgi_depth']) + '\n')
+        file_out.write(','.join(['id', 'fastq_1', 'fastq_2', 'assembly_accession', 'assembly_fasta', 'assembler']) + '\n')
 
     # filter runs
     assembly_run_dict = generate_lists(

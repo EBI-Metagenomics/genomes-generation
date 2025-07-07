@@ -13,11 +13,6 @@
         "errorMessage": "Prefix, used for the file names (raw reads accession)",
         "meta": ["id"]
       },
-      "assembly": {
-        "type": "string",
-        "pattern": "^\\S+\\.(fa.gz|fasta.gz)$",
-        "errorMessage": "The assembly needs to be a fasta file."
-      },
       "fastq_1": {
         "type": "string",
         "pattern": "^\\S+\\.(fastq|fq|fq.gz|fastq.gz)$",
@@ -33,8 +28,19 @@
         "pattern": "[EDS]RZ[0-9]{6,}",
         "errorMessage": "Assembly accession (ERZ)",
         "meta": ["erz"]
+      },
+      "assembly": {
+        "type": "string",
+        "pattern": "^\\S+\\.(fa.gz|fasta.gz)$",
+        "errorMessage": "The assembly needs to be a fasta file."
+      },
+      "assembler": {
+        "type": "string",
+        "default": null,
+        "description": "Tool that was used to perform assembly in format: Tool_vVersion",
+        "meta": ["assembler"]
       }
     },
-    "required": ["id", "assembly", "fastq_1", "assembly_accession"]
+    "required": ["id", "fastq_1", "assembly_accession", "assembly_fasta"]
   }
 }

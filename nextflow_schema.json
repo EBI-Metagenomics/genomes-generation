@@ -31,6 +31,16 @@
           "description": "Path to comma-separated file containing information about the assemblies, raw reads with the prefix to be used.",
           "help_text": "You will need to create a design file with information about the assemblies, raw reads running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row.",
           "fa_icon": "fas fa-file-csv"
+        },
+        "assembly_software_file": {
+          "type": "string",
+          "format": "file-path",
+          "exists": true,
+          "mimetype": "text/tsv",
+          "pattern": "^\\S+\\.tsv$",
+          "description": "Path to tab-separated file containing run_accession and assembly software that was used for assembly.",
+          "help_text": "The easiest way to create that file is to take run_accession, assembly_accession and assembler info (Assembler_vVERSION from backlog DB.",
+          "fa_icon": "fas fa-file-tsv"
         }
       },
       "anyOf": [

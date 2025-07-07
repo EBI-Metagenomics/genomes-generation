@@ -119,14 +119,14 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
             transformed_path, _ = transform_paths(item)
             transformed_runs.append(transformed_path)
 
-        line = f"{run},{transformed_assembly},"
+        line = f"{run},"
         if len(transformed_runs) == 2:
             line += f"{transformed_runs[0]},{transformed_runs[1]},"
         elif len(transformed_runs) == 1:
             line += f"{transformed_runs[0]},,"
         else:
             print("wrong length of runs path")
-        line += f"{assembly}"
+        line += f"{assembly},{transformed_assembly}"
         file_out.write(line + '\n')
 
 
@@ -204,7 +204,7 @@ def main(args):
     # add header to input samplesheet
     samplesheet_path = os.path.join(args.outdir, args.output_samplesheet)
     with open(samplesheet_path, 'w') as file_out:
-        file_out.write(','.join(['id', 'assembly', 'fastq_1', 'fastq_2', 'assembly_accession']) + '\n')
+        file_out.write(','.join(['id', 'fastq_1', 'fastq_2', 'assembly_accession', 'assembly']) + '\n')
 
     # filter runs
     assembly_run_dict = generate_lists(
@@ -222,7 +222,7 @@ def main(args):
         assembly_run_dict,
         outfile_software=os.path.join(args.outdir, args.assembly_software_filename)
     )
-    print('Software file ganerated')
+    print('Software file generated')
     print('Done.')
 
 

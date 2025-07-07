@@ -72,9 +72,9 @@ If you will use ENA data follow [instructions](input_generation/README.md). Othe
 
 Each row corresponds to a specific dataset with information such as row identifier `id`, the file path to the contigs file (`assembly`), and paths to the raw reads files (`fastq_1` and `fastq_2`). Additionally, the assembly identifier `assembly_accession` column. 
 
-| id  | assembly                | fastq_1                 | fastq_2                 | assembly_accession |
-|-----|-------------------------|-------------------------|-------------------------|--------------------|
-| ID  | /path/to/ASSEMBLY.fasta | /path/to/RUN_1.fastq.gz | /path/to/RUN_2.fastq.gz | ASSEMBLY           |
+| id  | fastq_1                  | fastq_2                  | assembly_accession | assembly                | assembler [optional] |
+|-----|--------------------------|--------------------------|--------------------|-------------------------|----------------------|
+| ID  | /path/to/RUN_1.fastq.gz  | /path/to/RUN_2.fastq.gz  | ASSEMBLY           | /path/to/ASSEMBLY.fasta | metaspades_v3.15.5   |
 
 There is an example [here](assets/samplesheet_example.csv).
 
