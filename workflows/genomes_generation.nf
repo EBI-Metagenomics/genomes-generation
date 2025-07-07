@@ -8,8 +8,6 @@ if (params.help) {
    exit 0
 }
 
-validateParameters()
-
 
 log.info paramsSummaryLog(workflow)
 
