@@ -65,7 +65,9 @@ You need to download the mentioned databases and specify as inputs to parameters
 
 ## Pipeline inputs
 
-If you will use ENA data follow [instructions](input_generation/README.md). Otherwise, download your data and keep format as recommended in inputs description below.
+> [!NOTE]
+> If you will use [ENA](https://www.ebi.ac.uk/ena/browser/home) data follow [instructions](docs/ena_readme.md). 
+> Otherwise, download your data and keep format as recommended in inputs description below.
 
 
 ### samplesheet.csv
@@ -78,15 +80,13 @@ Each row corresponds to a specific dataset with information such as row identifi
 
 There is an example [here](assets/samplesheet_example.csv).
 
-> [!NOTE]
-> Check that [page](assets/upload_readme.md) for additional inputs if you want to **upload MAGs to ENA**.
 
 ## Run pipeline
 
 ```bash
 nextflow run ebi-metagenomics/genomes-generation \
 -profile `specify profile(s)` \
---input `samplesheet.csv` \
+--samplesheet `samplesheet.csv` \
 --outdir `full path to output directory`
 ```
 
