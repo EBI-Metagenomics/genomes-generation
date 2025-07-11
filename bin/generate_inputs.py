@@ -85,17 +85,21 @@ def generate_software_input(erz_acc):
     handler_request = handler.get_assembly(erz_acc)
     assembly_software = handler_request["assembly_software"]
     if not assembly_software:
-        json_analysis = load_xml(erz_acc)
-        assembly_software = json_analysis["ANALYSIS_SET"]["ANALYSIS"]["ANALYSIS_TYPE"]["SEQUENCE_ASSEMBLY"][
-            "PROGRAM"]
-        assembly_software = assembly_software.replace(" ", "_" if "v" in assembly_software else "_v")
-        if '_v' not in assembly_software:
-            assembly_software = assembly_software.replace('v', '_v')
+        try:
+            json_analysis = load_xml(erz_acc)
+            assembly_software = json_analysis["ANALYSIS_SET"]["ANALYSIS"]["ANALYSIS_TYPE"]["SEQUENCE_ASSEMBLY"][
+                "PROGRAM"]
+            assembly_software = assembly_software.replace(" ", "_" if "v" in assembly_software else "_v")
+            if '_v' not in assembly_software:
+                assembly_software = assembly_software.replace('v', '_v')
+        except:
+            print('Did not get software from XML. Leaving empty field')
     return assembly_software
 
 
 def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
     with open(samplesheet, 'a') as file_out:
+        transformed_assembly = ""
         if assembly_path:
             # TODO: return s3 when nextflow will work with -resume
             transformed_assembly, _ = transform_paths(assembly_path)
@@ -139,7 +143,10 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
             print("wrong length of runs path")
         assembler = generate_software_input(assembly)
         line += f"{assembly},{transformed_assembly},{assembler}"
-        file_out.write(line + '\n')
+        if transformed_assembly == '' or transformed_runs == []:
+            print(f'Some data is missing for {run} - {assembly}. Skipping that raw in samplesheet.')
+        else:
+            file_out.write(line + '\n')
 
 
 def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_name, input_env_biome, keep_metat, samplesheet_path):
