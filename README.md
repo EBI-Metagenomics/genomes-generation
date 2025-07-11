@@ -67,12 +67,18 @@ You need to download the mentioned databases and specify as inputs to parameters
 
 > [!NOTE]
 > If you will use [ENA](https://www.ebi.ac.uk/ena/browser/home) data follow [instructions](docs/ena_readme.md). 
-> Otherwise, download your data and keep format as recommended in inputs description below.
+> Otherwise, download your data and use the format as recommended in the inputs description below.
 
 
 ### samplesheet.csv
 
-Each row corresponds to a specific dataset with information such as row identifier `id`, the file path to the contigs file (`assembly`), and paths to the raw reads files (`fastq_1` and `fastq_2`). Additionally, the assembly identifier `assembly_accession` column. 
+Each row corresponds to a specific dataset with information:
+- row identifier `id`
+- paths to the raw reads files (`fastq_1` and `fastq_2`)
+- assembly identifier `assembly_accession`
+- the file path to the contigs file (`assembly`)
+
+Additionally, an optional column `assembler` contains information about tool and version that was used to produce the `assembly`. 
 
 | id  | fastq_1                  | fastq_2                  | assembly_accession | assembly                | assembler [optional] |
 |-----|--------------------------|--------------------------|--------------------|-------------------------|----------------------|

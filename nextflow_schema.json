@@ -71,7 +71,7 @@
         "outdir": {
           "type": "string",
           "format": "directory-path",
-          "description": "The output directory where the results will be saved. That value should be an absolute path.",
+          "description": "The output directory where the results will be saved. This value must be an absolute path.",
           "fa_icon": "fas fa-folder-open"
         }
       }
@@ -169,15 +169,15 @@
       "properties": {
         "filter_samplesheet_by_scientific_name": {
           "type": "string",
-          "description": "Comma separated list of scientific_name(s) that would be included"
+          "description": "Comma separated list of scientific_name(s) to include"
         },
         "filter_samplesheet_by_environment_biome": {
           "type": "string",
-          "description": "Comma separated list of environment_biome(s) that would be included"
+          "description": "Comma separated list of environment_biome(s) to include"
         },
         "keep_metat_runs_in_samplesheet": {
           "type": "boolean",
-          "description": "Allow METATRANSCRIPTOMIC runs (use that argument if you are 100% sure that ENA has mislabeled runs library_source)"
+          "description": "Allow METATRANSCRIPTOMIC runs (use this argument if you are 100% sure that the library_source field is mislabelled in ENA)"
         }
       }
     },

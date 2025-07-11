@@ -35,7 +35,7 @@
             "assembler": {
               "type": "string",
               "default": null,
-              "description": "Tool that was used to perform assembly in format: Tool_vVersion",
+              "description": "Tool that was used to perform assembly in format: Tool_vVersion (i.e. MetaSpades_v4.0.0)",
               "meta": ["assembler"]
             }
         },

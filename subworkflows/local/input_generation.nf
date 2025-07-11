@@ -44,7 +44,7 @@ workflow INPUT_GENERATION {
 
     // --- assembly software file ---
     if (params.assembly_software_file) {
-        assembly_software = file(params.assembly_software_file)
+        assembly_software = file(params.assembly_software_file, checkIfExists: true)
     }
     else {
         assembly_software = assembly_and_runs

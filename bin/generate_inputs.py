@@ -25,9 +25,9 @@ def parse_args():
     parser.add_argument('--output-samplesheet', required=False,
                         help='Name of output file', default="samplesheet.csv")
     parser.add_argument('-b', '--scientific-name', required=False,
-                        help='Comma separated list of scientific_name(s) that would be included')
+                        help='Comma separated list of scientific_name(s) to include')
     parser.add_argument('-e', '--environment-biome', required=False,
-                        help='Comma separated list of environment_biome(s) that would be included')
+                        help='Comma separated list of environment_biome(s) to include')
     parser.add_argument('--keep-metat', action='store_true')
     return parser.parse_args()
 
@@ -97,59 +97,70 @@ def generate_software_input(erz_acc):
     return assembly_software
 
 
-def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
-    with open(samplesheet, 'a') as file_out:
-        transformed_assembly = ""
-        if assembly_path:
-            # TODO: return s3 when nextflow will work with -resume
-            transformed_assembly, _ = transform_paths(assembly_path)
-        else:
-            print(f'no assembly path {assembly}')
-        chosen_run_path = []
-        if run_path:
-            se, pe_forward, pe_reversed = False, False, False
-            if len(run_path) >= 2:
-                for raw_file in run_path:
-                    if len(raw_file.split('_1')) >= 2:
-                        pe_forward = raw_file
-                    elif len(raw_file.split('_2')) >= 2:
-                        pe_reversed = raw_file
-                    else:
-                        se = raw_file
-                if se and pe_forward and pe_reversed:
-                    print(f"More than 3 raw files detected for {run}, choosing PE reads")
-                    chosen_run_path = [pe_forward, pe_reversed]
-                elif pe_forward and pe_reversed:
-                    chosen_run_path = [pe_forward, pe_reversed]
+def get_assembly_data(assembly, assembly_path):
+    # fetch assembly data
+    assembler = generate_software_input(assembly)
+    transformed_assembly = ""
+    if assembly_path:
+        # TODO: return s3 when nextflow will work with -resume
+        transformed_assembly, _ = transform_paths(assembly_path)
+    else:
+        print(f'no assembly path {assembly}')
+    return transformed_assembly, assembler
+
+
+def get_run_data(run, run_path):
+    # fetch runs data
+    chosen_run_path = []
+    if run_path:
+        se, pe_forward, pe_reversed = False, False, False
+        if len(run_path) >= 2:
+            for raw_file in run_path:
+                if len(raw_file.split('_1')) >= 2:
+                    pe_forward = raw_file
+                elif len(raw_file.split('_2')) >= 2:
+                    pe_reversed = raw_file
                 else:
-                    chosen_run_path = [se]
+                    se = raw_file
+            if se and pe_forward and pe_reversed:
+                print(f"More than 3 raw files detected for {run}, choosing PE reads")
+                chosen_run_path = [pe_forward, pe_reversed]
+            elif pe_forward and pe_reversed:
+                chosen_run_path = [pe_forward, pe_reversed]
             else:
-                chosen_run_path = [run_path[0]]
+                chosen_run_path = [se]
         else:
-            print(f'no runs path {assembly}')
+            chosen_run_path = [run_path[0]]
+    else:
+        print(f'no runs path {run}')
 
-        transformed_runs = []
-        for item in chosen_run_path:
-            # TODO: return when s3 will work with -resume
-            transformed_path, _ = transform_paths(item)
-            transformed_runs.append(transformed_path)
+    transformed_runs = []
+    for item in chosen_run_path:
+        # TODO: return when s3 will work with -resume
+        transformed_path, _ = transform_paths(item)
+        transformed_runs.append(transformed_path)
+    runs_str = ","
+    if len(transformed_runs) == 2:
+        runs_str = f"{transformed_runs[0]},{transformed_runs[1]}"
+    elif len(transformed_runs) == 1:
+        runs_str = f"{transformed_runs[0]},"
+    else:
+        print(f"wrong length of run {run} paths: {','.join(transformed_runs)}")
+    return runs_str
 
-        line = f"{run},"
-        if len(transformed_runs) == 2:
-            line += f"{transformed_runs[0]},{transformed_runs[1]},"
-        elif len(transformed_runs) == 1:
-            line += f"{transformed_runs[0]},,"
-        else:
-            print("wrong length of runs path")
-        assembler = generate_software_input(assembly)
-        line += f"{assembly},{transformed_assembly},{assembler}"
-        if transformed_assembly == '' or transformed_runs == []:
-            print(f'Some data is missing for {run} - {assembly}. Skipping that raw in samplesheet.')
-        else:
+
+def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
+    transformed_assembly, assembler = get_assembly_data(assembly, assembly_path)
+    runs_str = get_run_data(run, run_path)
+    if not (transformed_assembly == "" or runs_str == ""):
+        with open(samplesheet, 'a') as file_out:
+            line = f"{run},{runs_str},{assembly},{transformed_assembly},{assembler}"
             file_out.write(line + '\n')
+        return 1
+    return 0
 
 
-def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_name, input_env_biome, keep_metat, samplesheet_path):
+def process(raw_reads_study, assembly_study, outdir, input_scientific_name, input_env_biome, keep_metat, samplesheet_path):
     allowed_library_source = ['METAGENOMIC']
     run_fields = 'library_source,library_strategy,fastq_ftp'
     if input_scientific_name:
@@ -181,6 +192,8 @@ def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_nam
     assembly_run = {}
     assemblies = handler.get_study_assemblies(assembly_study, fields='submitted_ftp,generated_ftp')
     print(f'Received {len(assemblies)} assemblies from {assembly_study}')
+
+    skipped_lines = 0
     with open(os.path.join(outdir, 'runs_assemblies.tsv'), 'w') as file_out:
         for assembly in assemblies:
             retrieved_run = assembly['submitted_ftp'].split('/')[-1].split('.')[0].split('_')[0]
@@ -192,14 +205,14 @@ def generate_lists(raw_reads_study, assembly_study, outdir, input_scientific_nam
             file_out.write('\t'.join([retrieved_run, assembly['analysis_accession']]) + '\n')
             assembly_run[assembly['analysis_accession']] = retrieved_run
 
-            write_samplesheet_line(
+            skipped_lines += write_samplesheet_line(
                 assembly=assembly['analysis_accession'],
                 assembly_path=assembly['generated_ftp'],
                 run=retrieved_run,
                 run_path=run_paths[retrieved_run].split(';'),
                 samplesheet=samplesheet_path
             )
-    return assembly_run
+    return assembly_run, skipped_lines
 
 
 def main(args):
@@ -211,7 +224,7 @@ def main(args):
         file_out.write(','.join(['id', 'fastq_1', 'fastq_2', 'assembly_accession', 'assembly_fasta', 'assembler']) + '\n')
 
     # filter runs
-    assembly_run_dict = generate_lists(
+    assembly_run_dict, skipped_lines = process(
         raw_reads_study=args.raw_reads_study,
         assembly_study=args.assembly_study,
         outdir=args.outdir,
@@ -220,7 +233,7 @@ def main(args):
         keep_metat=args.keep_metat,
         samplesheet_path=samplesheet_path
     )
-    print(f'Samplesheet is done for {len(assembly_run_dict)} records')
+    print(f'Samplesheet is done for {len(assembly_run_dict) - skipped_lines} records')
     print('Done.')
 
 
