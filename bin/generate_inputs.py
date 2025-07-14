@@ -93,7 +93,7 @@ def generate_software_input(erz_acc):
             if '_v' not in assembly_software:
                 assembly_software = assembly_software.replace('v', '_v')
         except:
-            print('Did not get software from XML. Leaving empty field')
+            print('Could not get the assembly software from ENA API. Leaving the field empty')
     return assembly_software
 
 
