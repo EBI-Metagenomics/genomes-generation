@@ -54,8 +54,8 @@ def transform_paths(ftp_path: str) -> Tuple[str, str]:
 
 
 def load_xml(assembly):
-    retry_attempts = 3
-    retry_delay_min = 15
+    retry_attempts = 1
+    retry_delay_min = 5
     xml_url = "https://www.ebi.ac.uk/ena/browser/api/xml/{}".format(assembly)
 
     for attempt in range(1, retry_attempts + 1):
@@ -193,7 +193,7 @@ def process(raw_reads_study, assembly_study, outdir, input_scientific_name, inpu
     assemblies = handler.get_study_assemblies(assembly_study, fields='submitted_ftp,generated_ftp')
     print(f'Received {len(assemblies)} assemblies from {assembly_study}')
 
-    skipped_lines = 0
+    written_lines = 0
     with open(os.path.join(outdir, 'runs_assemblies.tsv'), 'w') as file_out:
         for assembly in assemblies:
             retrieved_run = assembly['submitted_ftp'].split('/')[-1].split('.')[0].split('_')[0]
@@ -205,14 +205,14 @@ def process(raw_reads_study, assembly_study, outdir, input_scientific_name, inpu
             file_out.write('\t'.join([retrieved_run, assembly['analysis_accession']]) + '\n')
             assembly_run[assembly['analysis_accession']] = retrieved_run
 
-            skipped_lines += write_samplesheet_line(
+            written_lines += write_samplesheet_line(
                 assembly=assembly['analysis_accession'],
                 assembly_path=assembly['generated_ftp'],
                 run=retrieved_run,
                 run_path=run_paths[retrieved_run].split(';'),
                 samplesheet=samplesheet_path
             )
-    return assembly_run, skipped_lines
+    return assembly_run, written_lines
 
 
 def main(args):
@@ -224,7 +224,7 @@ def main(args):
         file_out.write(','.join(['id', 'fastq_1', 'fastq_2', 'assembly_accession', 'assembly_fasta', 'assembler']) + '\n')
 
     # filter runs
-    assembly_run_dict, skipped_lines = process(
+    assembly_run_dict, written_lines = process(
         raw_reads_study=args.raw_reads_study,
         assembly_study=args.assembly_study,
         outdir=args.outdir,
@@ -233,7 +233,7 @@ def main(args):
         keep_metat=args.keep_metat,
         samplesheet_path=samplesheet_path
     )
-    print(f'Samplesheet is done for {len(assembly_run_dict) - skipped_lines} records')
+    print(f'Samplesheet is done for {written_lines} records')
     print('Done.')
 
 
