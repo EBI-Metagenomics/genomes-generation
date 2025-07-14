@@ -1,32 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
   "title": ". pipeline parameters",
   "description": "",
   "type": "object",
   "definitions": {
-    "input_output_options": {
-      "title": "Input/output options",
+    "input_options": {
+      "title": "Input options",
       "type": "object",
       "fa_icon": "fas fa-terminal",
-      "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["ena_assembly_study_accession", "samplesheet", "outdir"],
+      "description": "Define pipeline input arguments.",
       "properties": {
         "ena_assembly_study_accession": {
           "type": "string",
-          "description": "Assembly study accession - used to upload MAGs",
+          "description": "Assembly study accession (ENA specific feature, used to fetch assemblies and upload MAGs)",
           "fa_icon": "fas fa-ad"
         },
-        "metagenome": {
+        "ena_raw_reads_study_accession": {
           "type": "string",
-          "description": "Metagenome from ENA list for upload",
+          "description": "Raw reads study accession (ENA specific feature, used to fetch reads from ENA)",
           "fa_icon": "fas fa-ad"
-        },
-        "biomes": {
-          "type": "string",
-          "description": "Biome in format: environment_biome,environment_feature,environment_material",
-          "fa_icon": "fas fa-ad",
-          "pattern": "^[a-z\\s]+,[a-z\\s]+,[a-z\\s-]+$"
         },
         "samplesheet": {
           "type": "string",
@@ -48,11 +41,37 @@
           "description": "Path to tab-separated file containing run_accession and assembly software that was used for assembly.",
           "help_text": "The easiest way to create that file is to take run_accession, assembly_accession and assembler info (Assembler_vVERSION from backlog DB.",
           "fa_icon": "fas fa-file-tsv"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["ena_assembly_study_accession", "ena_raw_reads_study_accession"],
+          "not": {
+            "required": ["samplesheet"]
+          }
         },
+        {
+          "required": ["samplesheet"],
+          "not": {
+            "anyOf": [
+              {"required": ["ena_assembly_study_accession"]},
+              {"required": ["ena_raw_reads_study_accession"]}
+            ]
+          }
+        }
+      ]
+    },
+    "output_options": {
+      "title": "Output options",
+      "type": "object",
+      "fa_icon": "fas fa-terminal",
+      "description": "Define where the pipeline should save output data.",
+      "required": ["outdir"],
+      "properties": {
         "outdir": {
           "type": "string",
           "format": "directory-path",
-          "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+          "description": "The output directory where the results will be saved. This value must be an absolute path.",
           "fa_icon": "fas fa-folder-open"
         }
       }
@@ -81,10 +100,26 @@
       "description": "genome_uploader supported options for automatic mags upload",
       "default": "",
       "properties": {
+        "metagenome": {
+          "type": "string",
+          "description": "Metagenome from ENA list for upload",
+          "fa_icon": "fas fa-ad"
+        },
+        "biomes": {
+          "type": "string",
+          "description": "Biome in format: environment_biome,environment_feature,environment_material",
+          "fa_icon": "fas fa-ad",
+          "pattern": "^[a-z\\s]+,[a-z\\s]+,[a-z\\s-]+$"
+        },
         "centre_name": {
           "type": "string",
           "default": "",
           "description": "name of the centre generating and uploading genomes"
+        },
+        "test_upload": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use test server for upload, not live mode"
         },
         "upload_tpa": {
           "type": "boolean",
@@ -110,8 +145,8 @@
       "oneOf": [
         {
           "properties": {
-            "webin_account": { "type": "string" },
-            "webin_password": { "type": "string" },
+            "metagenome": { "type": "string" },
+            "biomes": { "type": "boolean" },
             "centre_name": { "type": "string" },
             "upload_tpa": { "type": "boolean" },
             "upload_mags": { "const": true },
@@ -125,6 +160,26 @@
           }
         }
       ]
+    },
+    "samplesheet_generation": {
+      "title": "Generate input samplesheet from ENA raw_reads and assembly studies",
+      "type": "object",
+      "description": "ENA specific function",
+      "default": "",
+      "properties": {
+        "filter_samplesheet_by_scientific_name": {
+          "type": "string",
+          "description": "Comma separated list of scientific_name(s) to include"
+        },
+        "filter_samplesheet_by_environment_biome": {
+          "type": "string",
+          "description": "Comma separated list of environment_biome(s) to include"
+        },
+        "keep_metat_runs_in_samplesheet": {
+          "type": "boolean",
+          "description": "Allow METATRANSCRIPTOMIC runs (use this argument if you are 100% sure that the library_source field is mislabelled in ENA)"
+        }
+      }
     },
     "prokaryotes_mags_generation": {
       "title": "Prokaryotes MAGs generation",
@@ -312,7 +367,10 @@
   },
   "allOf": [
     {
-      "$ref": "#/definitions/input_output_options"
+      "$ref": "#/definitions/input_options"
+    },
+    {
+      "$ref": "#/definitions/output_options"
     },
     {
       "$ref": "#/definitions/quality_control"

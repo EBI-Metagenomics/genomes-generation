@@ -65,28 +65,34 @@ You need to download the mentioned databases and specify as inputs to parameters
 
 ## Pipeline inputs
 
-If you will use ENA data follow [instructions](input_generation/README.md). Otherwise, download your data and keep format as recommended in inputs description below.
+> [!NOTE]
+> If you will use [ENA](https://www.ebi.ac.uk/ena/browser/home) data follow [instructions](docs/ena_readme.md). 
+> Otherwise, download your data and use the format as recommended in the inputs description below.
 
 
 ### samplesheet.csv
 
-Each row corresponds to a specific dataset with information such as row identifier `id`, the file path to the contigs file (`assembly`), and paths to the raw reads files (`fastq_1` and `fastq_2`). Additionally, the assembly identifier `assembly_accession` column. 
+Each row corresponds to a specific dataset with information:
+- row identifier `id`
+- paths to the raw reads files (`fastq_1` and `fastq_2`)
+- assembly identifier `assembly_accession`
+- the file path to the contigs file (`assembly`)
 
-| id  | assembly                | fastq_1                 | fastq_2                 | assembly_accession |
-|-----|-------------------------|-------------------------|-------------------------|--------------------|
-| ID  | /path/to/ASSEMBLY.fasta | /path/to/RUN_1.fastq.gz | /path/to/RUN_2.fastq.gz | ASSEMBLY           |
+Additionally, an optional column `assembler` contains information about tool and version that was used to produce the `assembly`. 
+
+| id  | fastq_1                  | fastq_2                  | assembly_accession | assembly                | assembler [optional] |
+|-----|--------------------------|--------------------------|--------------------|-------------------------|----------------------|
+| ID  | /path/to/RUN_1.fastq.gz  | /path/to/RUN_2.fastq.gz  | ASSEMBLY           | /path/to/ASSEMBLY.fasta | metaspades_v3.15.5   |
 
 There is an example [here](assets/samplesheet_example.csv).
 
-> [!NOTE]
-> Check that [page](assets/upload_readme.md) for additional inputs if you want to **upload MAGs to ENA**.
 
 ## Run pipeline
 
 ```bash
 nextflow run ebi-metagenomics/genomes-generation \
 -profile `specify profile(s)` \
---input `samplesheet.csv` \
+--samplesheet `samplesheet.csv` \
 --outdir `full path to output directory`
 ```
 

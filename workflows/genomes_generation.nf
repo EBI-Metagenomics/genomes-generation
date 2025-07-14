@@ -8,8 +8,6 @@ if (params.help) {
    exit 0
 }
 
-validateParameters()
-
 
 log.info paramsSummaryLog(workflow)
 
@@ -47,8 +45,6 @@ rfam_rrna_models   = file(params.rfam_rrna_models, checkIfExists: true)
 ref_genome         = file(params.ref_genome)
 ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
 
-assembly_software  = file(params.assembly_software_file)
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,6 +63,7 @@ include { GUNZIP as GUNZIP_ASSEMBLY   } from '../modules/local/utils'
      Subworkflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+include { INPUT_GENERATION     } from '../subworkflows/local/input_generation'
 include { PROCESS_INPUT        } from '../subworkflows/local/process_input_files'
 include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
 include { ALIGN                } from '../subworkflows/local/alignment'
@@ -100,16 +97,11 @@ workflow GGP {
     taxonomy_euks  = Channel.empty()
     taxonomy_proks = Channel.empty()
 
-    // ---- combine data for reads and contigs pre-processing ---- //
-    groupReads = { meta, assembly, fq1, fq2 ->
-        if (fq2 == []) {
-            return tuple(meta + [single_end: true], assembly, [fq1])
-        }
-        else {
-            return tuple(meta + [single_end: false], assembly, [fq1, fq2])
-        }
-    }
-    assembly_and_runs = Channel.fromSamplesheet("samplesheet", header: true, sep: ',').map(groupReads) // [ meta, assembly_file, [raw_reads] ]
+    // ---- input reads and assemblies ---- //
+    INPUT_GENERATION()
+    assembly_and_runs = INPUT_GENERATION.out.input_data
+    assembly_software = INPUT_GENERATION.out.assembly_software
+    ch_versions = ch_versions.mix(INPUT_GENERATION.out.versions)
 
     // --- check input reads quality --- //
     FASTQC_BEFORE (assembly_and_runs.map{ meta, _ , reads -> [meta, reads] })
