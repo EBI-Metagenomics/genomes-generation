@@ -5,7 +5,7 @@ ENA is a very useful resource for MAGs/bins generation because it [structures](h
 For example, 
 `raw-reads study` [SRP080008](https://www.ebi.ac.uk/ena/browser/view/PRJNA330077) was assembled and submitted as `assembly study` [ERP108081](https://www.ebi.ac.uk/ena/browser/view/PRJEB26108).
 
-It is possible to submit generated MAGs to ENA **if you own the data**. That pipeline is automated to register and submit MAGs using [genome_uploader](https://github.com/EBI-Metagenomics/genome_uploader) to ENA mags layer under `assembly study` project. 
+It is possible to submit generated MAGs to ENA if you own the records in ENA. Our pipeline is automated to register and submit MAGs using [genome_uploader](https://github.com/EBI-Metagenomics/genome_uploader) to ENA's MAGs layer under an assembly study project.
 > [!NOTE]
 > If you do not have full access to ENA studies - do not submit MAGs 
 
