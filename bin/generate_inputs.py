@@ -160,7 +160,7 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
     return 0
 
 
-def process(raw_reads_study, assembly_study, outdir, input_scientific_name, input_env_biome, keep_metat, samplesheet_path):
+def fetch_data(raw_reads_study, assembly_study, outdir, input_scientific_name, input_env_biome, keep_metat):
     allowed_library_source = ['METAGENOMIC']
     run_fields = 'library_source,library_strategy,fastq_ftp'
     if input_scientific_name:
@@ -189,11 +189,10 @@ def process(raw_reads_study, assembly_study, outdir, input_scientific_name, inpu
         list_runs.append(run['run_accession'])
         run_paths[run['run_accession']] = run['fastq_ftp']
     print(f'Received {len(list_runs)} runs after filtering')
-    assembly_run = {}
+    assembly_run, assembly_path = {}, {}
     assemblies = handler.get_study_assemblies(assembly_study, fields='submitted_ftp,generated_ftp')
     print(f'Received {len(assemblies)} assemblies from {assembly_study}')
 
-    written_lines = 0
     with open(os.path.join(outdir, 'runs_assemblies.tsv'), 'w') as file_out:
         for assembly in assemblies:
             retrieved_run = assembly['submitted_ftp'].split('/')[-1].split('.')[0].split('_')[0]
@@ -204,15 +203,21 @@ def process(raw_reads_study, assembly_study, outdir, input_scientific_name, inpu
                 continue
             file_out.write('\t'.join([retrieved_run, assembly['analysis_accession']]) + '\n')
             assembly_run[assembly['analysis_accession']] = retrieved_run
+            assembly_path[assembly['analysis_accession']] = assembly['generated_ftp']
+    return assembly_run, assembly_path, run_paths
 
-            written_lines += write_samplesheet_line(
-                assembly=assembly['analysis_accession'],
-                assembly_path=assembly['generated_ftp'],
-                run=retrieved_run,
-                run_path=run_paths[retrieved_run].split(';'),
-                samplesheet=samplesheet_path
-            )
-    return assembly_run, written_lines
+
+def generate_samplesheet(assembly_run, assembly_path, run_paths, samplesheet_path):
+    written_lines = 0
+    for assembly in assembly_run:
+        written_lines += write_samplesheet_line(
+            assembly=assembly,
+            assembly_path=assembly_path[assembly],
+            run=assembly_run[assembly],
+            run_path=run_paths[assembly_run[assembly]].split(';'),
+            samplesheet=samplesheet_path
+        )
+    return written_lines
 
 
 def main(args):
@@ -224,15 +229,15 @@ def main(args):
         file_out.write(','.join(['id', 'fastq_1', 'fastq_2', 'assembly_accession', 'assembly_fasta', 'assembler']) + '\n')
 
     # filter runs
-    assembly_run_dict, written_lines = process(
+    assembly_run_dict, assembly_path_dict, run_paths_dict = fetch_data(
         raw_reads_study=args.raw_reads_study,
         assembly_study=args.assembly_study,
         outdir=args.outdir,
         input_scientific_name=args.scientific_name,
         input_env_biome=args.environment_biome,
-        keep_metat=args.keep_metat,
-        samplesheet_path=samplesheet_path
+        keep_metat=args.keep_metat
     )
+    written_lines = generate_samplesheet(assembly_run_dict, assembly_path_dict, run_paths_dict, samplesheet_path=samplesheet_path)
     print(f'Samplesheet is done for {written_lines} records')
     print('Done.')
 
