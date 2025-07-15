@@ -6,8 +6,8 @@ process WEBIN_CLI_UPLOAD {
     container "quay.io/biocontainers/ena-webin-cli:8.2.0--hdfd78af_0"
 
     input:
-    secret 'ENA_API_USER'
-    secret 'ENA_API_PASSWORD'
+    secret 'WEBIN_ACCOUNT'
+    secret 'WEBIN_PASSWORD'
     tuple val(id), path(mag), path(manifest)
 
     output:
@@ -27,8 +27,8 @@ process WEBIN_CLI_UPLOAD {
     ena-webin-cli \
       -context=genome \
       -manifest=${id}_updated_manifest.manifest \
-      -userName='\$ENA_API_USER' \
-      -password='\$ENA_API_PASSWORD' \
+      -userName='\$WEBIN_ACCOUNT' \
+      -password='\$WEBIN_PASSWORD' \
       -submit \
       ${mode}
 
