@@ -48,6 +48,9 @@ nextflow run ebi-metagenomics/genomes-generation \
 ## Optional arguments
 
 ### input samplesheet generation
+
+You can run samplesheet generation separately using [script](../bin/generate_inputs.py). Required input arguments are `assembly_study_accession` and `raw_reads_study_accession`.
+
 **By default GGP filters out AMPLICON and metaT runs.**
 - `--filter_samplesheet_by_scientific_name (default=false)`: filter by **scientific_name** (like in ENA records) comma separated list
 - `--filter_samplesheet_by_environment_biome (default=false)`: filter by **environment_biome** (like in ENA records) comma separated list
@@ -56,7 +59,7 @@ nextflow run ebi-metagenomics/genomes-generation \
 ### ENA upload
 #### Metagenome
 - `--metagenome ` \
-Manually choose the most appropriate metagenome from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree. \
+Manually choose the most appropriate metagenome type from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree. \
 For example, `marine metagenome`
 #### Environment information
 - `--biomes ` \

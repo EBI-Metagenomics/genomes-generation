@@ -2,26 +2,34 @@
 
 <img align="right" width="160" height="120" src="assets/GGP_logo.png">
 
-MGnify genomes generation pipeline (GGP) produces prokaryotic and eukaryotic MAGs from raw reads and corresponding assemblies.
+MGnify genomes generation pipeline (GGP) produces prokaryotic and eukaryotic metagenome-assembled genomes (MAGs) from raw reads and corresponding assemblies.
 
 <p align="center">
     <img src="assets/GGP_schema.png" alt="Pipeline overview" width="90%">
 </p>
 
 
-This pipeline **does not support co-binning** and was tested only on **short reads** yet.
+This pipeline **does not support co-binning** and has so far only been tested on **short reads**.
 
 ## Pipeline summary
 
 The pipeline performs the following tasks:
 
-- Quality trims the reads, removes adapters [fastp](https://github.com/OpenGene/fastp).
+Pre-processing:
+
+- Sanity check raw-reads with [seqkit](https://bioinf.shenwei.me/seqkit/usage/#sana).
+- Rename raw-reads identifiers to corresponding assembly identifiers (that process helps to traceback what contigs were used to build particular bin/MAG).
+- Change all dots to underscores in contig headers.
+
+Data processing:
+
+- Quality trims the reads and removes adapters using [fastp](https://github.com/OpenGene/fastp).
 - Runs a decontamination step using BWA to remove any host reads. By default, it uses the [hg39.fna](https://example.com/hg39.fna).
 - Bins the contigs using [Concoct](https://github.com/BinPro/CONCOCT), [MetaBAT2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6662567/) and [MaxBin2](https://flowcraft.readthedocs.io/en/latest/user/components/maxbin2.html).
-- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) `bin_refinement` compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
 
 For prokaryotes:
 
+- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) `bin_refinement` compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
 - Conducts bin quality control with [CAT](https://github.com/dutilh/CAT), [GUNC](https://github.com/CK7/GUNC), and [CheckM](https://github.com/Ecogenomics/CheckM).
 - Performs dereplication with [dRep](https://github.com/MrOlm/drep).
 - Calculates coverage using MetaBAT2 calculated depths.
@@ -38,12 +46,12 @@ For eukaryotes:
 
 Final steps: 
 
-- Tools versions are available in `software_versions.yml`
+- Tool versions are available in `software_versions.yml`
 - [MultiQC](https://seqera.io/multiqc/) report
 
 Optional steps:
 
-- Upload MAGs to [ENA](https://www.ebi.ac.uk/ena/browser/home) using [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader). Applicable only for ENA related data.
+- Upload MAGs to [ENA](https://www.ebi.ac.uk/ena/browser/home) using [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader). Applicable only if assemblies and reads were downloaded from ENA.
 
 ## Requirements
 
@@ -52,7 +60,7 @@ Optional steps:
 
 ### Required reference databases
 
-You need to download the mentioned databases and specify as inputs to parameters (check `.nextflow.config`).
+You need to download the mentioned databases and specify them as inputs to parameters (check `nextflow.config`).
 
 - [BUSCO](https://busco.ezlab.org/)
 - [CAT](https://github.com/dutilh/CAT)
@@ -66,8 +74,8 @@ You need to download the mentioned databases and specify as inputs to parameters
 ## Pipeline inputs
 
 > [!NOTE]
-> If you will use [ENA](https://www.ebi.ac.uk/ena/browser/home) data follow [instructions](docs/ena_readme.md). 
-> Otherwise, download your data and use the format as recommended in the inputs description below.
+> If you want to use the pipeline on [ENA](https://www.ebi.ac.uk/ena/browser/home), data follow these [instructions](docs/ena_readme.md). 
+> Otherwise, download your data and organise it in the recommended format described below.
 
 
 ### samplesheet.csv
@@ -98,7 +106,7 @@ nextflow run ebi-metagenomics/genomes-generation \
 
 ### Optional arguments
 
-- `--skip_preprocessing_input (default=false)`: skip input data pre-processing step that renames contig files to ID accessions.
+- `--skip_preprocessing_input (default=false)`: skip input data pre-processing step
 - `--skip_prok (default=false)`: do not generate prokaryotic MAGs
 - `--skip_euk (default=false)`: do not generate eukaryotic MAGs
 - `--skip_concoct (default=false)`: skip CONCOCT binner in binning process

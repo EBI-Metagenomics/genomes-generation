@@ -15,7 +15,7 @@ from ena_portal_api.ena_handler import EnaApiHandler
 handler = EnaApiHandler()
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='The script filters list of assemblies')
+    parser = argparse.ArgumentParser(description='The script generates input samplesheet for genomes-generation pipeline')
     parser.add_argument('-a', '--assembly-study', required=True,
                         help='Assembly study accession')
     parser.add_argument('-r', '--raw-reads-study', required=True,
@@ -25,9 +25,11 @@ def parse_args():
     parser.add_argument('--output-samplesheet', required=False,
                         help='Name of output file', default="samplesheet.csv")
     parser.add_argument('-b', '--scientific-name', required=False,
-                        help='Comma separated list of scientific_name(s) to include')
+                        help='Comma separated list of scientific_name(s) to include. '
+                             'For example: marine sediment metagenome,sediment metagenome')
     parser.add_argument('-e', '--environment-biome', required=False,
-                        help='Comma separated list of environment_biome(s) to include')
+                        help='Comma separated list of environment_biome(s) to include. '
+                             'For example: cold marine sediment biome,warm marine sediment biome')
     parser.add_argument('--keep-metat', action='store_true')
     return parser.parse_args()
 
@@ -40,13 +42,13 @@ def transform_paths(ftp_path: str) -> Tuple[str, str]:
     """
     if ftp_path.startswith("ftp.sra.ebi.ac.uk/vol1/"):
         # TODO: return s3 path when nextflow would be fixed
-        #s3_key = ftp_path.replace("ftp.sra.ebi.ac.uk/vol1/", "s3://era-public/")
+        # TODO s3_key = ftp_path.replace("ftp.sra.ebi.ac.uk/vol1/", "s3://era-public/")
         https_key = 'https://' + ftp_path
         print(f"Detected a public file for FTP path: {ftp_path}")
         return https_key, 'public'
     elif ftp_path.startswith("ftp.dcc-private.ebi.ac.uk/vol1/"):
         # TODO: return s3 path when nextflow would be fixed
-        #s3_key = ftp_path.replace("ftp.dcc-private.ebi.ac.uk/vol1/", "s3://era-private/")
+        # TODO s3_key = ftp_path.replace("ftp.dcc-private.ebi.ac.uk/vol1/", "s3://era-private/")
         print(f"Detected a private file for FTP path: {ftp_path}")
         return ftp_path, 'private'
     else:
@@ -55,10 +57,8 @@ def transform_paths(ftp_path: str) -> Tuple[str, str]:
         )
 
 
-def load_xml(assembly):
-    retry_attempts = 1
-    retry_delay_min = 5
-    xml_url = "https://www.ebi.ac.uk/ena/browser/api/xml/{}".format(assembly)
+def load_xml(assembly, retry_attempts=1, retry_delay_min=5):
+    xml_url = f"https://www.ebi.ac.uk/ena/browser/api/xml/{assembly}"
 
     for attempt in range(1, retry_attempts + 1):
         r = requests.get(xml_url)
@@ -170,7 +170,7 @@ def fetch_data(raw_reads_study, assembly_study, outdir, input_scientific_name, i
         run_fields += ',scientific_name'
     if input_env_biome:
         run_fields += ',environment_biome'
-        input_input_env_biomes = [s.strip() for s in input_env_biome.split(',')]
+        input_env_biomes = [s.strip() for s in input_env_biome.split(',')]
     runs = handler.get_study_runs(raw_reads_study, fields=run_fields)
     print(f'Received {len(runs)} runs from {raw_reads_study}')
     list_runs = []
@@ -182,7 +182,7 @@ def fetch_data(raw_reads_study, assembly_study, outdir, input_scientific_name, i
             if run['scientific_name'] not in input_scientific_name:
                 continue
         if input_env_biome:
-            if run['environment_biome'] not in input_input_env_biomes:
+            if run['environment_biome'] not in input_env_biomes:
                 continue
         if keep_metat:
             allowed_library_source.append('METATRANSCRIPTOMIC')
