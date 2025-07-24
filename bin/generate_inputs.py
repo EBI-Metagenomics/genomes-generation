@@ -47,9 +47,8 @@ def transform_paths(ftp_path: str) -> Tuple[str, str]:
     elif ftp_path.startswith("ftp.dcc-private.ebi.ac.uk/vol1/"):
         # TODO: return s3 path when nextflow would be fixed
         #s3_key = ftp_path.replace("ftp.dcc-private.ebi.ac.uk/vol1/", "s3://era-private/")
-        https_key = 'https://' + ftp_path
         print(f"Detected a private file for FTP path: {ftp_path}")
-        return https_key, 'private'
+        return ftp_path, 'private'
     else:
         raise ValueError(
             f"Invalid FTP path: {ftp_path}. Must start with 'ftp.sra.ebi.ac.uk/vol1/' or 'ftp.dcc-private.ebi.ac.uk/vol1/'."
