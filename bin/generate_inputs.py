@@ -39,14 +39,16 @@ def transform_paths(ftp_path: str) -> Tuple[str, str]:
     Use FIRE S3 object key for private data (-resume is broken for S3 paths)
     """
     if ftp_path.startswith("ftp.sra.ebi.ac.uk/vol1/"):
+        # TODO: return s3 path when nextflow would be fixed
         #s3_key = ftp_path.replace("ftp.sra.ebi.ac.uk/vol1/", "s3://era-public/")
         https_key = 'https://' + ftp_path
         print(f"Detected a public file for FTP path: {ftp_path}")
         return https_key, 'public'
     elif ftp_path.startswith("ftp.dcc-private.ebi.ac.uk/vol1/"):
-        s3_key = ftp_path.replace("ftp.dcc-private.ebi.ac.uk/vol1/", "s3://era-private/")
+        # TODO: return s3 path when nextflow would be fixed
+        #s3_key = ftp_path.replace("ftp.dcc-private.ebi.ac.uk/vol1/", "s3://era-private/")
         print(f"Detected a private file for FTP path: {ftp_path}")
-        return s3_key, 'private'
+        return ftp_path, 'private'
     else:
         raise ValueError(
             f"Invalid FTP path: {ftp_path}. Must start with 'ftp.sra.ebi.ac.uk/vol1/' or 'ftp.dcc-private.ebi.ac.uk/vol1/'."

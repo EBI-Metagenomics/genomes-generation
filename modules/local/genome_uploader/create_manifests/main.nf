@@ -5,8 +5,8 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     container "quay.io/microbiome-informatics/genome-uploader:2.3.2"
 
     input:
-    secret 'ENA_API_USER'
-    secret 'ENA_API_PASSWORD'
+    secret 'WEBIN_ACCOUNT'
+    secret 'WEBIN_PASSWORD'
     path(table_for_upload)
     path(mags)
 
@@ -36,8 +36,8 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${tpa} \
       ${force} \
       ${mode} \
-      --webin \$ENA_API_USER \
-      --password \$ENA_API_PASSWORD \
+      --webin \$WEBIN_ACCOUNT \
+      --password \$WEBIN_PASSWORD \
       --out results \
       ${args}
     """
