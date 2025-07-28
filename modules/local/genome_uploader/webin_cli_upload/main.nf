@@ -34,15 +34,18 @@ process WEBIN_CLI_UPLOAD {
 
     mv webin-cli.report "${id}_webin-cli.report"
 
-    if grep -q "submission has been completed successfully" webin-cli.report; then
-        export SUCCESS_STATUS="true"
-    else
-        export SUCCESS_STATUS="false"
-    fi
-
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         ena-webin-cli: \$(ena-webin-cli -version 2>&1 )
     END_VERSIONS
+
+    # status check
+    if grep -q "submission has been completed successfully" "${id}_webin-cli.report"; then
+        export SUCCESS_STATUS="true"
+        exit 0
+    else
+        export SUCCESS_STATUS="false"
+        exit 1
+    fi
     """
 }
