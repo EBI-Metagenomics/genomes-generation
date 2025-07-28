@@ -22,13 +22,15 @@ process GTDBTK {
     """
     export GTDBTK_DATA_PATH=/opt/gtdbtk_refdata
 
+    mkdir gtdbtk_tmp
     gtdbtk classify_wf \
-    --cpus ${task.cpus} \
-    --pplacer_cpus ${task.cpus} \
-    --genome_dir genomes_dir \
-    --extension fa \
-    --skip_ani_screen \
-    --out_dir gtdbtk_results
+        --cpus ${task.cpus} \
+        --pplacer_cpus ${task.cpus} \
+        --genome_dir genomes_dir \
+        --extension fa \
+        --skip_ani_screen \
+        --out_dir gtdbtk_results \
+        --tmpdir gtdbtk_tmp
 
     echo "Compress GTDB-Tk"
     tar -czf gtdbtk_results.tar.gz -C gtdbtk_results .

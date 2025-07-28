@@ -50,11 +50,13 @@ process CHECKM2 {
     fi
 
     echo "checkm predict"
+    mkdir checkm_tmp
     checkm2 predict --threads ${task.cpus} \
         --input bins_folder \
         -x fa \
         --output-directory ${name}_checkm_output \
-        --database_path ${checkm2_db}
+        --database_path ${checkm2_db} \
+        --tmpdir checkm_tmp
     CHECMK2_EXITCODE="\$?"
 
     if [ "\$CHECMK2_EXITCODE" == "1" ]; then
