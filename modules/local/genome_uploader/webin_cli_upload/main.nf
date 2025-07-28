@@ -11,9 +11,9 @@ process WEBIN_CLI_UPLOAD {
     tuple val(id), path(mag), path(manifest)
 
     output:
-    tuple val(id), path("webin-cli.report") , emit: webin_report
-    tuple val(id), env('SUCCESS_STATUS')    , emit: upload_status
-    path "versions.yml"                     , emit: versions
+    tuple val(id), path("*webin-cli.report") , emit: webin_report
+    tuple val(id), env('SUCCESS_STATUS')     , emit: upload_status
+    path "versions.yml"                      , emit: versions
 
     script:
 
@@ -31,6 +31,8 @@ process WEBIN_CLI_UPLOAD {
       -password='\$WEBIN_PASSWORD' \
       -submit \
       ${mode}
+
+    mv webin-cli.report "${id}_webin-cli.report"
 
     if grep -q "submission has been completed successfully" webin-cli.report; then
         export SUCCESS_STATUS="true"
