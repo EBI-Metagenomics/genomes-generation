@@ -61,7 +61,7 @@ if exit code is 204 - metaeuk return empty faa -> no results for eukcc
 */
 process EUKCC {
 
-    label 'process_medium'
+    label 'process_long'
     tag "${meta.id} ${binner}"
 
     container 'quay.io/microbiome-informatics/eukcc:2.1.3'
@@ -80,7 +80,7 @@ process EUKCC {
 
     script:
     """
-    mkdir -p bins ${binner}_${meta.id}_merged_bins/merged_bins
+    mkdir -p bins ${binner}_${meta.id}_merged_bins
     touch ${meta.id}_${binner}.eukcc.csv ${meta.id}_${binner}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
@@ -91,6 +91,7 @@ process EUKCC {
     export BINS=\$(ls bins | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "No bins in input"
+        mkdir -p ${binner}_${meta.id}_merged_bins/merged_bins
         cat <<-END_LOGGING > progress.log
         ${meta.id}\t${task.process}\t${binner}
             bins: 0, merged: 0
@@ -121,6 +122,8 @@ process EUKCC {
         if [ "\$EUKCC_EXITCODE" == "204" ]; then
             echo "Metaeuk returned zero proteins"
         fi
+
+        mkdir -p ${binner}_${meta.id}_merged_bins/merged_bins
 
         set -e
 

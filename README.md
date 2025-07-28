@@ -1,30 +1,35 @@
-# MAGs generation pipeline
+# Genomes Generation Pipeline
 
-MGnify genomes generation pipeline to generate prokaryotic and eukaryotic MAGs from reads and assemblies.
+<img align="right" width="160" height="120" src="assets/GGP_logo.png">
+
+MGnify genomes generation pipeline (GGP) produces prokaryotic and eukaryotic metagenome-assembled genomes (MAGs) from raw reads and corresponding assemblies.
 
 <p align="center">
     <img src="assets/GGP_schema.png" alt="Pipeline overview" width="90%">
 </p>
 
 
-This pipeline does not support co-binning.
+This pipeline **does not support co-binning** and has so far only been tested on **short reads**.
 
 ## Pipeline summary
 
 The pipeline performs the following tasks:
 
-- Supports short reads.
-- Changes read headers to their corresponding assembly accessions (in the ERZ namespace).
-- Quality trims the reads, removes adapters [fastp](https://github.com/OpenGene/fastp).
+Pre-processing:
 
-Afterward, the pipeline:
+- Sanity check raw-reads with [seqkit](https://bioinf.shenwei.me/seqkit/usage/#sana).
+- Rename raw-reads identifiers to corresponding assembly identifiers (that process helps to traceback what contigs were used to build particular bin/MAG).
+- Change all dots to underscores in contig headers.
 
+Data processing:
+
+- Quality trims the reads and removes adapters using [fastp](https://github.com/OpenGene/fastp).
 - Runs a decontamination step using BWA to remove any host reads. By default, it uses the [hg39.fna](https://example.com/hg39.fna).
 - Bins the contigs using [Concoct](https://github.com/BinPro/CONCOCT), [MetaBAT2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6662567/) and [MaxBin2](https://flowcraft.readthedocs.io/en/latest/user/components/maxbin2.html).
-- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) bin_refinement compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
 
 For prokaryotes:
 
+- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) `bin_refinement` compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
 - Conducts bin quality control with [CAT](https://github.com/dutilh/CAT), [GUNC](https://github.com/CK7/GUNC), and [CheckM](https://github.com/Ecogenomics/CheckM).
 - Performs dereplication with [dRep](https://github.com/MrOlm/drep).
 - Calculates coverage using MetaBAT2 calculated depths.
@@ -41,19 +46,21 @@ For eukaryotes:
 
 Final steps: 
 
-- Tools versions are available in software_versions.yml 
-- Pipeline generates a tsv table for [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader)
-- TODO: finish MultiQC 
+- Tool versions are available in `software_versions.yml`
+- [MultiQC](https://seqera.io/multiqc/) report
 
-## Usage
+Optional steps:
 
-If this the first time running nextflow please refer to [this page](https://www.nextflow.io/index.html#GetStarted)
+- Upload MAGs to [ENA](https://www.ebi.ac.uk/ena/browser/home) using [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader). Applicable only if assemblies and reads were downloaded from ENA.
+
+## Requirements
+
+- [Nextflow](https://www.nextflow.io/index.html#GetStarted)
+- Docker/Singularity
 
 ### Required reference databases
 
-You need to download the mentioned databases and add them to [config/dbs.config](config/dbs.config).
-
-Don't forget to add this configuration to the main `.nextflow.config`.
+You need to download the mentioned databases and specify them as inputs to parameters (check `nextflow.config`).
 
 - [BUSCO](https://busco.ezlab.org/)
 - [CAT](https://github.com/dutilh/CAT)
@@ -64,36 +71,42 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 - [Rfam](https://ftp.ebi.ac.uk/pub/databases/metagenomics/genomes-pipeline/rfam_14.9/rfams_cms/)
 - The reference genome of your choice for decontamination. Example, human genome [hg38](https://ftp.ebi.ac.uk/pub/databases/metagenomics/pipeline-5.0/ref-dbs/hg38/)
 
-## Data download
+## Pipeline inputs
 
-If you use EBI cluster:
-1) Get your Raw reads and Assembly study accessions;
-2) Download data from ENA, [get assembly and run_accessions](download_data/scripts/rename-erz.py) and [generate](download_data/scripts/generate_samplesheet.py) input samplesheet:
-```commandline
-bash download_data/fetch_data.sh \
-    -a assembly_study_accession \
-    -r reads_study_accession \
-    -c `pwd`/assembly_study_accession \
-    -f "false"
-```
-Otherwise, download your data and keep format as recommended in Sample sheet example section below.
+> [!NOTE]
+> If you want to use the pipeline on [ENA](https://www.ebi.ac.uk/ena/browser/home), data follow these [instructions](docs/ena_readme.md). 
+> Otherwise, download your data and organise it in the recommended format described below.
 
-## Run
+
+### samplesheet.csv
+
+Each row corresponds to a specific dataset with information:
+- row identifier `id`
+- paths to the raw reads files (`fastq_1` and `fastq_2`)
+- assembly identifier `assembly_accession`
+- the file path to the contigs file (`assembly`)
+
+Additionally, an optional column `assembler` contains information about tool and version that was used to produce the `assembly`. 
+
+| id  | fastq_1                  | fastq_2                  | assembly_accession | assembly                | assembler [optional] |
+|-----|--------------------------|--------------------------|--------------------|-------------------------|----------------------|
+| ID  | /path/to/RUN_1.fastq.gz  | /path/to/RUN_2.fastq.gz  | ASSEMBLY           | /path/to/ASSEMBLY.fasta | metaspades_v3.15.5   |
+
+There is an example [here](assets/samplesheet_example.csv).
+
+
+## Run pipeline
 
 ```bash
 nextflow run ebi-metagenomics/genomes-generation \
--profile <complete_with_profile> \
---input samplesheet.csv \
---assembly_software_file software.tsv \
---metagenome "metagenome" \
---biomes "biome,feature,material" \
---outdir <FULL_PATH_TO_OUTDIR>
+-profile `specify profile(s)` \
+--samplesheet `samplesheet.csv` \
+--outdir `full path to output directory`
 ```
 
 ### Optional arguments
 
-- `--xlarge (default=false)`: use high-memory config for big studies. _Study maybe considered as **big** if it has more than 300 runs. In addition, if study has less number of runs but they are very deeply sequenced it also makes sense to try that option._ 
-- `--skip_preprocessing_input (default=false)`: skip input data pre-processing step that renames ERZ-fasta files to ERR-run accessions. Useful if you process data not from ENA
+- `--skip_preprocessing_input (default=false)`: skip input data pre-processing step
 - `--skip_prok (default=false)`: do not generate prokaryotic MAGs
 - `--skip_euk (default=false)`: do not generate eukaryotic MAGs
 - `--skip_concoct (default=false)`: skip CONCOCT binner in binning process
@@ -101,53 +114,12 @@ nextflow run ebi-metagenomics/genomes-generation \
 - `--skip_metabat2 (default=false)`: skip METABAT2 binner in binning process
 - `--merge_pairs (default=false)`: merge paired-end reads on QC step with fastp 
 
-## Pipeline input data
 
-### Sample sheet example
-
-Each row corresponds to a specific dataset with information such as an identifier for the row, the file path to the assembly, and paths to the raw reads files (fastq_1 and fastq_2). Additionally, the assembly_accession column contains ERZ-specific accessions associated with the assembly. 
-
-| id         | assembly                  | fastq_1                             | fastq_2                             | assembly_accession |
-|------------|---------------------------|-------------------------------------|-------------------------------------|--------------------|
-| SRR1631112 | /path/to/ERZ1031893.fasta | /path/to/SRR1631112_1.fastq.gz      | /path/to/SRR1631112_2.fastq.gz      | ERZ1031893         |
-
-
-There is example [here](assets/samplesheet_example.csv)
-
-### Assembly software
-
-Id column is RUN accession \
-Assembly software is a tool that was used to assemble RUN into assembly (ERZ).
-
-_If you ran `download_data/fetch_data.sh` that file already exists in catalogue folder under name `per_run_assembly.tsv`.
-Otherwise, [script](download_data/scripts/generate_samplesheet.py) can be helpful to collect that information from ENA._ 
-
-| id         | assembly_software  |
-|------------|--------------------|
-| SRR1631112 | Assembler_vVersion |
-
-### Metagenome
-Manually choose the most appropriate metagenome from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree.
-
-### Biomes
-Comma-separated environment parameters in format: 
-`"environment_biome,environment_feature,environment_material"`
-
-
-## Pipeline output
-
-### Upload
-
-Use `final_table_for_uploader.tsv` to upload your MAGs with [uploader](https://github.com/EBI-Metagenomics/genome_uploader).
-
-There is example [here](assets/final_table_for_uploader.tsv).
-
-! _Do not modify existing output structure because that TSV file contains full paths to your genomes._
+## Pipeline results
 
 ### Structure
 
 ```
-final_table_for_uploader.tsv
 unclassified_genomes.txt
 
 bins
