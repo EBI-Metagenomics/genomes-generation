@@ -1,7 +1,7 @@
 include { samplesheetToList                                   } from 'plugin/nf-schema'
 include { GENERATE_INPUT_SAMPLESHEET                          } from '../../modules/local/generate_input_samplesheet'
-include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_READS      } from '../../modules/download_from_fire'
-include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_ASSEMBLIES } from '../../modules/download_from_fire'
+include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_READS      } from '../../modules/local/download_from_fire'
+include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_ASSEMBLIES } from '../../modules/local/download_from_fire'
 
 
 workflow INPUT_GENERATION {
