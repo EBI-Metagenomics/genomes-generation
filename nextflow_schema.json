@@ -41,6 +41,11 @@
           "description": "Path to tab-separated file containing run_accession and assembly software that was used for assembly.",
           "help_text": "The easiest way to create that file is to take run_accession, assembly_accession and assembler info (Assembler_vVERSION from backlog DB.",
           "fa_icon": "fas fa-file-tsv"
+        },
+        "download_data": {
+          "type": "boolean",
+          "description": "Download reads and assemblies from s3 fire",
+          "default": false
         }
       },
       "anyOf": [

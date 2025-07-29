@@ -1,5 +1,7 @@
-include { samplesheetToList                   } from 'plugin/nf-schema'
-include { GENERATE_INPUT_SAMPLESHEET          } from '../../modules/local/generate_input_samplesheet'
+include { samplesheetToList                                   } from 'plugin/nf-schema'
+include { GENERATE_INPUT_SAMPLESHEET                          } from '../../modules/local/generate_input_samplesheet'
+include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_READS      } from '../../modules/download_from_fire'
+include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_ASSEMBLIES } from '../../modules/download_from_fire'
 
 
 workflow INPUT_GENERATION {
@@ -42,6 +44,16 @@ workflow INPUT_GENERATION {
 
     assembly_and_runs = samplesheet_ch.map(groupReads)
 
+    // ---- download data from s3 fire
+    if (params.download_data) {
+        DOWNLOAD_FROM_FIRE_READS(assembly_and_runs.map{meta, assemblies, reads -> [meta, reads]})
+        DOWNLOAD_FROM_FIRE_ASSEMBLIES(assembly_and_runs.map{meta, assemblies, reads -> [meta, [assemblies]]})
+        input_data = DOWNLOAD_FROM_FIRE_ASSEMBLIES.out.downloaded_files.join(DOWNLOAD_FROM_FIRE_READS.out.downloaded_files)
+    } else {
+        input_data = assembly_and_runs
+    }
+
+
     // --- assembly software file ---
     if (params.assembly_software_file) {
         assembly_software = file(params.assembly_software_file, checkIfExists: true)
@@ -55,7 +67,7 @@ workflow INPUT_GENERATION {
     }
 
     emit:
-    input_data        = assembly_and_runs  // channel: [ val(meta), assembly, [ reads ] ]
+    input_data        = input_data         // channel: [ val(meta), assembly, [ reads ] ]
     assembly_software = assembly_software  // file(id \t assembler)
     versions          = ch_versions        // channel: [ versions.yml ]
 }
