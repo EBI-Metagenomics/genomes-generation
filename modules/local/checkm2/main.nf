@@ -50,7 +50,7 @@ process CHECKM2 {
     fi
 
     echo "checkm predict"
-    mkdir checkm_tmp
+    mkdir -p checkm_tmp
     checkm2 predict --threads ${task.cpus} \
         --input bins_folder \
         -x fa \

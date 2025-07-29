@@ -22,7 +22,7 @@ process GTDBTK {
     """
     export GTDBTK_DATA_PATH=/opt/gtdbtk_refdata
 
-    mkdir gtdbtk_tmp
+    mkdir -p gtdbtk_tmp
     gtdbtk classify_wf \
         --cpus ${task.cpus} \
         --pplacer_cpus ${task.cpus} \
