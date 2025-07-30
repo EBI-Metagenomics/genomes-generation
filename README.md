@@ -50,7 +50,7 @@ Final steps:
 
 Optional steps:
 
-- Upload MAGs to [ENA](https://www.ebi.ac.uk/ena/browser/home) using [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader). Applicable only if assemblies and reads were downloaded from ENA.
+- Upload MAGs to [ENA](https://www.ebi.ac.uk/ena/browser/home) using [public MAG uploader](https://github.com/EBI-Metagenomics/genome_uploader). Applicable only if assemblies and reads were downloaded from ENA (or GenBank, or DDBJ).
 
 ## Requirements
 
@@ -73,8 +73,8 @@ You need to download the mentioned databases and specify them as inputs to param
 ## Pipeline inputs
 
 > [!NOTE]
-> If you want to use the pipeline on [ENA](https://www.ebi.ac.uk/ena/browser/home), data follow these [instructions](docs/ena_readme.md). 
-> Otherwise, download your data and organise it in the recommended format described below.
+> If you own your studies of interest, they have been deposited to [ENA](https://www.ebi.ac.uk/ena/browser/home) and you own them, follow these [instructions](docs/ena_readme.md).
+> Otherwise, download your data locally and organise it in the recommended format described below.
 
 
 ### samplesheet.csv
@@ -113,6 +113,9 @@ nextflow run ebi-metagenomics/genomes-generation \
 - `--skip_metabat2 (default=false)`: skip METABAT2 binner in binning process
 - `--merge_pairs (default=false)`: merge paired-end reads on QC step with fastp 
 
+### Optional: upload MAGs
+> [!NOTE]
+> If you want to upload the MAGs you generated to the ENA, follow the instructions described [here](docs/ena_readme.md).
 
 ## Pipeline results
 
