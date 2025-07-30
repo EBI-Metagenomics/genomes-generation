@@ -47,7 +47,7 @@ nextflow run ebi-metagenomics/genomes-generation \
 
 ## Optional arguments
 
-### input samplesheet generation
+### Input samplesheet generation
 
 You can run samplesheet generation separately using [script](../bin/generate_inputs.py). Required input arguments are `assembly_study_accession` and `raw_reads_study_accession`.
 
@@ -55,6 +55,13 @@ You can run samplesheet generation separately using [script](../bin/generate_inp
 - `--filter_samplesheet_by_scientific_name (default=false)`: filter by **scientific_name** (like in ENA records) comma separated list
 - `--filter_samplesheet_by_environment_biome (default=false)`: filter by **environment_biome** (like in ENA records) comma separated list
 - `--keep_metat_runs_in_samplesheet (default=false)`: allow **METATRANSCRIPTOMIC** runs (use that argument if you are 100% sure that ENA has mislabeled runs `library_source`)
+
+### Download reads and assemblies 
+
+By default, nextflow should be able to execute pipeline using direct links to files in samplesheet. In case it doesn't work it is possible to download data from s3 fire using `--download_data`.
+> [!NOTE]
+> You must specify nextflow secrets for **FIRE_ACCESS_KEY** and **FIRE_SECRET_KEY**
+
 
 ### ENA upload
 #### Metagenome
