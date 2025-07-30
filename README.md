@@ -47,7 +47,6 @@ For eukaryotes:
 Final steps: 
 
 - Tool versions are available in `software_versions.yml`
-- [MultiQC](https://seqera.io/multiqc/) report
 
 Optional steps:
 
