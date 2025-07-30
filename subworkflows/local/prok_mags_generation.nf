@@ -129,8 +129,7 @@ workflow PROK_MAGS_GENERATION {
         cluster_fasta.copyTo("${params.outdir}/genomes_drep/prokaryotes/genomes/${cluster_fasta.name}")
     })
 
-    // TODO what to do with log?
-    // ch_log = ch_log.mix( BIN_REFINEMENT.out.progress_log )
+    ch_log = ch_log.mix( BINETTE.out.progress_log )
     ch_log = ch_log.mix( CHECKM2.out.progress_log )
     ch_log = ch_log.mix( DREP.out.progress_log )
 
