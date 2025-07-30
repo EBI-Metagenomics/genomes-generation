@@ -11,6 +11,8 @@ from botocore.config import Config
 
 
 FIRE_ENDPOINT: str = "https://hl.fire.sdo.ebi.ac.uk"
+PUBLIC_FTP_PATH = "ftp.sra.ebi.ac.uk/vol1/"
+PRIVATE_FTP_PATH = "ftp.dcc-private.ebi.ac.uk/vol1/"
 PUBLIC_BUCKET: str = "era-public"
 PRIVATE_BUCKET: str = "era-private"
 
@@ -31,17 +33,17 @@ def transform_ftp_to_s3(ftp_path: str) -> Tuple[str, str]:
     """
     if ftp_path.startswith('https'):
         ftp_path = ftp_path.replace('https://', '')
-    if ftp_path.startswith("ftp.sra.ebi.ac.uk/vol1/"):
-        s3_key = ftp_path.replace("ftp.sra.ebi.ac.uk/vol1/", "")
+    if ftp_path.startswith(PUBLIC_FTP_PATH):
+        s3_key = ftp_path.replace(PUBLIC_FTP_PATH, "")
         logger.info(f"Detected a public file for FTP path: {ftp_path}")
         return s3_key, PUBLIC_BUCKET
-    elif ftp_path.startswith("ftp.dcc-private.ebi.ac.uk/vol1/"):
-        s3_key = ftp_path.replace("ftp.dcc-private.ebi.ac.uk/vol1/", "")
+    elif ftp_path.startswith(PRIVATE_FTP_PATH):
+        s3_key = ftp_path.replace(PRIVATE_FTP_PATH, "")
         logger.info(f"Detected a private file for FTP path: {ftp_path}")
         return s3_key, PRIVATE_BUCKET
     else:
         raise ValueError(
-            f"Invalid FTP path: {ftp_path}. Must start with 'ftp.sra.ebi.ac.uk/vol1/' or 'ftp.dcc-private.ebi.ac.uk/vol1/'."
+            f"Invalid FTP path: {ftp_path}. Must start with {PUBLIC_FTP_PATH} or {PRIVATE_FTP_PATH}."
         )
 
 
@@ -119,7 +121,7 @@ def main() -> None:
         "--ftp-paths",
         nargs="+",
         required=True,
-        help="Space-separated list of FTP paths to download (e.g., ftp.sra.ebi.ac.uk/vol1/.../file1 ftp.sra.ebi.ac.uk/vol1/.../file2).",
+        help=f"Space-separated list of FTP paths to download (e.g., {PUBLIC_FTP_PATH}.../file1 {PRIVATE_FTP_PATH}.../file2).",
     )
     parser.add_argument("--outdir", required=True, help="Local destination directory for the downloaded files.")
     parser.add_argument("--access-key", required=False, help="S3 access key (required for private files).")

@@ -47,7 +47,9 @@ workflow INPUT_GENERATION {
     // ---- download data from s3 fire
     if (params.download_data) {
         DOWNLOAD_FROM_FIRE_READS(assembly_and_runs.map{meta, assemblies, reads -> [meta, reads]})
+        ch_versions = ch_versions.mix( DOWNLOAD_FROM_FIRE_READS.out.versions )
         DOWNLOAD_FROM_FIRE_ASSEMBLIES(assembly_and_runs.map{meta, assemblies, reads -> [meta, [assemblies]]})
+        ch_versions = ch_versions.mix( DOWNLOAD_FROM_FIRE_ASSEMBLIES.out.versions )
         input_data = DOWNLOAD_FROM_FIRE_ASSEMBLIES.out.downloaded_files.join(DOWNLOAD_FROM_FIRE_READS.out.downloaded_files)
     } else {
         input_data = assembly_and_runs
