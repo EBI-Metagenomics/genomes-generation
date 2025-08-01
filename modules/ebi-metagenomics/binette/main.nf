@@ -44,6 +44,9 @@ process BINETTE {
         -o . \\
         ${args}
 
+    # add run accession to all bin names
+    for file in final_bins/*.fa*; do mv "\$file" "final_bins/${meta.id}_\$(basename "\$file")"; done
+    # add run accession to the bin folder and report with stats
     mv final_bins "${meta.id}_final_bins"
     mv final_bins_quality_reports.tsv ${meta.id}_final_bins_quality_reports.tsv
 
