@@ -34,6 +34,7 @@ process PREPARE_TSV_FOR_UPLOADER {
     def args_rna = rna ? "--rna-outs ${rna}": "" ;
     def args_tax_euks = taxonomy_euks ? "--tax-euks ${taxonomy_euks}": "" ;
     def args_tax_proks = taxonomy_proks ? "--tax-proks ${taxonomy_proks}": "" ;
+    def absolute_outdir = file(params.outdir).toRealPath()
     """
     tsv_for_genome_upload.py \
         $args_genomes_euks \
@@ -48,7 +49,7 @@ process PREPARE_TSV_FOR_UPLOADER {
         ${args_tax_proks} \
         --metagenome '$params.metagenome' \
         --biomes '${params.biomes}' \
-        --absolute-path "$params.outdir"
+        --absolute-path $absolute_outdir
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
