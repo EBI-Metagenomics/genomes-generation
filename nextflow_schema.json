@@ -133,7 +133,7 @@
         },
         "upload_mags": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "Upload MAGs (Metagenome-Assembled Genomes)"
         },
         "upload_bins": {
