@@ -48,16 +48,17 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = Channel.empty()
     ch_log = Channel.empty()
 
-    ch_binette_input = collected_binners_assembly_and_depth.map { meta, concot_bins, maxbin_bins, metabat_bins, assembly, _ -> 
+    ch_binette_input = collected_binners_assembly_and_depth.map { meta, concoct_bins, maxbin_bins, metabat_bins, assembly, _ -> 
+        def valid_bins = [concoct_bins, maxbin_bins, metabat_bins].findAll { it != null && it != [] }
         [
             meta,
-            [concot_bins, maxbin_bins, metabat_bins], // Combined binning results
+            valid_bins,    // Combined binning results
             assembly,
-            []                                        // Placeholder for predicted proteins (optional BINETTE input)
+            []             // Placeholder for predicted proteins (optional BINETTE input)
         ]
     }
 
-    metabat_depth = collected_binners_assembly_and_depth.map { it -> it[4] }
+    metabat_depth = collected_binners_assembly_and_depth.map { it -> it[5] }
 
     // -- bin refinement //
     BINETTE( ch_binette_input, "fasta", checkm2_db )

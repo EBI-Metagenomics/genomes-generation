@@ -187,8 +187,8 @@ workflow GGP {
 
     if ( !params.skip_prok ) {
         // input: tuple( meta, concoct, metabat, maxbin, depth_file)
-        collected_binners_assembly_and_depth = concoct_collected_bins.join( maxbin_collected_bins, remainder: true ) \
-            .join( metabat_collected_bins, remainder: true ) \
+        collected_binners_assembly_and_depth = BINNING.out.concoct_bins.join( BINNING.out.maxbin_bins, remainder: true ) \
+            .join( BINNING.out.metabat_bins, remainder: true ) \
             .join( GUNZIP_ASSEMBLY.out.uncompressed, remainder: true ) \
             .join( jgi_depth, remainder: true )
 
