@@ -4,6 +4,7 @@ process WEBIN_CLI_UPLOAD {
     tag "${id}"
     stageInMode 'copy'
     container "quay.io/biocontainers/ena-webin-cli:8.2.0--hdfd78af_0"
+    errorStrategy = { task.exitStatus in ((130..145) + 104 + 1) ? 'retry' : 'finish' }
 
     input:
     secret 'WEBIN_ACCOUNT'
@@ -12,7 +13,7 @@ process WEBIN_CLI_UPLOAD {
 
     output:
     tuple val(id), path("*webin-cli.report") , emit: webin_report
-    tuple val(id), env('SUCCESS_STATUS')     , emit: upload_status
+    tuple val(id), env('STATUS')             , emit: upload_status
     path "versions.yml"                      , emit: versions
 
     script:
@@ -41,10 +42,10 @@ process WEBIN_CLI_UPLOAD {
 
     # status check
     if grep -q "submission has been completed successfully" "${id}_webin-cli.report"; then
-        export SUCCESS_STATUS="true"
+        export STATUS="success"
         exit 0
     else
-        export SUCCESS_STATUS="false"
+        export STATUS="failed"
         exit 1
     fi
     """

@@ -62,7 +62,7 @@ workflow UPLOAD_MAGS {
 
         // Count successes using channel operators
         success_count = WEBIN_CLI_UPLOAD.out.upload_status
-           .map { sample_id, status -> status == "true" ? 1 : 0 }
+           .map { sample_id, status -> status == "success" ? 1 : 0 }
            .sum()
            .view { count -> "✅ Total successful submissions: ${count}" }
 
@@ -73,7 +73,7 @@ workflow UPLOAD_MAGS {
 
         // Generate summary report file
         WEBIN_CLI_UPLOAD.out.upload_status
-            .map { sample_id, status -> status == "true" ? 1 : 0 }
+            .map { sample_id, status -> status == "success" ? 1 : 0 }
             .sum()
             .combine(
                 WEBIN_CLI_UPLOAD.out.upload_status.count()
