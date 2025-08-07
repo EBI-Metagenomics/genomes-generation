@@ -58,7 +58,7 @@ workflow PROK_MAGS_GENERATION {
         ]
     }
 
-    metabat_depth = collected_binners_assembly_and_depth.map { it -> it[5] }
+    all_metabat_depths = collected_binners_assembly_and_depth.map { meta, _concoct, _metabat, _maxbin, _assembly_fasta, depth_file -> depth_file }.collect()
 
     // -- bin refinement //
     BINETTE( ch_binette_input, "fasta", checkm2_db )
@@ -95,7 +95,7 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( DREP.out.versions.first() )
 
     // -- coverage -- //
-    COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )
+    COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, all_metabat_depths)
 
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
