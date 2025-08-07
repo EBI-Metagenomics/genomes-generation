@@ -36,8 +36,6 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${tpa} \
       ${force} \
       ${mode} \
-      --webin \$WEBIN_ACCOUNT \
-      --password \$WEBIN_PASSWORD \
       --out results \
       ${args}
     """
