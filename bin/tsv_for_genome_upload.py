@@ -10,7 +10,7 @@ import logging
 LIMIT_RRNA = 80
 LIMIT_TRNA = 18
 
-DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.0.0"
+DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.2.0"
 DEFAULT_BINNING_SOFTWARE_PARAMS = "default"
 
 EUK_PATH = os.path.join("genomes_drep", "eukaryotes", "genomes")
@@ -229,7 +229,7 @@ class MAGupload:
         self.rna = args.rna_outs if args.rna_outs else None
         self.tax_euks = args.tax_euks if args.tax_euks else None
         self.tax_proks = args.tax_proks if args.tax_proks else None
-        self.absolute_path = os.path.abspath(args.absolute_path)
+        self.absolute_path = args.absolute_path
         self.output_file = args.output
 
     def process_mags(self):

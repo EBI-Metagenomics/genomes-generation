@@ -3,9 +3,9 @@
      Prokaryotes subworkflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { REFINEMENT as BIN_REFINEMENT       } from './mgbinrefinder/binrefinder'
 include { CLEAN_AND_FILTER_BINS              } from './clean_and_filter_bins'
 
+include { BINETTE                            } from '../../modules/ebi-metagenomics/binette/main'
 include { CHECKM2                            } from '../../modules/local/checkm2/main'
 include { DREP                               } from '../../modules/local/drep/main'
 include { COVERAGE_RECYCLER                  } from '../../modules/local/coverage_recycler/main'
@@ -34,7 +34,7 @@ process CHECKM2_TABLE_FOR_DREP_GENOMES {
 workflow PROK_MAGS_GENERATION {
 
     take:
-    collected_binners_and_depth // tuple( meta, concoct, metabat, maxbin, depth_file)
+    collected_binners_assembly_and_depth // tuple( meta, concoct, metabat, maxbin, assembly_fasta, depth_file)
     cat_db_folder
     cat_diamond_db
     cat_taxonomy_db
@@ -48,19 +48,25 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = Channel.empty()
     ch_log = Channel.empty()
 
-    collected_binners = collected_binners_and_depth.map { meta, concot_bins, maxbin_bins, metabat_bins, _ -> 
-        [ meta, concot_bins, maxbin_bins, metabat_bins ]
+    ch_binette_input = collected_binners_assembly_and_depth.map { meta, concoct_bins, maxbin_bins, metabat_bins, assembly, _ -> 
+        def valid_bins = [concoct_bins, maxbin_bins, metabat_bins].findAll { it != null && it != [] }
+        [
+            meta,
+            valid_bins,    // Combined binning results
+            assembly,
+            []             // Placeholder for predicted proteins (optional BINETTE input)
+        ]
     }
 
-    metabat_depth = collected_binners_and_depth.map { it -> it[4] }
+    all_metabat_depths = collected_binners_assembly_and_depth.map { meta, _concoct, _metabat, _maxbin, _assembly_fasta, depth_file -> depth_file }.collect()
 
     // -- bin refinement //
-    BIN_REFINEMENT( collected_binners, checkm2_db )
-    ch_versions = ch_versions.mix( BIN_REFINEMENT.out.versions )
+    BINETTE( ch_binette_input, "fasta", checkm2_db )
+    ch_versions = ch_versions.mix( BINETTE.out.versions )
 
     // -- clean bins
     CLEAN_AND_FILTER_BINS( 
-        BIN_REFINEMENT.out.bin_ref_bins,
+        BINETTE.out.refined_bins,
         cat_db_folder,
         cat_diamond_db,
         cat_taxonomy_db,
@@ -89,7 +95,7 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( DREP.out.versions.first() )
 
     // -- coverage -- //
-    COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, metabat_depth.collect() )
+    COVERAGE_RECYCLER( DREP.out.dereplicated_genomes, all_metabat_depths)
 
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
@@ -124,7 +130,7 @@ workflow PROK_MAGS_GENERATION {
         cluster_fasta.copyTo("${params.outdir}/genomes_drep/prokaryotes/genomes/${cluster_fasta.name}")
     })
 
-    ch_log = ch_log.mix( BIN_REFINEMENT.out.progress_log )
+    ch_log = ch_log.mix( BINETTE.out.progress_log )
     ch_log = ch_log.mix( CHECKM2.out.progress_log )
     ch_log = ch_log.mix( DREP.out.progress_log )
 

@@ -29,7 +29,7 @@ Data processing:
 
 For prokaryotes:
 
-- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) `bin_refinement` compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
+- Refines the bins using [Binette](https://github.com/genotoul-bioinfo/Binette).
 - Conducts bin quality control with [CAT](https://github.com/dutilh/CAT), [GUNC](https://github.com/CK7/GUNC), and [CheckM](https://github.com/Ecogenomics/CheckM).
 - Performs dereplication with [dRep](https://github.com/MrOlm/drep).
 - Calculates coverage using MetaBAT2 calculated depths.

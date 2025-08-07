@@ -43,7 +43,7 @@ gtdbtk_db          = file(params.gtdbtk_db, checkIfExists: true)
 rfam_rrna_models   = file(params.rfam_rrna_models, checkIfExists: true)
 
 ref_genome         = file(params.ref_genome)
-ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
+ref_genome_index   = file("${ref_genome.parent}/bwa-mem2/*.fna.*")
 
 
 /*
@@ -187,12 +187,13 @@ workflow GGP {
 
     if ( !params.skip_prok ) {
         // input: tuple( meta, concoct, metabat, maxbin, depth_file)
-        collected_binners_and_depth = concoct_collected_bins.join( maxbin_collected_bins, remainder: true ) \
-            .join( metabat_collected_bins, remainder: true ) \
+        collected_binners_assembly_and_depth = BINNING.out.concoct_bins.join( BINNING.out.maxbin_bins, remainder: true ) \
+            .join( BINNING.out.metabat_bins, remainder: true ) \
+            .join( GUNZIP_ASSEMBLY.out.uncompressed, remainder: true ) \
             .join( jgi_depth, remainder: true )
 
         PROK_MAGS_GENERATION(
-            collected_binners_and_depth,
+            collected_binners_assembly_and_depth,
             cat_db_folder,
             cat_diamond_db,
             cat_taxonomy_db,
