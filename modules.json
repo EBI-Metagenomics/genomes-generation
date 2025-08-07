@@ -1,82 +1,76 @@
 {
-    "name": "",
-    "homePage": "",
-    "repos": {
-        "https://github.com/nf-core/modules.git": {
-            "modules": {
-                "nf-core": {
-                    "concoct/concoct": {
-                        "branch": "master",
-                        "git_sha": "c684a6edba2c8516a0d2cfeafb12489b99d2fffb",
-                        "installed_by": [
-                            "fasta_binning_concoct"
-                        ],
-                        "patch": "modules/nf-core/concoct/concoct/concoct-concoct.diff"
-                    },
-                    "concoct/extractfastabins": {
-                        "branch": "master",
-                        "git_sha": "36aa9d3ce6561d9bd5c240bcf82fe109af543c0d",
-                        "installed_by": [
-                            "fasta_binning_concoct"
-                        ],
-                        "patch": "modules/nf-core/concoct/extractfastabins/concoct-extractfastabins.diff"
-                    },
-                    "concoct/mergecutupclustering": {
-                        "branch": "master",
-                        "git_sha": "36aa9d3ce6561d9bd5c240bcf82fe109af543c0d",
-                        "installed_by": [
-                            "fasta_binning_concoct"
-                        ],
-                        "patch": "modules/nf-core/concoct/mergecutupclustering/concoct-mergecutupclustering.diff"
-                    },
-                    "custom/dumpsoftwareversions": {
-                        "branch": "master",
-                        "git_sha": "fc6caedab1c71113aa440900e5989dd1c03ec58f",
-                        "installed_by": [
-                            "modules"
-                        ]
-                    },
-                    "fastp": {
-                        "branch": "master",
-                        "git_sha": "d497a4868ace3302016ea8ed4b395072d5e833cd",
-                        "installed_by": [
-                            "modules"
-                        ],
-                        "patch": "modules/nf-core/fastp/fastp.diff"
-                    },
-                    "fastqc": {
-                        "branch": "master",
-                        "git_sha": "49b18b1639f4f7104187058866a8fab33332bdfe",
-                        "installed_by": [
-                            "modules"
-                        ]
-                    },
-                    "maxbin2": {
-                        "branch": "master",
-                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
-                        "installed_by": [
-                            "modules"
-                        ],
-                        "patch": "modules/nf-core/maxbin2/maxbin2.diff"
-                    },
-                    "metabat2/metabat2": {
-                        "branch": "master",
-                        "git_sha": "d2e220fdec3aa2f4482c70017df4cdf8a4c94f27",
-                        "installed_by": [
-                            "modules"
-                        ],
-                        "patch": "modules/nf-core/metabat2/metabat2/metabat2-metabat2.diff"
-                    },
-                    "multiqc": {
-                        "branch": "master",
-                        "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
-                        "installed_by": [
-                            "modules"
-                        ],
-                        "patch": "modules/nf-core/multiqc/multiqc.diff"
-                    }
-                }
-            }
+  "name": "",
+  "homePage": "",
+  "repos": {
+    "git@github.com:EBI-Metagenomics/nf-modules.git": {
+      "modules": {
+        "ebi-metagenomics": {
+          "binette": {
+            "branch": "main",
+            "git_sha": "7e011c2157bb5885f07a4d0b247d081597864bc6",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/binette/binette.diff"
+          }
         }
+      }
+    },
+    "https://github.com/nf-core/modules.git": {
+      "modules": {
+        "nf-core": {
+          "concoct/concoct": {
+            "branch": "master",
+            "git_sha": "c684a6edba2c8516a0d2cfeafb12489b99d2fffb",
+            "installed_by": ["fasta_binning_concoct"],
+            "patch": "modules/nf-core/concoct/concoct/concoct-concoct.diff"
+          },
+          "concoct/extractfastabins": {
+            "branch": "master",
+            "git_sha": "36aa9d3ce6561d9bd5c240bcf82fe109af543c0d",
+            "installed_by": ["fasta_binning_concoct"],
+            "patch": "modules/nf-core/concoct/extractfastabins/concoct-extractfastabins.diff"
+          },
+          "concoct/mergecutupclustering": {
+            "branch": "master",
+            "git_sha": "36aa9d3ce6561d9bd5c240bcf82fe109af543c0d",
+            "installed_by": ["fasta_binning_concoct"],
+            "patch": "modules/nf-core/concoct/mergecutupclustering/concoct-mergecutupclustering.diff"
+          },
+          "custom/dumpsoftwareversions": {
+            "branch": "master",
+            "git_sha": "fc6caedab1c71113aa440900e5989dd1c03ec58f",
+            "installed_by": ["modules"]
+          },
+          "fastp": {
+            "branch": "master",
+            "git_sha": "d497a4868ace3302016ea8ed4b395072d5e833cd",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/fastp/fastp.diff"
+          },
+          "fastqc": {
+            "branch": "master",
+            "git_sha": "49b18b1639f4f7104187058866a8fab33332bdfe",
+            "installed_by": ["modules"]
+          },
+          "maxbin2": {
+            "branch": "master",
+            "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/maxbin2/maxbin2.diff"
+          },
+          "metabat2/metabat2": {
+            "branch": "master",
+            "git_sha": "d2e220fdec3aa2f4482c70017df4cdf8a4c94f27",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/metabat2/metabat2/metabat2-metabat2.diff"
+          },
+          "multiqc": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/multiqc/multiqc.diff"
+          }
+        }
+      }
     }
+  }
 }
