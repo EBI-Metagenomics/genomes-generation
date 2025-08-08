@@ -1,13 +1,13 @@
 ## Run GGP using ENA data
 
-ENA is a very useful resource for MAGs/bins generation because it [structures](https://www.ebi.ac.uk/training/online/courses/ena-quick-tour/what-is-ena/how-is-ena-structured/) raw-reads and assemblies by study.
+ENA is a very useful resource for MAGs/bins generation because it can [structure](https://www.ebi.ac.uk/training/online/courses/ena-quick-tour/what-is-ena/how-is-ena-structured/) raw-reads and assemblies by study.
 
 For example, 
 `raw-reads study` [SRP080008](https://www.ebi.ac.uk/ena/browser/view/PRJNA330077) was assembled and submitted as `assembly study` [ERP108081](https://www.ebi.ac.uk/ena/browser/view/PRJEB26108).
 
-It is possible to submit generated MAGs to ENA if you own the records in ENA. Our pipeline is automated to register and submit MAGs using [genome_uploader](https://github.com/EBI-Metagenomics/genome_uploader) to ENA's MAGs layer under an assembly study project.
+It is possible to submit generated MAGs to ENA if you own the records, as long as raw-reads and assemblies have been submitted to the same project. Our pipeline is automated to register and submit MAGs using [genome_uploader](https://github.com/EBI-Metagenomics/genome_uploader) to ENA's MAGs layer under an assembly study project.
 > [!NOTE]
-> If you do not have full access to ENA studies - do not submit MAGs 
+> If you do not have full access to ENA studies you won't be able to submit MAGs.
 
 ## Simple run using ENA accessions, it won't upload MAGs
 ```bash
@@ -64,6 +64,8 @@ By default, nextflow should be able to execute pipeline using direct links to fi
 
 
 ### ENA upload
+You will need to add the following arguments to your `genomes-generation` command.
+
 #### Metagenome
 - `--metagenome ` \
 Manually choose the most appropriate metagenome type from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree. \
@@ -80,3 +82,5 @@ For example, `marine sediments,subtropical gyre,sinking marine particle`
 - `--upload_mags`: upload MAGs (Metagenome-Assembled Genomes)
 - `--upload_bins`: upload bins
 - `--test_upload`: use **test** server for upload, not live mode
+
+A further description of some of these arguments is described [here](https://github.com/EBI-Metagenomics/genome_uploader).
