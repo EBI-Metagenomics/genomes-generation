@@ -43,10 +43,10 @@ process WEBIN_CLI_UPLOAD {
     # status check
     if grep -q "submission has been completed successfully" "${id}_webin-cli.report"; then
         export STATUS="success"
-        exit 0
+        true
     else
         export STATUS="failed"
-        exit 1
+        false
     fi
     """
 }
