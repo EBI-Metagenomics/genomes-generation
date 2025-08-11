@@ -27,6 +27,9 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     def args     = task.ext.args ?: ''
 
     """
+    export ENA_WEBIN=\$WEBIN_ACCOUNT
+    export ENA_WEBIN_PASSWORD=\$WEBIN_PASSWORD
+
     genome_upload \
       -u $params.ena_assembly_study_accession \
       --genome_info ${table_for_upload} \
