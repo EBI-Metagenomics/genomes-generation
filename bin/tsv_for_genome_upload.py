@@ -10,7 +10,7 @@ import logging
 LIMIT_RRNA = 80
 LIMIT_TRNA = 18
 
-DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.0.0"
+DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.2.0"
 DEFAULT_BINNING_SOFTWARE_PARAMS = "default"
 
 EUK_PATH = os.path.join("genomes_drep", "eukaryotes", "genomes")
