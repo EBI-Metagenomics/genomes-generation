@@ -1,7 +1,7 @@
 process GTDBTK {
 
     label 'process_long'
-    container 'quay.io/microbiome-informatics/gtdb-tk:2.3.0'
+    container 'quay.io/biocontainers/gtdbtk:2.4.1--pyhdfd78af_1'
 
     containerOptions "${ workflow.containerEngine == 'singularity' ?
         "--bind ${gtdbtk_refdata}:/opt/gtdbtk_refdata":
