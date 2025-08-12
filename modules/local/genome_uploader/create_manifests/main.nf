@@ -2,7 +2,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
 
     label 'process_low'
 
-    container "quay.io/microbiome-informatics/genome-uploader:2.3.2"
+    container "community.wave.seqera.io/library/genome-uploader:2.4.0--c32667b153eea137"
 
     input:
     secret 'WEBIN_ACCOUNT'
@@ -27,6 +27,9 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     def args     = task.ext.args ?: ''
 
     """
+    export ENA_WEBIN=\$WEBIN_ACCOUNT
+    export ENA_WEBIN_PASSWORD=\$WEBIN_PASSWORD
+
     genome_upload \
       -u $params.ena_assembly_study_accession \
       --genome_info ${table_for_upload} \
@@ -36,8 +39,6 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${tpa} \
       ${force} \
       ${mode} \
-      --webin \$WEBIN_ACCOUNT \
-      --password \$WEBIN_PASSWORD \
       --out results \
       ${args}
     """
