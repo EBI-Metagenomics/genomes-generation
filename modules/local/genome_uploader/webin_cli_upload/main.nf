@@ -42,6 +42,11 @@ process WEBIN_CLI_UPLOAD {
 
     # status check
     if grep -q "submission has been completed successfully" "${id}_webin-cli.report"; then
+        # first time submission completed successfully
+        export STATUS="success"
+        true
+    elif grep -q "object being added already exists in the submission account with accession" "${id}_webin-cli.report"; then
+        # there was attempt to re-submit already submitted genome
         export STATUS="success"
         true
     else
