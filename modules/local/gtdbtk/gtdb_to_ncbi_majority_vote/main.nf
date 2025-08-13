@@ -24,8 +24,8 @@ process GTDBTK_TO_NCBI_TAXONOMY {
     gtdb_to_ncbi_majority_vote.py \
         --gtdbtk_output_dir ${gtdbtk_results} \
         --output_file ncbi_taxonomy.txt \
-        --ar53_metadata_file ${gtdbtk_refdata}/ar53_metadata_r214.tsv \
-        --bac120_metadata_file ${gtdbtk_refdata}/bac120_metadata_r214.tsv
+        --ar53_metadata_file ${gtdbtk_refdata}/ar53_metadata_r???.tsv \
+        --bac120_metadata_file ${gtdbtk_refdata}/bac120_metadata_r???.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
