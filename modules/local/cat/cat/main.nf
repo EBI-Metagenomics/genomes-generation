@@ -17,12 +17,14 @@ process CAT {
     script:
     """
     echo "[MAG clean-up] Analysing contigs"
+    mkdir -p cat_tmp
     CAT contigs \
     -n ${task.cpus} \
     -c ${bin_fa} \
     -d ${cat_db_folder} \
     -t ${taxonomy_db} \
     --path_to_diamond ${cat_diamond_db} \
+    --tmpdir cat_tmp \
     --out_prefix ${meta.id}
 
     echo "[MAG clean-up] Adding taxonomy names"
