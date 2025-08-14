@@ -2,9 +2,25 @@
   "name": "",
   "homePage": "",
   "repos": {
+    "git@github.com:EBI-Metagenomics/nf-modules.git": {
+      "modules": {
+        "ebi-metagenomics": {
+          "binette": {
+            "branch": "main",
+            "git_sha": "7e011c2157bb5885f07a4d0b247d081597864bc6",
+            "installed_by": ["modules"]
+          }
+        }
+      }
+    },
     "https://github.com/nf-core/modules.git": {
       "modules": {
         "nf-core": {
+          "busco/busco": {
+            "branch": "master",
+            "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+            "installed_by": ["modules"]
+          },
           "concoct/concoct": {
             "branch": "master",
             "git_sha": "c684a6edba2c8516a0d2cfeafb12489b99d2fffb",

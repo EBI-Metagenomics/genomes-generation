@@ -27,7 +27,7 @@ def taxo_reporter( out_file, bat_files ):
             with open(current_bin, 'r') as file_in:
                 next(file_in)
                 for line in file_in:
-                    genome,classification,reason,lineage,lineage_scores = line.rstrip().split("\t")[:5]
+                    genome, classification, reason, lineage, lineage_scores = line.rstrip().split("\t")[:5]
                     to_concat.write("\t".join(line.rstrip().split("\t")[:5])+'\n')
                     
                     clean_lineage = []
@@ -36,7 +36,7 @@ def taxo_reporter( out_file, bat_files ):
                         name_rank = tax_rank.split(':')[0].split(' (')[0]
                         clean_lineage.append(name_rank)
                     clean_lineage = ";".join(clean_lineage)
-                    to_print.write("\t".join([genome,lineage,clean_lineage])+'\n')
+                    to_print.write("\t".join([genome, lineage, clean_lineage])+'\n')
 
 
 if __name__ == "__main__":
@@ -57,4 +57,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    taxo_reporter( args.output, args.bat_names )
+    taxo_reporter(args.output, args.bat_names)

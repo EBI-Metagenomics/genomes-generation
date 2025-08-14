@@ -5,7 +5,6 @@
 */
 
 include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { samplesheetToList         } from 'plugin/nf-schema'
 include { paramsHelp                } from 'plugin/nf-validation'
 
 include { UTILS_NFSCHEMA_PLUGIN     } from '../nf-core/utils_nfschema_plugin'
@@ -23,12 +22,7 @@ include { UTILS_NEXTFLOW_PIPELINE   } from '../nf-core/utils_nextflow_pipeline'
 workflow PIPELINE_INITIALISATION {
 
     take:
-    version           // boolean: Display version and exit
-    validate_params   // boolean: Boolean whether to validate parameters against the schema at runtime
-    monochrome_logs   // boolean: Do not use coloured log outputs
     nextflow_cli_args //   array: List of positional nextflow CLI args
-    outdir            //  string: The output directory where the results will be saved
-    input             //  string: Path to input samplesheet
 
     main:
 
@@ -46,9 +40,9 @@ workflow PIPELINE_INITIALISATION {
     // Print version and exit if required and dump pipeline parameters to JSON file
     //
     UTILS_NEXTFLOW_PIPELINE (
-        version,
+        params.version,
         true,
-        outdir,
+        params.outdir,
         workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1
     )
 
@@ -57,7 +51,7 @@ workflow PIPELINE_INITIALISATION {
     //
     UTILS_NFSCHEMA_PLUGIN (
         workflow,
-        validate_params,
+        params.validate_params,
         null
     )
 
@@ -68,13 +62,6 @@ workflow PIPELINE_INITIALISATION {
         nextflow_cli_args
     )
 
-    //
-    // Create channel from input file provided through input
-    //
-    ch_samplesheet = Channel.fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
-
-
     emit:
-    samplesheet = ch_samplesheet
     versions    = ch_versions
 }

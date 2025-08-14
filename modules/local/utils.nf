@@ -45,6 +45,22 @@ process CHANGE_UNDERSCORE_TO_DOT {
 }
 
 
+process CHECKM2_TABLE_FOR_DREP_GENOMES {
+
+    input:
+    path(checkm_filtered_genomes_dir)
+    path(dereplicated_genomes_tsv)
+
+    output:
+    path("checkm_results_mags.tab"), emit: checkm_results_mags
+
+    script:
+    """
+    grep -f ${dereplicated_genomes_tsv} ${checkm_filtered_genomes_dir} > checkm_results_mags.tab || true
+    """
+}
+
+
 process FINALIZE_LOGGING {
 
     label 'process_low'

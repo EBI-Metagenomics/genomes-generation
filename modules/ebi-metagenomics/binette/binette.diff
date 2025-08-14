@@ -1,0 +1,39 @@
+--- binette.orig	2025-08-07 13:14:42
++++ main.nf	2025-08-07 13:17:10
+@@ -15,6 +15,7 @@
+     output:
+     tuple val(meta), path("${meta.id}_final_bins/*")                  , emit: refined_bins
+     tuple val(meta), path("${meta.id}_final_bins_quality_reports.tsv"), emit: refined_bins_report
++    path "progress.log"                                               , emit: progress_log
+     path "versions.yml"                                               , emit: versions
+
+     when:
+@@ -43,9 +44,28 @@
+         -o . \\
+         ${args}
+
++    # add run accession to all bin names
++    for file in final_bins/*.fa*; do mv "\$file" "final_bins/${meta.id}_\$(basename "\$file")"; done
++    # add run accession to the bin folder and report with stats
+     mv final_bins "${meta.id}_final_bins"
+     mv final_bins_quality_reports.tsv ${meta.id}_final_bins_quality_reports.tsv
+
++    # Count number of bins before and after refinement
++    BINNER_COUNTS=""
++    BINNER_INDEX=1
++    for binner_dir in input_binning/*; do
++        if [ -d "\$binner_dir" ]; then
++            count=\$(ls -1 "\$binner_dir" | wc -l)
++            BINNER_COUNTS="\${BINNER_COUNTS}binner\${BINNER_INDEX}: \${count}, "
++            BINNER_INDEX=\$((BINNER_INDEX + 1))
++        fi
++    done
++
++    cat <<-END_LOGGING > progress.log
++    ${meta.id}\t${task.process}
++        \${BINNER_COUNTS}refined: \$(ls -1 ${meta.id}_final_bins/ | wc -l)
++    END_LOGGING
++
+     cat <<-END_VERSIONS > versions.yml
+     "${task.process}":
+         binette: \$( binette --version )
