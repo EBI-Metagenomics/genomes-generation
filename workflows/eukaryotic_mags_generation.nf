@@ -12,8 +12,8 @@ include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from '../subworkflows/lo
 */
 include { BAT                                         } from '../modules/local/cat/bat/bat'
 include { BAT_TAXONOMY_WRITER                         } from '../modules/local/cat/bat/bat_taxonomy_writer'
-include { BUSCO                                       } from '../modules/local/busco/busco'
-include { BUSCO_EUKCC_QC                              } from '../modules/local/busco/busco_qc'
+include { BUSCO                                       } from '../modules/local/busco'
+include { BUSCO_EUKCC_QC                              } from '../modules/local/busco_qc'
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK  } from '../modules/local/coverage_recycler'
 include { DREP                                        } from '../modules/local/drep'
 include { DREP as DREP_MAGS                           } from '../modules/local/drep'
