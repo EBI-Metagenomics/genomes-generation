@@ -229,7 +229,7 @@ class MAGupload:
         self.rna = args.rna_outs if args.rna_outs else None
         self.tax_euks = args.tax_euks if args.tax_euks else None
         self.tax_proks = args.tax_proks if args.tax_proks else None
-        self.absolute_path = os.path.abspath(args.absolute_path)
+        self.absolute_path = args.absolute_path
         self.output_file = args.output
 
     def process_mags(self):

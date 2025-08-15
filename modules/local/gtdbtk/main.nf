@@ -1,7 +1,7 @@
 process GTDBTK {
 
     label 'process_long'
-    container 'quay.io/microbiome-informatics/gtdb-tk:2.3.0'
+    container 'quay.io/biocontainers/gtdbtk:2.4.1--pyhdfd78af_1'
 
     containerOptions "${ workflow.containerEngine == 'singularity' ?
         "--bind ${gtdbtk_refdata}:/opt/gtdbtk_refdata":
@@ -23,12 +23,12 @@ process GTDBTK {
     export GTDBTK_DATA_PATH=/opt/gtdbtk_refdata
 
     gtdbtk classify_wf \
-    --cpus ${task.cpus} \
-    --pplacer_cpus ${task.cpus} \
-    --genome_dir genomes_dir \
-    --extension fa \
-    --skip_ani_screen \
-    --out_dir gtdbtk_results
+        --cpus ${task.cpus} \
+        --pplacer_cpus ${task.cpus} \
+        --genome_dir genomes_dir \
+        --extension fa \
+        --skip_ani_screen \
+        --out_dir gtdbtk_results
 
     echo "Compress GTDB-Tk"
     tar -czf gtdbtk_results.tar.gz -C gtdbtk_results .

@@ -1,4 +1,5 @@
-process CONCOCT_EXTRACTFASTABINS {
+process CONCOCT_EXTRACTFASTABINS 
+{
     tag "$meta.id"
     label 'process_medium'
 
@@ -16,16 +17,6 @@ process CONCOCT_EXTRACTFASTABINS {
 
     when:
     task.ext.when == null || task.ext.when
-
-    errorStrategy {
-        task.exitStatus {
-            exitVal ->
-                // Retry on non-zero exit codes
-                return exitVal != 0 ? ErrorAction.RETRY : ErrorAction.FINISH
-        }
-        maxRetries 3  // Set the maximum number of retries
-        sleep 10      // Set the delay between retries in seconds
-    }
 
     script:
     def args   = task.ext.args ?: ''

@@ -26,7 +26,7 @@ workflow DECONTAMINATION {
         ALIGNMENT_DECONTAMINATION(
            reads.map { meta, reads_item -> [ meta, reads_item, ref_genome, ref_genome_index ] }
         )
-        ch_versions = ch_versions.mix(ALIGNMENT_DECONTAMINATION.out.versions.first())
+        ch_versions = ch_versions.mix(ALIGNMENT_DECONTAMINATION.out.versions)
         decontaminated_reads = ALIGNMENT_DECONTAMINATION.out.reads
     }
 

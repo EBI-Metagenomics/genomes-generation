@@ -20,13 +20,14 @@ include { FINALIZE_LOGGING            } from '../modules/local/utils'
     SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+include { EUK_MAGS_GENERATION  } from './eukaryotic_mags_generation'
+include { PROK_MAGS_GENERATION } from './prokaryotic_mags_generation'
+
 include { BINNING              } from '../subworkflows/local/binning'
 include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
-include { EUK_MAGS_GENERATION  } from './eukaryotic_mags_generation'
 include { INPUT_PREPROCESSING  } from '../subworkflows/local/input_preprocessing'
-//include { PREPARE_UPLOAD_FILES } from '../subworkflows/local/prepare_upload'
-//include { PROK_MAGS_GENERATION } from '../subworkflows/local/prok_mags_generation'
 include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
+include { UPLOAD_MAGS          } from '../subworkflows/local/upload'
 
 
 /*
@@ -48,17 +49,17 @@ workflow GGP {
     main:
 
     ch_versions    = Channel.empty()
-    //ch_log         = Channel.empty()
+    ch_log         = Channel.empty()
 
-    //euk_genomes    = Channel.empty()
-    //stats_euks     = Channel.empty()
-    //coverage_euks  = Channel.empty()
-    //prok_genomes   = Channel.empty()
-    //stats_proks    = Channel.empty()
-    //coverage_proks = Channel.empty()
-    //rna            = Channel.empty()
-    //taxonomy_euks  = Channel.empty()
-    //taxonomy_proks = Channel.empty()
+    euk_genomes    = Channel.empty()
+    stats_euks     = Channel.empty()
+    coverage_euks  = Channel.empty()
+    taxonomy_euks  = Channel.empty()
+    prok_genomes   = Channel.empty()
+    stats_proks    = Channel.empty()
+    coverage_proks = Channel.empty()
+    rna_proks      = Channel.empty()
+    taxonomy_proks = Channel.empty()
 
     /*
     * ---- Optional input binners parsing ----
@@ -181,8 +182,54 @@ workflow GGP {
             .join(all_metabat_bins)
             .join(all_jgi_depth)
         )
-        ch_versions = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
+        euk_genomes   = euk_genomes.mix( EUK_MAGS_GENERATION.out.genomes )
+        stats_euks    = stats_euks.mix( EUK_MAGS_GENERATION.out.stats )
+        coverage_euks = coverage_euks.mix( EUK_MAGS_GENERATION.out.coverage )
+        taxonomy_euks = taxonomy_euks.mix( EUK_MAGS_GENERATION.out.taxonomy )
+        ch_versions   = ch_versions.mix( EUK_MAGS_GENERATION.out.versions )
+        ch_log        = ch_log.mix( EUK_MAGS_GENERATION.out.progress_log )
     }
+
+    if ( !params.skip_prok ) {
+        // input: tuple( meta, concoct, metabat, maxbin, depth_file)
+        collected_binners_assembly_and_depth = BINNING.out.concoct_bins.join( BINNING.out.maxbin_bins, remainder: true ) 
+            .join( BINNING.out.metabat_bins, remainder: true ) 
+            .join( INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _reads -> [meta, assembly] }, remainder: true ) 
+            .join( all_jgi_depth, remainder: true )
+
+        PROK_MAGS_GENERATION(
+            collected_binners_assembly_and_depth
+        )
+
+        prok_genomes = prok_genomes.mix( PROK_MAGS_GENERATION.out.genomes )
+        stats_proks = stats_proks.mix( PROK_MAGS_GENERATION.out.stats )
+        coverage_proks = coverage_proks.mix( PROK_MAGS_GENERATION.out.coverage )
+        rna_proks = rna_proks.mix( PROK_MAGS_GENERATION.out.rna )
+        taxonomy_proks = taxonomy_proks.mix( PROK_MAGS_GENERATION.out.taxonomy )
+        ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
+        ch_log = ch_log.mix( PROK_MAGS_GENERATION.out.progress_log )
+    }
+    
+    if ( params.skip_euk && params.skip_prok ) {
+        println "You skipped proks and euks. No results for MAGs. Exit."
+        exit(1)
+    }
+    else {
+        UPLOAD_MAGS (
+            euk_genomes.ifEmpty([]),
+            prok_genomes.ifEmpty([]),
+            assembly_software_file,
+            stats_euks.ifEmpty([]),
+            stats_proks.ifEmpty([]),
+            coverage_euks.ifEmpty([]),
+            coverage_proks.ifEmpty([]),
+            rna_proks.ifEmpty([]),
+            taxonomy_euks.ifEmpty([]),
+            taxonomy_proks.ifEmpty([]))
+        ch_versions = ch_versions.mix( UPLOAD_MAGS.out.versions )
+    }
+
+
     // for multiqc
     // binning samtools for multiqc
     // TODO return fastqc from INPUT_PREPROCESSING
@@ -191,4 +238,5 @@ workflow GGP {
 
     emit:
     versions          = ch_versions        // channel: [ versions.yml ]
+    pipeline_logging  = ch_log.collectFile(name: 'pipeline_logging.txt')
 }

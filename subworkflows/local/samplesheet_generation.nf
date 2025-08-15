@@ -4,7 +4,10 @@ include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_READS      } from '../../modu
 include { DOWNLOAD_FROM_FIRE as DOWNLOAD_FROM_FIRE_ASSEMBLIES } from '../../modules/local/download_from_fire'
 
 
-workflow SAMPLESHEET_GENERATION {
+workflow SAMPLESHEET_GENERATION 
+{
+
+    main:
 
     ch_versions = Channel.empty()
 
@@ -34,18 +37,24 @@ workflow SAMPLESHEET_GENERATION {
 
     // ---- download data from s3 fire for assemblies and reads
     if (params.download_data) {
-        assembly_and_runs = samplesheet_ch.map{ meta, fq1, fq2, assembly, concoct, metabat, maxbin, depth ->
+        assembly_and_runs = samplesheet_ch.map{ meta, fq1, fq2, assembly, _concoct, _metabat, _maxbin, _depth ->
             def is_single_end = (fq2 == [])
             def reads = is_single_end ? [fq1] : [fq1, fq2]
             return tuple(meta + [single_end: is_single_end], assembly, reads)
         }
-        DOWNLOAD_FROM_FIRE_READS(assembly_and_runs.map{ meta, assemblies, reads -> [meta, reads] })
+        DOWNLOAD_FROM_FIRE_READS(
+            assembly_and_runs.map{ meta, _assemblies, reads -> [meta, reads] }
+            )
         ch_versions = ch_versions.mix( DOWNLOAD_FROM_FIRE_READS.out.versions )
-        DOWNLOAD_FROM_FIRE_ASSEMBLIES(assembly_and_runs.map{ meta, assemblies, reads -> [meta, [assemblies]] })
+
+        DOWNLOAD_FROM_FIRE_ASSEMBLIES(
+            assembly_and_runs.map{ meta, assemblies, _reads -> [meta, [assemblies]] }
+        )
         ch_versions = ch_versions.mix( DOWNLOAD_FROM_FIRE_ASSEMBLIES.out.versions )
+
         assembly_and_reads = DOWNLOAD_FROM_FIRE_ASSEMBLIES.out.downloaded_files.join( DOWNLOAD_FROM_FIRE_READS.out.downloaded_files )
     } else {
-        assembly_and_reads = samplesheet_ch.map{ meta, fq1, fq2, assembly, concoct, metabat, maxbin, depth ->
+        assembly_and_reads = samplesheet_ch.map{ meta, fq1, fq2, assembly, _concoct, _metabat, _maxbin, _depth ->
             def is_single_end = (fq2 == [])
             def reads = is_single_end ? [fq1] : [fq1, fq2]
             return tuple(meta + [single_end: is_single_end], assembly, reads)
@@ -53,7 +62,7 @@ workflow SAMPLESHEET_GENERATION {
     }
 
     // --- process samplesheet
-    samplesheet_ch.multiMap{ meta, fq1, fq2, assembly, concoct, metabat, maxbin, depth ->
+    samplesheet_ch.multiMap{ meta, _fq1, fq2, _assembly, concoct, metabat, maxbin, depth ->
         def is_single_end = (fq2 == [])
         concoct: concoct ? tuple(meta + [single_end: is_single_end], concoct) : null
         metabat: metabat ? tuple(meta + [single_end: is_single_end], metabat) : null

@@ -12,6 +12,8 @@
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+include { FINALIZE_LOGGING            } from './modules/local/utils'
+
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from './modules/nf-core/custom/dumpsoftwareversions/main'
 
 include { SAMPLESHEET_GENERATION      } from './subworkflows/local/samplesheet_generation'
@@ -49,5 +51,10 @@ workflow {
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
+    )
+
+    FINALIZE_LOGGING (
+        GGP.out.pipeline_logging, 
+        "structured_pipeline_logging_by_runs.txt"
     )
 }

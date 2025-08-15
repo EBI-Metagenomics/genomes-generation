@@ -119,7 +119,7 @@ workflow EUK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix(DREP.out.versions)
 
-    /* -- Aggregate quality file for all runs -- //
+    /* -- Aggregate quality file for all runs -- */
     MODIFY_QUALITY_FILE( 
         quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false), 
         "aggregated_euk_quality.csv"
@@ -128,7 +128,7 @@ workflow EUK_MAGS_GENERATION {
         return tuple([id: "aggregated"], modified_csv)
     }
 
-    /* -- Dereplicate all MAGs in a study --//
+    /* -- Dereplicate all MAGs in a study -- */
     DREP_MAGS( 
         DREP.out.dereplicated_genomes.map{ _meta, drep_genomes -> drep_genomes }.flatten().collect()
           .map{ agg_genomes ->
@@ -140,21 +140,21 @@ workflow EUK_MAGS_GENERATION {
     drep_result = DREP_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
     ch_versions = ch_versions.mix( DREP_MAGS.out.versions)
 
-    /* -- coverage generation -- //
+    /* -- coverage generation -- */
     COVERAGE_RECYCLER_EUK(
         DREP_MAGS.out.dereplicated_genomes,
         input.concoct_input.map{_meta, _assemblies, _reads, _metabat, depth -> depth}.collectFile(name: "euks_depth.txt.gz")
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions)
 
-    /* -- BUSCO QC generation -- //
+    /* -- BUSCO QC generation -- */
     BUSCO( 
         drep_result, 
         file(params.busco_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( BUSCO.out.versions)
 
-    /* -- Combine BUSCO and EukCC quality -- //
+    /* -- Combine BUSCO and EukCC quality -- */
     BUSCO_EUKCC_QC( 
         aggregated_quality.map { _meta, agg_quality_file -> agg_quality_file },
         BUSCO.out.busco_summary.collect(), 
@@ -162,7 +162,7 @@ workflow EUK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( BUSCO_EUKCC_QC.out.versions)
 
-    /* --  BAT taxonomy generation -- //
+    /* --  BAT taxonomy generation -- */
     BAT( 
         drep_result, 
         file(params.cat_db_folder, checkIfExists: true), 
@@ -170,13 +170,13 @@ workflow EUK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( BAT.out.versions)
 
-    /* --  Cleanup BAT outputs -- //
+    /* --  Cleanup BAT outputs -- */
     BAT_TAXONOMY_WRITER( 
         BAT.out.bat_names.collect() 
     )
     ch_versions = ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions)
 
-    /* --  Compress MAGs and publish -- //
+    /* --  Compress MAGs and publish -- */
     COMPRESS_MAGS(
         drep_result
     )
@@ -184,7 +184,7 @@ workflow EUK_MAGS_GENERATION {
         cluster_fasta.copyTo("${params.outdir}/genomes_drep/eukaryotes/genomes/${cluster_fasta.name}")
     })
 
-    /* --  Compress bins and publish -- //
+    /* --  Compress bins and publish -- */
     COMPRESS_BINS(
         bins
     )
@@ -192,7 +192,7 @@ workflow EUK_MAGS_GENERATION {
         cluster_fasta.copyTo("${params.outdir}/bins/eukaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
     })
 
-    /* --  Collect custom logging -- //
+    /* --  Collect custom logging -- */
     ch_log = ch_log.mix( EUKCC_MERGE_METABAT.out.progress_log )
     ch_log = ch_log.mix( EUKCC_MERGE_CONCOCT.out.progress_log )
     ch_log = ch_log.mix( FILTER_QUALITY.out.progress_log )

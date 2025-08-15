@@ -4,9 +4,10 @@ process GENERATE_INPUT_SAMPLESHEET {
 
     container "quay.io/microbiome-informatics/ggp_samplesheet_generation:v1"
 
-    input:
     secret 'ENA_API_USER'
     secret 'ENA_API_PASSWORD'
+
+    input:
     val(ena_assembly_study_accession)
     val(ena_raw_reads_study_accession)
 
