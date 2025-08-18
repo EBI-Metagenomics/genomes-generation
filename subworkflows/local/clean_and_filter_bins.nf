@@ -22,9 +22,9 @@ workflow CLEAN_AND_FILTER_BINS {
 
     MAG_CLEANUP_CAT ( 
         bins, 
-        file(params.cat_db_folder, checkIfExists: true), 
-        file(params.cat_diamond_db, checkIfExists: true), 
-        file(params.cat_taxonomy_db, checkIfExists: true) 
+        file(params.cat_db_folder, checkIfExists: true),
+        file(params.cat_taxonomy_db, checkIfExists: true),
+        file(params.cat_diamond_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( MAG_CLEANUP_CAT.out.versions )
 
