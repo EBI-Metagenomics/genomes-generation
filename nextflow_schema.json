@@ -78,6 +78,11 @@
           "format": "directory-path",
           "description": "The output directory where the results will be saved. This value must be an absolute path.",
           "fa_icon": "fas fa-folder-open"
+        },
+        "publish_all": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish intermediate outputs"
         }
       }
     },

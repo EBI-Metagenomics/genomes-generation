@@ -3,26 +3,15 @@
 */
 process DREP {
     label 'process_medium'
-    tag "${meta.id} ${drep_params} ${type}"
+    tag "${meta.id} ${drep_params}"
 
-    //conda "bioconda::drep=3.2.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/drep:3.2.2--pyhdfd78af_0':
         'quay.io/biocontainers/drep:3.2.2--pyhdfd78af_0' }"
 
-    // that publishDir needs to be a function because of type parameter
-    publishDir(
-            path: "${params.outdir}/genomes_drep/${type}",
-            mode: params.publish_dir_mode,
-            failOnError: true,
-            pattern: "dereplicated_genomes.txt",
-            when: { "${meta.id}" == "aggregated" },
-    )
-
     input:
     tuple val(meta), path(genomes_list, stageAs: "genomes_dir/*"), path(quality_csv)
     val drep_params
-    val type
 
     output:
     tuple val(meta), path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes

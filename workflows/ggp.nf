@@ -13,6 +13,7 @@ include { paramsSummaryMap    } from 'plugin/nf-schema'  // for multiqc
 */
 include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { FINALIZE_LOGGING            } from '../modules/local/utils'
+include { PIGZ as COMPRESS_BINS       } from '../modules/local/compress/pigz'
 //include { MULTIQC                     } from '../modules/nf-core/multiqc'
 
 /*
@@ -209,6 +210,16 @@ workflow GGP {
         ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
         ch_log = ch_log.mix( PROK_MAGS_GENERATION.out.progress_log )
     }
+
+    // TODO find bins proks and euks and publish
+    /* --  Compress bins and publish -- */
+    //COMPRESS_BINS(
+    //    bins
+    //)
+    //COMPRESS_BINS.out.compressed.subscribe({ cluster_fasta ->
+    //    cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_bins}/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
+    //})
+
     
     if ( params.skip_euk && params.skip_prok ) {
         println "You skipped proks and euks. No results for MAGs. Exit."

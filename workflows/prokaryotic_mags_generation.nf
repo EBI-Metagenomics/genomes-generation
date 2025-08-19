@@ -14,7 +14,7 @@ include { CLEAN_AND_FILTER_BINS              } from '../subworkflows/local/clean
 
 include { BINETTE                            } from '../modules/ebi-metagenomics/binette/main'
 include { CHECKM2                            } from '../modules/local/checkm2/main'
-include { DREP                               } from '../modules/local/drep/main'
+include { DREP as DREP_PROKS                 } from '../modules/local/drep/main'
 include { PIGZ as COMPRESS_MAGS              } from '../modules/local/compress/pigz'
 include { COVERAGE_RECYCLER                  } from '../modules/local/coverage_recycler/main'
 include { DETECT_RRNA                        } from '../modules/local/detect_rrna/main'
@@ -75,7 +75,6 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Estimate completeness and contamination for all project bins -- */
     CHECKM2 (
-        "aggregated",
         all_bins,
         file(params.checkm2_db, checkIfExists: true)
     )
@@ -84,17 +83,16 @@ workflow PROK_MAGS_GENERATION {
     /* --  Dereplicate and filter good quality bins -- */
     prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
 
-    DREP ( 
+    DREP_PROKS (
         CHECKM2.out.stats, 
-        prok_drep_args, 
-        "prokaryotes" 
+        prok_drep_args
     )
-    dereplicated_genomes = DREP.out.dereplicated_genomes.map { it -> it[1] }.flatten()
-    ch_versions = ch_versions.mix( DREP.out.versions.first() )
+    dereplicated_genomes = DREP_PROKS.out.dereplicated_genomes.map { it -> it[1] }.flatten()
+    ch_versions = ch_versions.mix( DREP_PROKS.out.versions )
 
     /* --  Calculate coverage -- */
     COVERAGE_RECYCLER ( 
-        DREP.out.dereplicated_genomes, 
+        DREP_PROKS.out.dereplicated_genomes,
         all_metabat_depths
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
@@ -132,22 +130,24 @@ workflow PROK_MAGS_GENERATION {
     // Both channels will have only one element
     CHECKM2_TABLE_FOR_DREP_GENOMES (
         CHECKM2.out.stats.map { _map, _bins, stats -> stats },
-        DREP.out.dereplicated_genomes_list.map { _meta, genomes_list_tsv -> genomes_list_tsv }
+        DREP_PROKS.out.dereplicated_genomes_list.map { _meta, genomes_list_tsv -> genomes_list_tsv }
     )
 
     /* --  Compress MAGs -- */
     COMPRESS_MAGS (
         CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect().flatten()
     )
-    compressed_bins = COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/genomes_drep/prokaryotes/genomes/${cluster_fasta.name}")
+    compressed_mags = COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
+        cluster_fasta.copyTo("${params.outdir}/${params.subdir_proks}/${params.subdir_mags}/${cluster_fasta.name}")
     })
+
+    // TODO bins
 
     /* --  Finalize logging -- */
     ch_log = Channel.empty()
     ch_log = ch_log.mix( BINETTE.out.progress_log )
     ch_log = ch_log.mix( CHECKM2.out.progress_log )
-    ch_log = ch_log.mix( DREP.out.progress_log )
+    ch_log = ch_log.mix( DREP_PROKS.out.progress_log )
 
     emit:
 

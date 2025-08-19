@@ -15,10 +15,9 @@ include { BAT_TAXONOMY_WRITER                         } from '../modules/local/c
 include { BUSCO                                       } from '../modules/local/busco'
 include { BUSCO_EUKCC_QC                              } from '../modules/local/busco_qc'
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK  } from '../modules/local/coverage_recycler'
-include { DREP                                        } from '../modules/local/drep'
-include { DREP as DREP_MAGS                           } from '../modules/local/drep'
+include { DREP as DREP_EUKS_RUNS                      } from '../modules/local/drep'
+include { DREP as DREP_EUKS_MAGS                      } from '../modules/local/drep'
 include { PIGZ as COMPRESS_MAGS                       } from '../modules/local/compress/pigz'
-include { PIGZ as COMPRESS_BINS                       } from '../modules/local/compress/pigz'
 include { FILTER_QUALITY                              } from '../modules/local/euk_utils'
 include { CONCATENATE_QUALITY_FILES                   } from '../modules/local/euk_utils'
 include { MODIFY_QUALITY_FILE                         } from '../modules/local/euk_utils'
@@ -112,12 +111,11 @@ workflow EUK_MAGS_GENERATION {
     /* -- Dereplicate per-run -- //
     // input: tuple (meta, genomes/*, quality_file)
     */
-    DREP( 
+    DREP_EUKS_RUNS(
         FILTER_QUALITY.out.qs50_filtered_genomes, 
-        params.euk_drep_args, 
-        "eukaryotes" 
+        params.euk_drep_args
     )
-    ch_versions = ch_versions.mix(DREP.out.versions)
+    ch_versions = ch_versions.mix(DREP_EUKS_RUNS.out.versions)
 
     /* -- Aggregate quality file for all runs -- */
     MODIFY_QUALITY_FILE( 
@@ -129,20 +127,19 @@ workflow EUK_MAGS_GENERATION {
     }
 
     /* -- Dereplicate all MAGs in a study -- */
-    DREP_MAGS( 
-        DREP.out.dereplicated_genomes.map{ _meta, drep_genomes -> drep_genomes }.flatten().collect()
+    DREP_EUKS_MAGS(
+        DREP_EUKS_RUNS.out.dereplicated_genomes.map{ _meta, drep_genomes -> drep_genomes }.flatten().collect()
           .map{ agg_genomes ->
               return tuple([id: "aggregated"], agg_genomes)
           }.join( aggregated_quality ), 
-        params.euk_drep_args_mags, 
-        "eukaryotes"
+        params.euk_drep_args_mags
     )
-    drep_result = DREP_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
-    ch_versions = ch_versions.mix( DREP_MAGS.out.versions)
+    drep_result = DREP_EUKS_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
+    ch_versions = ch_versions.mix( DREP_EUKS_MAGS.out.versions)
 
     /* -- coverage generation -- */
     COVERAGE_RECYCLER_EUK(
-        DREP_MAGS.out.dereplicated_genomes,
+        DREP_EUKS_MAGS.out.dereplicated_genomes,
         input.concoct_input.map{_meta, _assemblies, _reads, _metabat, depth -> depth}.collectFile(name: "euks_depth.txt.gz")
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions)
@@ -158,7 +155,7 @@ workflow EUK_MAGS_GENERATION {
     BUSCO_EUKCC_QC( 
         aggregated_quality.map { _meta, agg_quality_file -> agg_quality_file },
         BUSCO.out.busco_summary.collect(), 
-        DREP_MAGS.out.dereplicated_genomes_list.map { _meta, drep_genomes -> drep_genomes }
+        DREP_EUKS_MAGS.out.dereplicated_genomes_list.map { _meta, drep_genomes -> drep_genomes }
     )
     ch_versions = ch_versions.mix( BUSCO_EUKCC_QC.out.versions)
 
@@ -181,24 +178,17 @@ workflow EUK_MAGS_GENERATION {
         drep_result
     )
     COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/genomes_drep/eukaryotes/genomes/${cluster_fasta.name}")
-    })
-
-    /* --  Compress bins and publish -- */
-    COMPRESS_BINS(
-        bins
-    )
-    COMPRESS_BINS.out.compressed.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/bins/eukaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
+        cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_mags}/${cluster_fasta.name}")
     })
 
     /* --  Collect custom logging -- */
     ch_log = ch_log.mix( EUKCC_MERGE_METABAT.out.progress_log )
     ch_log = ch_log.mix( EUKCC_MERGE_CONCOCT.out.progress_log )
     ch_log = ch_log.mix( FILTER_QUALITY.out.progress_log )
-    ch_log = ch_log.mix( DREP.out.progress_log )
-    ch_log = ch_log.mix( DREP_MAGS.out.progress_log )
+    ch_log = ch_log.mix( DREP_EUKS_RUNS.out.progress_log )
+    ch_log = ch_log.mix( DREP_EUKS_MAGS.out.progress_log )
 
+    // TODO
     /* 
     // ---- Generate files for bins upload ----
     */

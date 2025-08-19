@@ -10,11 +10,11 @@ import logging
 LIMIT_RRNA = 80
 LIMIT_TRNA = 18
 
-DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.0.0"
+DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.3.0"
 DEFAULT_BINNING_SOFTWARE_PARAMS = "default"
 
-EUK_PATH = os.path.join("genomes_drep", "eukaryotes", "genomes")
-PROK_PATH = os.path.join("genomes_drep", "prokaryotes", "genomes")
+EUK_PATH = os.path.join("eukaryotes", "mags")
+PROK_PATH = os.path.join("prokaryotes", "mags")
 
 STATS_SOFTWARE = {
     "eukaryotes": "EukCC_v2.1.0",
