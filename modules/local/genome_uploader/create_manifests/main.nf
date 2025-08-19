@@ -17,7 +17,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     path "results/MAG_upload/genome_samples.xml"   , emit: upload_genome_samples
     path "results/MAG_upload/registered_MAGs*.tsv" , emit: upload_registered_mags
     path "results/MAG_upload/submission.xml"       , emit: upload_submission_xml
-    //path "versions.yml"       , emit: versions
+    path "versions.yml"                            , emit: versions
 
     script:
     def mags_arg = params.upload_mags ? "--mags" : ""
@@ -42,5 +42,10 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${mode} \
       --out results \
       ${args}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        genome_uploader: \$(genome_upload --version 2>&1 | sed 's/genome_uploader //g')
+    END_VERSIONS
     """
 }

@@ -48,6 +48,7 @@ workflow UPLOAD_MAGS {
            PREPARE_TSV_FOR_UPLOADER.out.tsv_for_uploader,
            mags
         )
+        ch_versions = ch_versions.mix( CREATE_MANIFESTS_FOR_UPLOAD.out.versions )
 
         /* --   combine MAG with corresponding manifest -- */
         mags_ch = mags.flatten().map { bin ->
