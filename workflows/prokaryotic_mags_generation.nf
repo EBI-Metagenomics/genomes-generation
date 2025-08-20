@@ -84,7 +84,7 @@ workflow PROK_MAGS_GENERATION {
     prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
 
     DREP_PROKS (
-        CHECKM2.out.stats, 
+        CHECKM2.out.bins_and_stats,
         prok_drep_args
     )
     dereplicated_genomes = DREP_PROKS.out.dereplicated_genomes.map { it -> it[1] }.flatten()
@@ -129,7 +129,7 @@ workflow PROK_MAGS_GENERATION {
     // checkm_results_mags.txt 
     // Both channels will have only one element
     CHECKM2_TABLE_FOR_DREP_GENOMES (
-        CHECKM2.out.stats.map { _map, _bins, stats -> stats },
+        CHECKM2.out.bins_and_stats.map { _map, _bins, stats -> stats },
         DREP_PROKS.out.dereplicated_genomes_list.map { _meta, genomes_list_tsv -> genomes_list_tsv }
     )
 

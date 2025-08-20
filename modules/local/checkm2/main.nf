@@ -11,11 +11,11 @@ process CHECKM2 {
     path checkm2_db
 
     output:
-    tuple val(meta), path("bins_folder"), path("${meta.id}_all_stats.csv")   , emit: stats
-    tuple val(meta), path("${meta.id}_filtered_genomes")    , emit: filtered_genomes
-    tuple val(meta), path("${meta.id}_filtered_genomes.tsv"), emit: filtered_stats
-    path "versions.yml"                                  , emit: versions
-    path "progress.log"                                  , emit: progress_log
+    tuple val(meta), path("bins_folder"), path("${meta.id}_all_stats.csv")   , emit: bins_and_stats
+    tuple val(meta), path("${meta.id}_filtered_genomes")                     , emit: filtered_genomes
+    tuple val(meta), path("${meta.id}_filtered_genomes.tsv")                 , emit: filtered_stats
+    path "versions.yml"                                                      , emit: versions
+    path "progress.log"                                                      , emit: progress_log
 
     // NOTE:
     // Checkm2 works with list of files OR folder as --input
