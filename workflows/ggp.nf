@@ -66,19 +66,19 @@ workflow GGP {
     * ---- Optional input binners parsing ----
     */
     concoct_sample_ids = input_binners_concoct.filter { it != null }
-        .map { meta, f -> meta.id }
+        .map { meta, _files -> meta.id }
         .collect()
         .ifEmpty([])
     metabat_sample_ids = input_binners_metabat.filter { it != null }
-        .map { meta, f -> meta.id }
+        .map { meta, _files -> meta.id }
         .collect()
         .ifEmpty([])
     maxbin_sample_ids = input_binners_maxbin.filter { it != null }
-        .map { meta, f -> meta.id }
+        .map { meta, _files -> meta.id }
         .collect()
         .ifEmpty([])
     depth_sample_ids = input_jgi_depth.filter { it != null }
-        .map { meta, d -> meta.id }
+        .map { meta, _depth -> meta.id }
         .collect()
         .ifEmpty([])
 
@@ -193,8 +193,9 @@ workflow GGP {
 
     if ( !params.skip_prok ) {
         // input: tuple( meta, concoct, metabat, maxbin, depth_file)
-        collected_binners_assembly_and_depth = BINNING.out.concoct_bins.join( BINNING.out.maxbin_bins, remainder: true ) 
-            .join( BINNING.out.metabat_bins, remainder: true ) 
+        collected_binners_assembly_and_depth = all_concoct_bins
+            .join( all_maxbin_bins, remainder: true ) 
+            .join( all_metabat_bins, remainder: true ) 
             .join( INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _reads -> [meta, assembly] }, remainder: true ) 
             .join( all_jgi_depth, remainder: true )
 

@@ -119,7 +119,7 @@ workflow EUK_MAGS_GENERATION {
 
     /* -- Aggregate quality file for all runs -- */
     MODIFY_QUALITY_FILE( 
-        quality.map { meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false), 
+        quality.map { _meta, quality_file -> quality_file }.collectFile(name: "all.csv", newLine: false), 
         "aggregated_euk_quality.csv"
     )
     aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { modified_csv ->

@@ -17,8 +17,8 @@ workflow INPUT_PREPROCESSING {
 
     ch_versions = Channel.empty()
 
-    reads = input_data.map { meta, assembly, reads -> [meta, reads] }
-    contigs = input_data.map { meta, assembly, reads_item -> [meta, assembly] }
+    reads = input_data.map { meta, _assembly, reads -> [meta, reads] }
+    contigs = input_data.map { meta, assembly, _reads_item -> [meta, assembly] }
 
     //
     // --- check input reads quality ---

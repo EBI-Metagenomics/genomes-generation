@@ -21,7 +21,7 @@ workflow CONCOCT_SUBWF {
     )
 
     CONCOCT_CONCOCT( 
-        ch_fasta_tsv.map{ meta, tsv, concoct_fasta, assembly_fasta -> [meta, tsv, concoct_fasta] } 
+        ch_fasta_tsv.map{ meta, tsv, concoct_fasta, _assembly_fasta -> [meta, tsv, concoct_fasta] } 
     )
 
     ch_versions = ch_versions.mix(CONCOCT_CONCOCT.out.versions)
@@ -31,8 +31,6 @@ workflow CONCOCT_SUBWF {
     )
 
     ch_versions = ch_versions.mix( CONCOCT_MERGECUTUPCLUSTERING.out.versions)
-
-    ch_mergecutupclustering_for_extractfastabins = 
 
     CONCOCT_EXTRACTFASTABINS ( 
         GUNZIP_ASSEMBLY.out.uncompressed
