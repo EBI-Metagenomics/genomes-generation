@@ -18,7 +18,7 @@ process PROPAGATE_TAXONOMY_TO_BINS {
     propagate_taxonomy_to_bins.py \
         --cdb ${drep_clustering_csv} \
         --taxonomy ${taxonomy_tsv} \
-        --output ncbi_taxonomy.txt
+        --output ncbi_taxonomy_propagated.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
