@@ -139,7 +139,7 @@ workflow EUK_MAGS_GENERATION {
           }.join( aggregated_quality ), 
         params.euk_drep_args_mags
     )
-    drep_result = DREP_EUKS_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
+    dereplicated_genomes = DREP_EUKS_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
     ch_versions = ch_versions.mix( DREP_EUKS_MAGS.out.versions)
 
     /* -- coverage generation -- */
@@ -152,7 +152,7 @@ workflow EUK_MAGS_GENERATION {
 
     /* -- BUSCO QC generation -- */
     BUSCO_MAGS( 
-        drep_result, 
+        dereplicated_genomes, 
         file(params.busco_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( BUSCO_MAGS.out.versions)
@@ -167,7 +167,7 @@ workflow EUK_MAGS_GENERATION {
 
     /* --  BAT taxonomy generation -- */
     BAT( 
-        drep_result, 
+        dereplicated_genomes, 
         file(params.cat_db_folder, checkIfExists: true), 
         file(params.cat_taxonomy_db, checkIfExists: true) 
     )
@@ -181,7 +181,7 @@ workflow EUK_MAGS_GENERATION {
 
     /* --  Compress MAGs and publish -- */
     COMPRESS_MAGS(
-        drep_result
+        dereplicated_genomes
     )
     COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
         cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_mags}/${cluster_fasta.name}")
@@ -197,10 +197,12 @@ workflow EUK_MAGS_GENERATION {
     if ( params.upload_bins ) {
         
         // initially bins include MAGs, to save computing, we'll keep only non-MAG bins for further processing
+        dereplicated_genomes_filenames = dereplicated_genomes
+            .collect { file_path -> file_path.name }
         not_mags = bins
-            .combine(drep_result.collect())
+            .cross(dereplicated_genomes_filenames)
             .map { all_genomes, mags -> 
-                all_genomes.findAll { genome -> !(genome in mags) }
+                all_genomes.findAll { genome -> !(genome.name in mags) }
             }
 
         COVERAGE_RECYCLER_BINS(

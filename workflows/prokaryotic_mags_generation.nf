@@ -96,17 +96,19 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
     /* --  Separate bins and dereplicated_genomes (MAGs) -- */
-    dereplicated_genomes = DREP_PROKS.out.dereplicated_genomes.map { _meta, bins_list -> bins_list }
-    bins = CLEAN_AND_FILTER_BINS.out.bins
+    dereplicated_genomes = DREP_PROKS.out.dereplicated_genomes.map { _meta, bins_list -> bins_list }.flatten()
+    dereplicated_genomes_filenames = dereplicated_genomes
+        .collect { file_path -> file_path.name }
+    not_mags = CLEAN_AND_FILTER_BINS.out.bins
         .collect()
-        .combine(dereplicated_genomes)
+        .cross(dereplicated_genomes_filenames)
         .map { all_genomes, mags -> 
-            all_genomes.findAll { genome -> !(genome in mags) }
+            all_genomes.findAll { genome -> !(genome.name in mags) }
         }
 
     /* --  Detect RNA for cluster representatives -- */
     DETECT_RRNA(
-        dereplicated_genomes.flatten(),
+        dereplicated_genomes,
         file(params.rfam_rrna_models, checkIfExists: true)
     )
     rna_out = Channel.empty()
@@ -115,7 +117,7 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Assign taxonomy to cluster representatives -- */
     GTDBTK (
-        dereplicated_genomes,
+        dereplicated_genomes.collect(),
         file(params.gtdbtk_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( GTDBTK.out.versions.first() )
@@ -144,7 +146,7 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Compress MAGs -- */
     COMPRESS_MAGS (
-        dereplicated_genomes.flatten()
+        dereplicated_genomes
     )
     compressed_mags = COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
         cluster_fasta.copyTo("${params.outdir}/${params.subdir_proks}/${params.subdir_mags}/${cluster_fasta.name}")
@@ -154,7 +156,7 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Compress bins -- */
     COMPRESS_BINS (
-        bins.flatten()
+        not_mags.flatten()
     )
 
 
@@ -166,7 +168,7 @@ workflow PROK_MAGS_GENERATION {
 
     emit:
     mags_fastas  = COMPRESS_MAGS.out.compressed.collect()
-    bins_fastas  = COMPRESS_MAGS.out.compressed.mix(COMPRESS_BINS.out.compressed).collect()
+    bins_fastas  = COMPRESS_MAGS.out.compressed.mix(COMPRESS_BINS.out.compressed.collect())
     stats        = CHECKM2.out.bins_and_stats.map { _map, _bins, stats -> stats }
     coverage     = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
     mags_rna     = rna_out.collect()
