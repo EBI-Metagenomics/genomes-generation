@@ -10,21 +10,25 @@ include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from '../subworkflows/lo
     MODULES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { BAT                                         } from '../modules/local/cat/bat/bat'
-include { BAT_TAXONOMY_WRITER                         } from '../modules/local/cat/bat/bat_taxonomy_writer'
-include { BUSCO                                       } from '../modules/local/busco'
-include { BUSCO_EUKCC_QC                              } from '../modules/local/busco_qc'
-include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK  } from '../modules/local/coverage_recycler'
-include { DREP as DREP_EUKS_RUNS                      } from '../modules/local/drep'
-include { DREP as DREP_EUKS_MAGS                      } from '../modules/local/drep'
-include { PIGZ as COMPRESS_MAGS                       } from '../modules/local/compress/pigz'
-include { FILTER_QUALITY                              } from '../modules/local/euk_utils'
-include { CONCATENATE_QUALITY_FILES                   } from '../modules/local/euk_utils'
-include { MODIFY_QUALITY_FILE                         } from '../modules/local/euk_utils'
+include { BAT                                          } from '../modules/local/cat/bat/bat'
+include { BAT_TAXONOMY_WRITER                          } from '../modules/local/cat/bat/bat_taxonomy_writer'
+include { BUSCO as BUSCO_MAGS                          } from '../modules/local/busco'
+include { BUSCO as BUSCO_BINS                          } from '../modules/local/busco'
+include { BUSCO_EUKCC_QC as BUSCO_EUKCC_QC_MAGS        } from '../modules/local/busco_qc'
+include { BUSCO_EUKCC_QC as BUSCO_EUKCC_QC_BINS        } from '../modules/local/busco_qc'
+include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_MAGS  } from '../modules/local/coverage_recycler'
+include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_BINS  } from '../modules/local/coverage_recycler'
+include { DREP as DREP_EUKS_RUNS                       } from '../modules/local/drep'
+include { DREP as DREP_EUKS_MAGS                       } from '../modules/local/drep'
+include { PIGZ as COMPRESS_MAGS                        } from '../modules/local/compress/pigz'
+include { PIGZ as COMPRESS_BINS                        } from '../modules/local/compress/pigz'
+include { FILTER_QUALITY                               } from '../modules/local/euk_utils'
+include { CONCATENATE_QUALITY_FILES                    } from '../modules/local/euk_utils'
+include { MODIFY_QUALITY_FILE                          } from '../modules/local/euk_utils'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~
-     Eukaryotes workflow
+    Eukaryotes workflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -106,7 +110,6 @@ workflow EUK_MAGS_GENERATION {
     FILTER_QUALITY( 
         quality.join( eukcc_bins )
     )
-    bins = FILTER_QUALITY.out.qs50_filtered_genomes.map{ _meta, genomes, _quality -> genomes }.flatten()
 
     /* -- Dereplicate per-run -- //
     // input: tuple (meta, genomes/*, quality_file)
@@ -116,6 +119,8 @@ workflow EUK_MAGS_GENERATION {
         params.euk_drep_args
     )
     ch_versions = ch_versions.mix(DREP_EUKS_RUNS.out.versions)
+    
+    bins = DREP_EUKS_RUNS.out.dereplicated_genomes.map{ _meta, genomes -> genomes }.collect()
 
     /* -- Aggregate quality file for all runs -- */
     MODIFY_QUALITY_FILE( 
@@ -138,26 +143,27 @@ workflow EUK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( DREP_EUKS_MAGS.out.versions)
 
     /* -- coverage generation -- */
-    COVERAGE_RECYCLER_EUK(
+    depth_file = input.concoct_input.map{_meta, _assemblies, _reads, _metabat, depth -> depth}.collectFile(name: "euks_depth.txt.gz")
+    COVERAGE_RECYCLER_MAGS(
         DREP_EUKS_MAGS.out.dereplicated_genomes,
-        input.concoct_input.map{_meta, _assemblies, _reads, _metabat, depth -> depth}.collectFile(name: "euks_depth.txt.gz")
+        depth_file
     )
-    ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions)
+    ch_versions = ch_versions.mix( COVERAGE_RECYCLER_MAGS.out.versions)
 
     /* -- BUSCO QC generation -- */
-    BUSCO( 
+    BUSCO_MAGS( 
         drep_result, 
         file(params.busco_db, checkIfExists: true)
     )
-    ch_versions = ch_versions.mix( BUSCO.out.versions)
+    ch_versions = ch_versions.mix( BUSCO_MAGS.out.versions)
 
     /* -- Combine BUSCO and EukCC quality -- */
-    BUSCO_EUKCC_QC( 
+    BUSCO_EUKCC_QC_MAGS( 
         aggregated_quality.map { _meta, agg_quality_file -> agg_quality_file },
-        BUSCO.out.busco_summary.collect(), 
+        BUSCO_MAGS.out.busco_summary.collect(), 
         DREP_EUKS_MAGS.out.dereplicated_genomes_list.map { _meta, drep_genomes -> drep_genomes }
     )
-    ch_versions = ch_versions.mix( BUSCO_EUKCC_QC.out.versions)
+    ch_versions = ch_versions.mix( BUSCO_EUKCC_QC_MAGS.out.versions)
 
     /* --  BAT taxonomy generation -- */
     BAT( 
@@ -188,30 +194,69 @@ workflow EUK_MAGS_GENERATION {
     ch_log = ch_log.mix( DREP_EUKS_RUNS.out.progress_log )
     ch_log = ch_log.mix( DREP_EUKS_MAGS.out.progress_log )
 
-    // TODO
-    /* 
-    // ---- Generate files for bins upload ----
-    */
     if ( params.upload_bins ) {
-        // choose bins that are not MAGs
-        drep_result.view()
-        bins.view()
-        // COVERAGE_RECYCLER_EUK
-        // BAT
-        // BAT_TAXONOMY_WRITER
-        // PREPARE_UPLOAD_FILES
+        
+        // initially bins include MAGs, to save computing, we'll keep only non-MAG bins for further processing
+        not_mags = bins
+            .combine(drep_result.collect())
+            .map { all_genomes, mags -> 
+                all_genomes.findAll { genome -> !(genome in mags) }
+            }
+
+        COVERAGE_RECYCLER_BINS(
+            not_mags,
+            depth_file
+        )
+        ch_versions = ch_versions.mix( COVERAGE_RECYCLER_BINS.out.versions )
+
+        BUSCO_BINS( 
+            not_mags.flatten(), 
+            file(params.busco_db, checkIfExists: true)
+        )
+        ch_versions = ch_versions.mix( BUSCO_BINS.out.versions)
+
+        BUSCO_EUKCC_QC_BINS( 
+            aggregated_quality.map { _meta, agg_quality_file -> agg_quality_file },
+            BUSCO_BINS.out.busco_summary.collect(), 
+            not_mags
+        )
+        ch_versions = ch_versions.mix( BUSCO_EUKCC_QC_BINS.out.versions)
+
+        // TAXONOMY
+
+        COMPRESS_BINS(
+            not_mags.flatten()
+        )
+        ch_versions = ch_versions.mix( COMPRESS_BINS.out.versions )
+
+        bins_fastas = COMPRESS_MAGS.out.compressed.mix(COMPRESS_BINS.out.compressed).collect()
+        stats = BUSCO_EUKCC_QC_MAGS.out.eukcc_final_qc
+            .mix( BUSCO_EUKCC_QC_BINS.out.eukcc_final_qc )
+            .collectFile(name: "euk_final_qc_all_bins.csv", newLine: true, keepHeader: true)
+        coverage = COVERAGE_RECYCLER_MAGS.out.mag_coverage
+            .mix( COVERAGE_RECYCLER_BINS.out.mag_coverage )
+            .map{ _meta, coverage_file -> coverage_file }
+            .collect()
+
+    } else {
+        bins_fastas = channel.empty()
+        stats = BUSCO_EUKCC_QC_MAGS.out.eukcc_final_qc
+        coverage = COVERAGE_RECYCLER_MAGS.out.mag_coverage
+            .map{ _meta, coverage_file -> coverage_file }
+            .collect()
     }
 
 
     emit:
-    genomes                   = COMPRESS_MAGS.out.compressed.collect()
-    stats                     = BUSCO_EUKCC_QC.out.eukcc_final_qc
-    coverage                  = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
+    mags_fastas               = COMPRESS_MAGS.out.compressed.collect()
+    bins_fastas               = bins_fastas
+    stats                     = stats
+    coverage                  = coverage
     taxonomy                  = BAT_TAXONOMY_WRITER.out.all_bin2classification
     versions                  = ch_versions
     progress_log              = ch_log
     // for multiqc
     samtools_idxstats_metabat = EUKCC_MERGE_METABAT.out.samtools_idxstats
     samtools_idxstats_concoct = EUKCC_MERGE_CONCOCT.out.samtools_idxstats
-    busco_short_summary       = BUSCO.out.busco_summary
+    busco_short_summary       = BUSCO_MAGS.out.busco_summary
 }
