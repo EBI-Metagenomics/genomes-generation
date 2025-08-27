@@ -136,14 +136,6 @@ workflow PROK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( PROPAGATE_TAXONOMY_TO_BINS.out.versions.first() )
 
-    ch_taxonomy = GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
-        .mix(PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy)
-        .collectFile(
-            name: 'all_genomes_taxonomy.txt',
-            keepHeader: true,
-            newLine: true
-        )
-
     /* --  Compress MAGs -- */
     COMPRESS_MAGS (
         dereplicated_genomes
@@ -172,7 +164,7 @@ workflow PROK_MAGS_GENERATION {
     stats        = CHECKM2.out.bins_and_stats.map { _map, _bins, stats -> stats }
     coverage     = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
     mags_rna     = rna_out.collect()
-    taxonomy     = ch_taxonomy
+    taxonomy     = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy
     versions     = ch_versions
     progress_log = ch_log
 }

@@ -9,8 +9,8 @@ process PROPAGATE_TAXONOMY_TO_BINS {
     path(taxonomy_tsv)
 
     output:
-    tuple val(meta), path("ncbi_taxonomy.txt"), emit: ncbi_taxonomy
-    path "versions.yml"                       , emit: versions
+    tuple val(meta), path("ncbi_taxonomy_propagated.txt"), emit: ncbi_taxonomy
+    path "versions.yml"                                  , emit: versions
 
 
     script:
