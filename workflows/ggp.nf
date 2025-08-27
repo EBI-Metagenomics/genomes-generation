@@ -26,10 +26,8 @@ include { PROK_MAGS_GENERATION } from './prokaryotic_mags_generation'
 
 include { BINNING              } from '../subworkflows/local/binning'
 include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
-include { INPUT_PREPROCESSING  } from '../subworkflows/local/input_preprocessing'
-include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
+include { INPUT_QC             } from '../subworkflows/local/qc'
 include { UPLOAD_MAGS          } from '../subworkflows/local/upload'
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,22 +84,13 @@ workflow GGP {
     /*
     * --- pre-processing input files ---
     * skip that step with --skip_preprocessing_input
-    * change ERR to ERZ in reads
-    * change . to _ in assembly files
+    * sanitise and trim fastq files, merge with fastp is regulated with --merge_pairs (default: false)
+    * change contig headers to short names and create mapping file
     */
-    INPUT_PREPROCESSING(
+    INPUT_QC(
         assembly_and_reads
     )
     ch_versions = ch_versions.mix(INPUT_PREPROCESSING.out.versions)
-
-    /*
-    * --- trimming reads ----
-    * merge step is regulated with --merge_pairs (default: false)
-    */
-    QC_AND_MERGE_READS(
-        INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, _1, reads -> [meta, reads] }
-    )
-    ch_versions = ch_versions.mix( QC_AND_MERGE_READS.out.versions )
 
     /*
     * --- reads decontamination ----
@@ -244,7 +233,7 @@ workflow GGP {
 
     // for multiqc
     // binning samtools for multiqc
-    // TODO return fastqc from INPUT_PREPROCESSING
+    // TODO return fastqc from qc
     // TODO return fastqc result after decontamination
     // TODO return ALIGN samtools stats
 
