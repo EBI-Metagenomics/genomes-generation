@@ -10,6 +10,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     input:
     path(table_for_upload)
     path(mags)
+    val(mags_or_bins_flag)
 
     output:
     path "results/MAG_upload/manifests*/*.manifest", emit: manifests
@@ -20,8 +21,6 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     path "versions.yml"                            , emit: versions
 
     script:
-    def mags_arg = params.upload_mags ? "--mags" : ""
-    def bins_arg = params.upload_bins ? "--bins" : ""
     def tpa      = params.upload_tpa  ? "--tpa"  : ""
     def force    = params.upload_force  ? "--force"  : ""
     def mode     = (!params.test_upload) ? "--live" : ""
@@ -35,8 +34,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       -u $params.ena_assembly_study_accession \
       --genome_info ${table_for_upload} \
       --centre_name $params.centre_name \
-      ${mags_arg} \
-      ${bins_arg} \
+      --${mags_or_bins_flag} \
       ${tpa} \
       ${force} \
       ${mode} \

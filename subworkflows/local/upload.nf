@@ -20,6 +20,7 @@ workflow UPLOAD_MAGS {
     rna
     taxonomy_euks
     taxonomy_proks
+    mags_or_bins_flag
 
     main:
 
@@ -45,7 +46,8 @@ workflow UPLOAD_MAGS {
     /* --  Generate manifests for submission -- */
     CREATE_MANIFESTS_FOR_UPLOAD(
         PREPARE_TSV_FOR_UPLOADER.out.tsv_for_uploader,
-        mags
+        mags,
+        mags_or_bins_flag
     )
     ch_versions = ch_versions.mix( CREATE_MANIFESTS_FOR_UPLOAD.out.versions )
 
