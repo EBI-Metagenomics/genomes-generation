@@ -2,7 +2,7 @@ process PROPAGATE_TAXONOMY_TO_BINS {
     tag "${meta.id}"
     label 'process_single'
 
-    container ''
+    container 'community.wave.seqera.io/library/pip_pandas:5c59aaec7d5d4750'
 
     input:
     tuple val(meta), path(drep_clustering_csv)
