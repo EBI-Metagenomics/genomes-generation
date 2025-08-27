@@ -101,9 +101,11 @@ workflow PROK_MAGS_GENERATION {
         .collect { file_path -> file_path.name }
     not_mags = CLEAN_AND_FILTER_BINS.out.bins
         .collect()
-        .cross(dereplicated_genomes_filenames)
-        .map { all_genomes, mags -> 
-            all_genomes.findAll { genome -> !(genome.name in mags) }
+        .map { all_genomes -> 
+            def mags_list = dereplicated_genomes_filenames.val
+            all_genomes.findAll { genome -> 
+                !(genome.name in mags_list)
+            }
         }
 
     /* --  Detect RNA for cluster representatives -- */
