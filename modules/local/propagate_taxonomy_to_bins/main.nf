@@ -5,7 +5,7 @@ process PROPAGATE_TAXONOMY_TO_BINS {
     container 'community.wave.seqera.io/library/pip_pandas:5c59aaec7d5d4750'
 
     input:
-    tuple val(meta), path(drep_clustering_csv)
+    tuple val(meta), path(drep_cdb_csv), path(drep_wdb_csv)
     path(taxonomy_tsv)
 
     output:
@@ -16,7 +16,8 @@ process PROPAGATE_TAXONOMY_TO_BINS {
     script:
     """
     propagate_taxonomy_to_bins.py \
-        --cdb ${drep_clustering_csv} \
+        --cdb ${drep_cdb_csv} \
+        --wdb ${drep_wdb_csv} \
         --taxonomy ${taxonomy_tsv} \
         --output ncbi_taxonomy_propagated.txt
 

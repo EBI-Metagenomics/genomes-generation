@@ -2,19 +2,24 @@
 
 import argparse
 from pathlib import Path
-
 import pandas as pd
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Propagate taxonomy from dRep cluster reps to all cluster members.")
+    parser = argparse.ArgumentParser(
+        description="Propagate taxonomy from dRep cluster reps to all cluster members."
+    )
     parser.add_argument(
         "-c", "--cdb", type=Path, required=True,
-        help="Path to dRep Cdb.csv file"
+        help="Path to dRep Cdb.csv file (maps genomes to clusters)"
+    )
+    parser.add_argument(
+        "-w", "--wdb", type=Path, required=True,
+        help="Path to dRep Wdb.csv file (maps clusters to representatives)"
     )
     parser.add_argument(
         "-t", "--taxonomy", type=Path, required=True,
-        help="Path to taxonomy file (TSV with representative and lineage)"
+        help="Path to taxonomy file (TSV output from gtdb_to_ncbi_majority_vote.py)"
     )
     parser.add_argument(
         "-o", "--output", type=Path, required=True,
@@ -23,49 +28,72 @@ def parse_args():
     return parser.parse_args()
 
 
-def propagate_taxonomy(cdb_path: Path, taxonomy_path: Path, output_path: Path) -> None:
+def strip_fasta_ext(name):
+    # peel compression suffix if present
+    for comp in (".gz", ".zip"):
+        if name.endswith(comp):
+            name = name[: -len(comp)]
+            break
+    # peel fasta-like suffixes (case-insensitive)
+    fasta_exts = (".fa", ".fna", ".fasta", ".fas", ".fsa")
+    low = name.lower()
+    for ext in fasta_exts:
+        if low.endswith(ext):
+            name = name[: -len(ext)]
+            break
+    return name
+
+
+def propagate_taxonomy(cdb_path: Path, wdb_path: Path, taxonomy_path: Path, output_path: Path) -> None:
     """
     Propagate taxonomy from cluster representatives to all cluster members.
 
     Args:
-        cdb_path (Path): Path to the Cdb.csv file from dRep
+        cdb_path (Path): Path to the Cdb.csv file from dRep (maps genomes to clusters)
+        wdb_path (Path): Path to the Wdb.csv file from dRep (maps clusters to representatives)
         taxonomy_path (Path): Path to the representative taxonomy TSV
         output_path (Path): Path to write the output TSV
     """
-    # Load Cdb.csv
+    # Load files
     cdb = pd.read_csv(cdb_path)
+    wdb = pd.read_csv(wdb_path)
+    taxonomy = pd.read_csv(taxonomy_path, sep="\t")
 
-    # Ensure required columns exist
-    required_cols = {'genome', 'cluster', 'cluster_rep'}
-    if not required_cols.issubset(cdb.columns):
-        raise ValueError(f"Cdb file must contain columns: {required_cols}")
+    # Rename column in wdb to match taxonomy file
+    rep2cluster = wdb[["cluster", "genome"]].rename(columns={"genome": "Genome ID"})
+    
+    # Strip fasta extensions from Genome IDs to match taxonomy file
+    rep2cluster["Genome ID"] = rep2cluster["Genome ID"].apply(strip_fasta_ext)
 
-    # Load taxonomy file
-    taxonomy = pd.read_csv(taxonomy_path, sep='\t', names=["representative", "lineage"], header=None)
+    # Merge reps with taxonomy to associate each cluster with taxonomy
+    cluster2tax = rep2cluster.merge(
+        taxonomy,
+        on="Genome ID",
+        how="left"
+    )
 
-    # Extract representatives and their cluster
-    reps = cdb[cdb['cluster_rep']][['cluster', 'genome']].rename(columns={'genome': 'representative'})
+    # Merge all cluster members with cluster2tax
+    merged = cdb.merge(
+        cluster2tax.drop(columns=["Genome ID"]),
+        left_on="secondary_cluster",
+        right_on="cluster",
+        how="left"
+    )
 
-    # Merge representatives with their taxonomy
-    rep_tax = reps.merge(taxonomy, on='representative', how='left')
+    # Rename column listing cluster members to "Genome ID"
+    merged = merged.rename(columns={"genome": "Genome ID"})
+    merged["Genome ID"] = merged["Genome ID"].apply(strip_fasta_ext)
 
-    if rep_tax['lineage'].isnull().any():
-        missing = rep_tax[rep_tax['lineage'].isnull()]
-        raise ValueError(f"Missing taxonomy for representatives:\n{missing}")
+    # Output: name columns identical to taxonomy file
+    colnames = taxonomy.columns.tolist()
+    result = merged[colnames]
 
-    # Merge full Cdb with taxonomy via cluster
-    merged = cdb.merge(rep_tax[['cluster', 'lineage']], on='cluster', how='left')
-
-    # Output: genome (member), lineage
-    result = merged[['genome', 'lineage']].rename(columns={'genome': 'cluster_member'})
-
-    # Write output
-    result.to_csv(output_path, sep='\t', index=False)
+    result.to_csv(output_path, sep="\t", index=False)
 
 
 def main():
     args = parse_args()
-    propagate_taxonomy(args.cdb, args.taxonomy, args.output)
+    propagate_taxonomy(args.cdb, args.wdb, args.taxonomy, args.output)
 
 
 if __name__ == "__main__":

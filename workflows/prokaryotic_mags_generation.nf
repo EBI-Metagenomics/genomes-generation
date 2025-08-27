@@ -131,7 +131,7 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
     PROPAGATE_TAXONOMY_TO_BINS (
-        DREP_PROKS.out.clustering_csv,
+        DREP_PROKS.out.clustering_csvs,
         GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
     )
     ch_versions = ch_versions.mix( PROPAGATE_TAXONOMY_TO_BINS.out.versions.first() )
