@@ -130,6 +130,7 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( GTDBTK_TO_NCBI_TAXONOMY.out.versions.first() )
 
     /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
+    // TODO it can be empty if all clusters are singletons
     PROPAGATE_TAXONOMY_TO_BINS (
         DREP_PROKS.out.clustering_csvs,
         GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
@@ -164,7 +165,7 @@ workflow PROK_MAGS_GENERATION {
     stats        = CHECKM2.out.bins_and_stats.map { _map, _bins, stats -> stats }
     coverage     = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
     mags_rna     = rna_out.collect()
-    taxonomy     = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy
+    taxonomy     = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy.map { _meta, taxonomy_file -> taxonomy_file }.collect()
     versions     = ch_versions
     progress_log = ch_log
 }
