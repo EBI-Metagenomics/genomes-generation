@@ -14,11 +14,11 @@ process DREP {
     val drep_params
 
     output:
-    tuple val(meta), path("drep_output/dereplicated_genomes/*"), optional: true, emit: dereplicated_genomes
-    tuple val(meta), path("dereplicated_genomes.txt")          , optional: true, emit: dereplicated_genomes_list
-    tuple val(meta), path("drep_output/data_tables/Cdb.csv")   , optional: true, emit: clustering_csv
-    path "versions.yml"                                        , emit: versions
-    path "progress.log"                                        , emit: progress_log
+    tuple val(meta), path("drep_output/dereplicated_genomes/*")                                         , optional: true, emit: dereplicated_genomes
+    tuple val(meta), path("dereplicated_genomes.txt")                                                   , optional: true, emit: dereplicated_genomes_list
+    tuple val(meta), path("drep_output/data_tables/Cdb.csv"), path("drep_output/data_tables/Wdb.csv")   , optional: true, emit: clustering_csvs
+    path "versions.yml"                                                                                 , emit: versions
+    path "progress.log"                                                                                 , emit: progress_log
 
     // NOTE:
     // genomes_dir can be a folder with genomes OR folder with folder of genomes
