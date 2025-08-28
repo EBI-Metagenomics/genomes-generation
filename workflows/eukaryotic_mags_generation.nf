@@ -10,18 +10,18 @@ include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from '../subworkflows/lo
     MODULES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { BAT                                                } from '../modules/local/cat/bat/bat'
-include { BAT_TAXONOMY_WRITER                                } from '../modules/local/cat/bat/bat_taxonomy_writer'
-include { BUSCO                                              } from '../modules/local/busco'
-include { BUSCO_EUKCC_QC                                     } from '../modules/local/busco_qc'
-include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK         } from '../modules/local/coverage_recycler'
-include { DREP as DREP_EUKS_RUNS                             } from '../modules/local/drep'
-include { DREP as DREP_EUKS_MAGS                             } from '../modules/local/drep'
-include { PIGZ as COMPRESS_MAGS                              } from '../modules/local/compress/pigz'
-include { PIGZ as COMPRESS_BINS                              } from '../modules/local/compress/pigz'
-include { FILTER_QUALITY                                     } from '../modules/local/euk_utils'
-include { CONCATENATE_QUALITY_FILES                          } from '../modules/local/euk_utils'
-include { MODIFY_QUALITY_FILE                                } from '../modules/local/euk_utils'
+include { BAT                                        } from '../modules/local/cat/bat/bat'
+include { BAT_TAXONOMY_WRITER                        } from '../modules/local/cat/bat/bat_taxonomy_writer'
+include { BUSCO                                      } from '../modules/local/busco'
+include { BUSCO_EUKCC_QC                             } from '../modules/local/busco_qc'
+include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../modules/local/coverage_recycler'
+include { DREP_DEREPLICATE as DREP_DEREPLICATE_RUNS  } from '../modules/nf-core/drep/dereplicate/main'
+include { DREP_DEREPLICATE as DREP_DEREPLICATE_MAGS  } from '../modules/nf-core/drep/dereplicate/main'
+include { PIGZ as COMPRESS_MAGS                      } from '../modules/local/compress/pigz'
+include { PIGZ as COMPRESS_BINS                      } from '../modules/local/compress/pigz'
+include { FILTER_QUALITY                             } from '../modules/local/euk_utils'
+include { CONCATENATE_QUALITY_FILES                  } from '../modules/local/euk_utils'
+include { MODIFY_QUALITY_FILE                        } from '../modules/local/euk_utils'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,13 +111,13 @@ workflow EUK_MAGS_GENERATION {
     /* -- Dereplicate per-run -- //
     // input: tuple (meta, genomes/*, quality_file)
     */
-    DREP_EUKS_RUNS(
+    DREP_DEREPLICATE_RUNS(
         FILTER_QUALITY.out.qs50_filtered_genomes, 
-        params.euk_drep_args
+        []   // No previous dRep work directory
     )
-    ch_versions = ch_versions.mix(DREP_EUKS_RUNS.out.versions)
+    ch_versions = ch_versions.mix(DREP_DEREPLICATE_RUNS.out.versions)
     
-    bins = DREP_EUKS_RUNS.out.dereplicated_genomes.map{ _meta, genomes -> genomes }.collect()
+    bins = DREP_DEREPLICATE_RUNS.out.fastas.map{ _meta, genomes -> genomes }.collect()
 
     /* -- Aggregate quality file for all runs -- */
     MODIFY_QUALITY_FILE( 
@@ -129,16 +129,16 @@ workflow EUK_MAGS_GENERATION {
     }
 
     /* -- Dereplicate all MAGs in a study -- */
-    DREP_EUKS_MAGS(
-        DREP_EUKS_RUNS.out.dereplicated_genomes.map{ _meta, drep_genomes -> drep_genomes }.flatten().collect()
-          .map{ agg_genomes ->
-              return tuple([id: "aggregated"], agg_genomes)
-          }.join( aggregated_quality ), 
-        params.euk_drep_args_mags
+    DREP_DEREPLICATE_MAGS(
+        DREP_DEREPLICATE_RUNS.out.fastas.map{ _meta, drep_genomes -> drep_genomes }.flatten().collect()
+            .map{ agg_genomes ->
+                return tuple([id: "aggregated"], agg_genomes)
+            }.join( aggregated_quality ), 
+        []   // No previous dRep work directory
     )
-    ch_versions = ch_versions.mix( DREP_EUKS_MAGS.out.versions)
+    ch_versions = ch_versions.mix( DREP_DEREPLICATE_MAGS.out.versions)
 
-    dereplicated_genomes = DREP_EUKS_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
+    dereplicated_genomes = DREP_DEREPLICATE_MAGS.out.fastas.map { _meta, drep_genomes -> drep_genomes }.flatten()
     dereplicated_genomes_filenames = dereplicated_genomes
             .collect { file_path -> file_path.name }
     not_mags = bins
@@ -211,8 +211,8 @@ workflow EUK_MAGS_GENERATION {
     ch_log = ch_log.mix( EUKCC_MERGE_METABAT.out.progress_log )
     ch_log = ch_log.mix( EUKCC_MERGE_CONCOCT.out.progress_log )
     ch_log = ch_log.mix( FILTER_QUALITY.out.progress_log )
-    ch_log = ch_log.mix( DREP_EUKS_RUNS.out.progress_log )
-    ch_log = ch_log.mix( DREP_EUKS_MAGS.out.progress_log )
+    ch_log = ch_log.mix( DREP_DEREPLICATE_RUNS.out.progress_log )
+    ch_log = ch_log.mix( DREP_DEREPLICATE_MAGS.out.progress_log )
 
     emit:
     mags_fastas               = COMPRESS_MAGS.out.compressed.collect()
