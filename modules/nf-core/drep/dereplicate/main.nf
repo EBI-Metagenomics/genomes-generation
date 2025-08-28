@@ -8,15 +8,16 @@ process DREP_DEREPLICATE {
         : 'biocontainers/drep:3.6.2--pyhdfd78af_0'}"
 
     input:
-    tuple val(meta), path(fastas, stageAs: 'input_fastas/*')
+    tuple val(meta), path(fastas, stageAs: 'input_fastas/*'), path(quality_csv)
     tuple val(meta2), path(drep_work, stageAs: 'drep_work/')
 
     output:
     tuple val(meta), path("dereplicated_genomes/*"), emit: fastas
-    tuple val(meta), path("data_tables/*.csv"), emit: summary_tables
-    tuple val(meta), path("figures/*pdf"), emit: figures
-    tuple val(meta), path("logger.log"), emit: log
-    path "versions.yml", emit: versions
+    tuple val(meta), path("data_tables/*.csv")     , emit: summary_tables
+    tuple val(meta), path("figures/*pdf")          , emit: figures
+    tuple val(meta), path("logger.log")            , emit: log
+    path "versions.yml"                            , emit: versions
+    path "progress.log"                            , emit: progress_log
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,18 +25,20 @@ process DREP_DEREPLICATE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    // TODO check if number of genomes is 0 
+    // TODO check if number of genomes is 1, do checkm stats check and pass it directly to output
     """
     if [[ ! -d drep_work/ ]]; then
         mkdir drep_work/
     fi
 
     find -L input_fastas/ -type f > fastas_paths.txt
-
     dRep \\
         dereplicate \\
         drep_work/ \\
         -p ${task.cpus} \\
         -g fastas_paths.txt \\
+        --genomeInfo ${quality_csv} \
         ${args} \\
 
     ## We copy the output files to copies to ensure we don't break an already
@@ -50,6 +53,11 @@ process DREP_DEREPLICATE {
     "${task.process}":
         drep: \$(dRep | head -n 2 | sed 's/.*v//g;s/ .*//g' | tail -n 1)
     END_VERSIONS
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}
+        genomes_folder: \$(ls genomes_folder | wc -l), dereplicated: \$(ls drep_output/dereplicated_genomes | wc -l)
+    END_LOGGING
     """
 
     stub:
@@ -69,5 +77,10 @@ process DREP_DEREPLICATE {
     "${task.process}":
         drep: \$(dRep | head -n 2 | sed 's/.*v//g;s/ .*//g' | tail -n 1)
     END_VERSIONS
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}
+        genomes_folder: \$(ls genomes_folder | wc -l), dereplicated: \$(ls drep_output/dereplicated_genomes | wc -l)
+    END_LOGGING
     """
 }
