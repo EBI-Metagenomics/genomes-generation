@@ -113,7 +113,7 @@ workflow EUK_MAGS_GENERATION {
     */
     DREP_DEREPLICATE_RUNS(
         FILTER_QUALITY.out.qs50_filtered_genomes, 
-        []   // No previous dRep work directory
+        [[id:''], []]   // No previous dRep work directory
     )
     ch_versions = ch_versions.mix(DREP_DEREPLICATE_RUNS.out.versions)
     
@@ -134,7 +134,7 @@ workflow EUK_MAGS_GENERATION {
             .map{ agg_genomes ->
                 return tuple([id: "aggregated"], agg_genomes)
             }.join( aggregated_quality ), 
-        []   // No previous dRep work directory
+        [[id:''], []]   // No previous dRep work directory
     )
     ch_versions = ch_versions.mix( DREP_DEREPLICATE_MAGS.out.versions)
 

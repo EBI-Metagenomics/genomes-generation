@@ -79,10 +79,12 @@ workflow PROK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( CHECKM2.out.versions.first() )
 
+    // TODO add FILTER_QUALITY step here before dereplication
+
     /* --  Dereplicate and filter good quality bins -- */
     DREP_DEREPLICATE (
         CHECKM2.out.bins_and_stats,
-        []                            // No previous dRep work directory
+        [[id:''], []]   // No previous dRep work directory
     )
     ch_versions = ch_versions.mix( DREP_DEREPLICATE.out.versions )
 
@@ -130,7 +132,7 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( GTDBTK_TO_NCBI_TAXONOMY.out.versions.first() )
 
     /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
-    // TODO it can be empty if all clusters are singletons
+    // TODO what will happen if all clusters are singletons
     PROPAGATE_TAXONOMY_TO_BINS (
         DREP_DEREPLICATE.out.summary_tables,
         GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
@@ -151,7 +153,6 @@ workflow PROK_MAGS_GENERATION {
     COMPRESS_BINS (
         not_mags.flatten()
     )
-
 
     /* --  Finalize logging -- */
     ch_log = Channel.empty()
