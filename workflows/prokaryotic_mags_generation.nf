@@ -12,18 +12,18 @@ include { CLEAN_AND_FILTER_BINS              } from '../subworkflows/local/clean
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { BINETTE                            } from '../modules/ebi-metagenomics/binette/main'
-include { CHECKM2                            } from '../modules/local/checkm2/main'
-include { DREP as DREP_PROKS                 } from '../modules/local/drep/main'
-include { PIGZ as COMPRESS_MAGS              } from '../modules/local/compress/pigz'
-include { PIGZ as COMPRESS_BINS              } from '../modules/local/compress/pigz'
-include { COVERAGE_RECYCLER                  } from '../modules/local/coverage_recycler/main'
-include { DETECT_RRNA                        } from '../modules/local/detect_rrna/main'
-include { GTDBTK                             } from '../modules/local/gtdbtk/main'
-include { GTDBTK_TO_NCBI_TAXONOMY            } from '../modules/local/gtdbtk/gtdb_to_ncbi_majority_vote/main'
-include { PROPAGATE_TAXONOMY_TO_BINS         } from '../modules/local/propagate_taxonomy_to_bins/main'
+include { BINETTE                    } from '../modules/ebi-metagenomics/binette/main'
+include { CHECKM2                    } from '../modules/local/checkm2/main'
+include { DREP_DEREPLICATE           } from '../modules/nf-core/drep/dereplicate/main'
+include { PIGZ as COMPRESS_MAGS      } from '../modules/local/compress/pigz'
+include { PIGZ as COMPRESS_BINS      } from '../modules/local/compress/pigz'
+include { COVERAGE_RECYCLER          } from '../modules/local/coverage_recycler/main'
+include { DETECT_RRNA                } from '../modules/local/detect_rrna/main'
+include { GTDBTK                     } from '../modules/local/gtdbtk/main'
+include { GTDBTK_TO_NCBI_TAXONOMY    } from '../modules/local/gtdbtk/gtdb_to_ncbi_majority_vote/main'
+include { PROPAGATE_TAXONOMY_TO_BINS } from '../modules/local/propagate_taxonomy_to_bins/main'
 
-include { CHANGE_UNDERSCORE_TO_DOT           } from '../modules/local/utils'
+include { CHANGE_UNDERSCORE_TO_DOT   } from '../modules/local/utils'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,13 +80,11 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( CHECKM2.out.versions.first() )
 
     /* --  Dereplicate and filter good quality bins -- */
-    prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
-
-    DREP_PROKS (
+    DREP_DEREPLICATE (
         CHECKM2.out.bins_and_stats,
-        prok_drep_args
+        []                            // No previous dRep work directory
     )
-    ch_versions = ch_versions.mix( DREP_PROKS.out.versions )
+    ch_versions = ch_versions.mix( DREP_DEREPLICATE.out.versions )
 
     /* --  Calculate coverage for all genomes -- */
     COVERAGE_RECYCLER ( 
@@ -96,7 +94,7 @@ workflow PROK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
     /* --  Separate bins and dereplicated_genomes (MAGs) -- */
-    dereplicated_genomes = DREP_PROKS.out.dereplicated_genomes.map { _meta, bins_list -> bins_list }.flatten()
+    dereplicated_genomes = DREP_DEREPLICATE.out.fastas.map { _meta, bins_list -> bins_list }.flatten()
     dereplicated_genomes_filenames = dereplicated_genomes
         .collect { file_path -> file_path.name }
     not_mags = CLEAN_AND_FILTER_BINS.out.bins
@@ -134,7 +132,7 @@ workflow PROK_MAGS_GENERATION {
     /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
     // TODO it can be empty if all clusters are singletons
     PROPAGATE_TAXONOMY_TO_BINS (
-        DREP_PROKS.out.clustering_csvs,
+        DREP_DEREPLICATE.out.summary_tables,
         GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
     )
     ch_versions = ch_versions.mix( PROPAGATE_TAXONOMY_TO_BINS.out.versions.first() )
@@ -159,7 +157,7 @@ workflow PROK_MAGS_GENERATION {
     ch_log = Channel.empty()
     ch_log = ch_log.mix( BINETTE.out.progress_log )
     ch_log = ch_log.mix( CHECKM2.out.progress_log )
-    ch_log = ch_log.mix( DREP_PROKS.out.progress_log )
+    ch_log = ch_log.mix( DREP_DEREPLICATE.out.progress_log )
 
     emit:
     mags_fastas  = COMPRESS_MAGS.out.compressed.collect()
