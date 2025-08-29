@@ -23,8 +23,6 @@ include { GTDBTK                     } from '../modules/local/gtdbtk/main'
 include { GTDBTK_TO_NCBI_TAXONOMY    } from '../modules/local/gtdbtk/gtdb_to_ncbi_majority_vote/main'
 include { PROPAGATE_TAXONOMY_TO_BINS } from '../modules/local/propagate_taxonomy_to_bins/main'
 
-include { CHANGE_UNDERSCORE_TO_DOT   } from '../modules/local/utils'
-
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~
     Prokaryotes workflow
@@ -95,20 +93,8 @@ workflow PROK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
-    /* --  Separate bins and dereplicated_genomes (MAGs) -- */
-    dereplicated_genomes = DREP_DEREPLICATE.out.fastas.map { _meta, bins_list -> bins_list }.flatten()
-    dereplicated_genomes_filenames = dereplicated_genomes
-        .collect { file_path -> file_path.name }
-    not_mags = CLEAN_AND_FILTER_BINS.out.bins
-        .collect()
-        .map { all_genomes -> 
-            def mags_list = dereplicated_genomes_filenames.val
-            all_genomes.findAll { genome -> 
-                !(genome.name in mags_list)
-            }
-        }
-
     /* --  Detect RNA for cluster representatives -- */
+    dereplicated_genomes = DREP_DEREPLICATE.out.fastas.map { _meta, bins_list -> bins_list }.flatten()
     DETECT_RRNA(
         dereplicated_genomes,
         file(params.rfam_rrna_models, checkIfExists: true)
@@ -151,7 +137,7 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Compress bins -- */
     COMPRESS_BINS (
-        not_mags.flatten()
+        CLEAN_AND_FILTER_BINS.out.bins
     )
 
     /* --  Finalize logging -- */
@@ -162,7 +148,7 @@ workflow PROK_MAGS_GENERATION {
 
     emit:
     mags_fastas  = COMPRESS_MAGS.out.compressed.collect()
-    bins_fastas  = COMPRESS_MAGS.out.compressed.mix(COMPRESS_BINS.out.compressed.collect())
+    bins_fastas  = COMPRESS_BINS.out.compressed.collect()
     stats        = CHECKM2.out.bins_and_stats.map { _map, _bins, stats -> stats }
     coverage     = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
     mags_rna     = rna_out.collect()

@@ -125,29 +125,17 @@ workflow EUK_MAGS_GENERATION {
         "aggregated_euk_quality.csv"
     )
     aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { modified_csv ->
-        return tuple([id: "aggregated"], modified_csv)
+3        [[id: "aggregated"], modified_csv]
     }
 
     /* -- Dereplicate all MAGs in a study -- */
     DREP_DEREPLICATE_MAGS(
-        DREP_DEREPLICATE_RUNS.out.fastas.map{ _meta, drep_genomes -> drep_genomes }.flatten().collect()
-            .map{ agg_genomes ->
-                return tuple([id: "aggregated"], agg_genomes)
-            }.join( aggregated_quality ), 
+        bins.map{ agg_genomes -> [[id: "aggregated"], agg_genomes]}
+            .join( aggregated_quality ), 
         [[id:''], []]   // No previous dRep work directory
     )
     ch_versions = ch_versions.mix( DREP_DEREPLICATE_MAGS.out.versions)
 
-    dereplicated_genomes = DREP_DEREPLICATE_MAGS.out.fastas.map { _meta, drep_genomes -> drep_genomes }.flatten()
-    dereplicated_genomes_filenames = dereplicated_genomes
-            .collect { file_path -> file_path.name }
-    not_mags = bins
-        .map { all_genomes -> 
-            def mags_list = dereplicated_genomes_filenames.val
-            all_genomes.findAll { genome -> 
-                !(genome.name in mags_list)
-            }
-        }
     
     /* -- coverage generation -- */
     depth_file = input.concoct_input
@@ -196,14 +184,16 @@ workflow EUK_MAGS_GENERATION {
 
     /* --  Compress MAGs and publish -- */
     COMPRESS_MAGS(
-        dereplicated_genomes
+        DREP_DEREPLICATE_MAGS.out.fastas
+            .map { _meta, drep_genomes -> drep_genomes }
+            .flatten()
     )
     COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
         cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_mags}/${cluster_fasta.name}")
     })
 
     COMPRESS_BINS(
-        not_mags.flatten()
+        bins.flatten()
     )
     ch_versions = ch_versions.mix( COMPRESS_BINS.out.versions )
 
@@ -216,7 +206,7 @@ workflow EUK_MAGS_GENERATION {
 
     emit:
     mags_fastas               = COMPRESS_MAGS.out.compressed.collect()
-    bins_fastas               = COMPRESS_MAGS.out.compressed.mix(COMPRESS_BINS.out.compressed.collect())
+    bins_fastas               = COMPRESS_BINS.out.compressed.collect()
     stats                     = BUSCO_EUKCC_QC.out.eukcc_final_qc
     coverage                  = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
     taxonomy                  = BAT_TAXONOMY_WRITER.out.all_bin2classification
