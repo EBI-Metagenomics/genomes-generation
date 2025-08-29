@@ -181,6 +181,12 @@ workflow EUK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions)
 
     // TODO TAXONOMY propagated to all bins
+    clustering_csvs = DREP_DEREPLICATE_MAGS.out.summary_tables
+        .map { _meta, summary_table -> 
+            summary_table.findAll { table -> 
+                !(table.name in ["Cdb.csv", "Wdb.csv"] )
+            } 
+        }
 
     /* --  Compress MAGs and publish -- */
     COMPRESS_MAGS(

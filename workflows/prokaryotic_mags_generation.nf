@@ -119,9 +119,15 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
     // TODO what will happen if all clusters are singletons
+    clustering_csvs = DREP_DEREPLICATE.out.summary_tables
+        .map { _meta, summary_table -> 
+            summary_table.findAll { table -> 
+                !(table.name in ["Cdb.csv", "Wdb.csv"] )
+            } 
+        }
     PROPAGATE_TAXONOMY_TO_BINS (
         DREP_DEREPLICATE.out.summary_tables,
-        GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
+        clustering_csvs
     )
     ch_versions = ch_versions.mix( PROPAGATE_TAXONOMY_TO_BINS.out.versions.first() )
 
