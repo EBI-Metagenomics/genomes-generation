@@ -12,6 +12,7 @@ include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from '../subworkflows/lo
 */
 include { BAT                                        } from '../modules/local/cat/bat/bat'
 include { BAT_TAXONOMY_WRITER                        } from '../modules/local/cat/bat/bat_taxonomy_writer'
+include { PROPAGATE_TAXONOMY_TO_BINS                 } from '../modules/local/propagate_taxonomy_to_bins'
 include { BUSCO                                      } from '../modules/local/busco'
 include { BUSCO_EUKCC_QC                             } from '../modules/local/busco_qc'
 include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../modules/local/coverage_recycler'
@@ -19,7 +20,7 @@ include { DREP_DEREPLICATE as DREP_DEREPLICATE_RUNS  } from '../modules/nf-core/
 include { DREP_DEREPLICATE as DREP_DEREPLICATE_MAGS  } from '../modules/nf-core/drep/dereplicate/main'
 include { PIGZ as COMPRESS_MAGS                      } from '../modules/local/compress/pigz'
 include { PIGZ as COMPRESS_BINS                      } from '../modules/local/compress/pigz'
-include { FILTER_QUALITY                             } from '../modules/local/euk_utils'
+include { FILTER_QUALITY                             } from '../modules/local/utils'
 include { CONCATENATE_QUALITY_FILES                  } from '../modules/local/euk_utils'
 include { MODIFY_QUALITY_FILE                        } from '../modules/local/euk_utils'
 
@@ -105,7 +106,8 @@ workflow EUK_MAGS_GENERATION {
         }
 
     FILTER_QUALITY( 
-        quality.join( eukcc_bins )
+        quality.join( eukcc_bins ),
+        "\t"  // delimiter
     )
 
     /* -- Dereplicate per-run -- //
@@ -174,19 +176,30 @@ workflow EUK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( BAT.out.versions)
 
-    /* --  Cleanup BAT outputs -- */
+    /* --  Create user-friendly taxonomy files and concatenated taxonomy from BAT outputs -- */
     BAT_TAXONOMY_WRITER( 
         BAT.out.bat_names.collect() 
     )
     ch_versions = ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions)
 
-    // TODO TAXONOMY propagated to all bins
+    /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
     clustering_csvs = DREP_DEREPLICATE_MAGS.out.summary_tables
-        .map { _meta, summary_table -> 
-            summary_table.findAll { table -> 
-                !(table.name in ["Cdb.csv", "Wdb.csv"] )
-            } 
+        .map { meta, summary_table -> 
+            def cdb_file = summary_table.find { it.name == "Cdb.csv" }
+            def wdb_file = summary_table.find { it.name == "Wdb.csv" }
+
+            // Check if both files exist
+            if (cdb_file && wdb_file) {
+                [meta, cdb_file, wdb_file]
+            } else {
+                error "Missing required CSV files: Cdb.csv or Wdb.csv not found for sample ${meta.id}"
+            }
         }
+    PROPAGATE_TAXONOMY_TO_BINS(
+        clustering_csvs,
+        BAT_TAXONOMY_WRITER.out.all_bin2classification,
+        "euks" // type defines the format of taxonomy file
+    )
 
     /* --  Compress MAGs and publish -- */
     COMPRESS_MAGS(
