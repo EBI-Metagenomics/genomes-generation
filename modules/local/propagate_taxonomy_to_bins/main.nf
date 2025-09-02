@@ -7,6 +7,7 @@ process PROPAGATE_TAXONOMY_TO_BINS {
     input:
     tuple val(meta), path(drep_cdb_csv), path(drep_wdb_csv)
     path(taxonomy_tsv)
+    val(type)
 
     output:
     tuple val(meta), path("ncbi_taxonomy_propagated.txt"), emit: ncbi_taxonomy
@@ -19,6 +20,7 @@ process PROPAGATE_TAXONOMY_TO_BINS {
         --cdb ${drep_cdb_csv} \
         --wdb ${drep_wdb_csv} \
         --taxonomy ${taxonomy_tsv} \
+        --type ${type} \
         --output ncbi_taxonomy_propagated.txt
 
     cat <<-END_VERSIONS > versions.yml
