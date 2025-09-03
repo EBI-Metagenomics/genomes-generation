@@ -51,7 +51,7 @@ process FILTER_QUALITY {
     label 'process_light'
 
     input:
-    tuple val(meta), path(quality_file), path(bins, stageAs: "input_bins/")
+    tuple val(meta), path(quality_file), path(bins, stageAs: "input_bins/*")
     val delimiter
 
     output:
@@ -75,8 +75,9 @@ process FILTER_QUALITY {
     then
         echo "No genomes"
     else
-        for i in \$(ls input_bins | grep -w -f filtered_genomes.txt); do
-            mv input_bins/\${i} output_genomes; done
+        for i in \$(find input_bins -name "*" -type f | xargs -n1 basename | grep -w -f filtered_genomes.txt); do
+            find input_bins -name "\${i}" -type f -exec mv {} output_genomes/ \\;
+        done
 
         echo "genome,completeness,contamination" > quality_file.csv
         grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
@@ -84,7 +85,7 @@ process FILTER_QUALITY {
 
     cat <<-END_LOGGING > progress.log
     ${meta.id}\t${task.process}
-        input_bins: \$(ls input_bins | wc -l)
+        input_bins: \$(find input_bins -type f | wc -l)
     END_LOGGING
     """
 }
