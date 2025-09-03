@@ -51,7 +51,7 @@ process FILTER_QUALITY {
     label 'process_light'
 
     input:
-    tuple val(meta), path(quality_file), path(bins, stageAs: "input_bins/*")
+    tuple val(meta), path(quality_file), path(bins)
     val delimiter
 
     output:
@@ -60,13 +60,27 @@ process FILTER_QUALITY {
 
     script:
     """
-    mkdir -p output_genomes
+    mkdir -p output_genomes input_bins
     touch quality_file.csv
+
+    # Handle both directory and file list inputs
+    if [ -d "${bins}" ]; then
+        echo "Input is a directory, copying contents..."
+        cp -r ${bins}/* input_bins/ || echo "Directory is empty or no files to copy"
+    else
+        echo "Input is file(s), staging them..."
+        # Check if bins is a single file or multiple files
+        for bin_file in ${bins}; do
+            if [ -f "\$bin_file" ]; then
+                cp "\$bin_file" input_bins/
+            fi
+        done
+    fi
 
     echo "Prepare drep quality"
     grep -v "completeness" ${quality_file} |\
     awk -F "${delimiter}" '{{if(\$2>=50 && \$2<=100 && \$3>=0 && \$3<=5){{print \$0}}}}' |\
-    sort -k 2,3 -n | cut -f1 > filtered_genomes.txt || true
+    sort -k 2,3 -n | cut -d "${delimiter}" -f1 > filtered_genomes.txt || true
 
     echo "bins count"
     export BINS=\$(cat filtered_genomes.txt | wc -l)
@@ -75,17 +89,16 @@ process FILTER_QUALITY {
     then
         echo "No genomes"
     else
-        for i in \$(find input_bins -name "*" -type f | xargs -n1 basename | grep -w -f filtered_genomes.txt); do
-            find input_bins -name "\${i}" -type f -exec mv {} output_genomes/ \\;
-        done
+        for i in \$(ls input_bins | grep -w -f filtered_genomes.txt); do
+            mv input_bins/\${i} output_genomes; done
 
         echo "genome,completeness,contamination" > quality_file.csv
-        grep -w -f filtered_genomes.txt ${quality_file} | cut -f1-3 | tr '\\t' ',' >> quality_file.csv
+        grep -w -f filtered_genomes.txt ${quality_file} | cut -d "${delimiter}" -f1-3 | tr '\\t' ',' >> quality_file.csv
     fi
 
     cat <<-END_LOGGING > progress.log
     ${meta.id}\t${task.process}
-        input_bins: \$(find input_bins -type f | wc -l)
+        input_bins: \$(ls input_bins | wc -l)
     END_LOGGING
     """
 }
