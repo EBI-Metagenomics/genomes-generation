@@ -70,7 +70,7 @@ workflow PROK_MAGS_GENERATION {
     CHECKM2 (
         CLEAN_AND_FILTER_BINS.out.bins
             .collect()
-            .map { bins_list -> [ [id: "aggregated" ], bins_list ] },
+            .map { bins_folder -> [ [id: "aggregated" ], bins_folder ] },
         file(params.checkm2_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( CHECKM2.out.versions.first() )
@@ -78,7 +78,7 @@ workflow PROK_MAGS_GENERATION {
     /* --  Remove genomes with completeness < 50 or contamination > 5 -- */
     /* --  to produce final set of bins -- */
     FILTER_QUALITY (
-        CHECKM2.out.bins_and_stats,
+        CHECKM2.out.bins_and_stats.map { meta, bins_folder, stats -> [meta, stats, bins_folder] },
         "," // delimiter
     )
 
@@ -165,7 +165,7 @@ workflow PROK_MAGS_GENERATION {
     emit:
     mags_fastas  = COMPRESS_MAGS.out.compressed.collect()
     bins_fastas  = COMPRESS_BINS.out.compressed.collect()
-    stats        = CHECKM2.out.bins_and_stats.map { _map, _bins, stats -> stats }
+    stats        = CHECKM2.out.bins_and_stats.map { _map, _bins_folder, stats -> stats }
     coverage     = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
     mags_rna     = rna_out.collect()
     taxonomy     = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy.map { _meta, taxonomy_file -> taxonomy_file }.collect()
