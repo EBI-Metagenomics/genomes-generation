@@ -12,21 +12,21 @@ include { CLEAN_AND_FILTER_BINS              } from '../subworkflows/local/clean
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { BINETTE                            } from '../modules/ebi-metagenomics/binette/main'
-include { CHECKM2                            } from '../modules/local/checkm2/main'
-include { DREP as DREP_PROKS                 } from '../modules/local/drep/main'
-include { PIGZ as COMPRESS_MAGS              } from '../modules/local/compress/pigz'
-include { COVERAGE_RECYCLER                  } from '../modules/local/coverage_recycler/main'
-include { DETECT_RRNA                        } from '../modules/local/detect_rrna/main'
-include { GTDBTK                             } from '../modules/local/gtdbtk/main'
-include { GTDBTK_TO_NCBI_TAXONOMY            } from '../modules/local/gtdbtk/gtdb_to_ncbi_majority_vote/main'
-
-include { CHECKM2_TABLE_FOR_DREP_GENOMES     } from '../modules/local/utils'
-include { CHANGE_UNDERSCORE_TO_DOT           } from '../modules/local/utils'
+include { BINETTE                    } from '../modules/ebi-metagenomics/binette/main'
+include { CHECKM2                    } from '../modules/local/checkm2/main'
+include { FILTER_QUALITY             } from '../modules/local/utils'
+include { DREP_DEREPLICATE           } from '../modules/nf-core/drep/dereplicate/main'
+include { PIGZ as COMPRESS_MAGS      } from '../modules/local/compress/pigz'
+include { PIGZ as COMPRESS_BINS      } from '../modules/local/compress/pigz'
+include { COVERAGE_RECYCLER          } from '../modules/local/coverage_recycler/main'
+include { DETECT_RRNA                } from '../modules/local/detect_rrna/main'
+include { GTDBTK                     } from '../modules/local/gtdbtk/main'
+include { GTDBTK_TO_NCBI_TAXONOMY    } from '../modules/local/gtdbtk/gtdb_to_ncbi_majority_vote/main'
+include { PROPAGATE_TAXONOMY_TO_BINS } from '../modules/local/propagate_taxonomy_to_bins/main'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~
-     Prokaryotes workflow
+    Prokaryotes workflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -60,49 +60,46 @@ workflow PROK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( BINETTE.out.versions )
 
-    /* --  Clean bins -- */
+    /* --  Decontaminate bins -- */
     CLEAN_AND_FILTER_BINS(
         BINETTE.out.refined_bins
     )
     ch_versions = ch_versions.mix( CLEAN_AND_FILTER_BINS.out.versions.first() )
 
-    /* --  aggregate all bins  -- */
-    all_bins = CLEAN_AND_FILTER_BINS.out.bins.collect().map { it ->
-        def meta = [:]
-        meta.id = "aggregated"
-        return tuple( meta, it )
-    }
-
     /* --  Estimate completeness and contamination for all project bins -- */
     CHECKM2 (
-        all_bins,
+        CLEAN_AND_FILTER_BINS.out.bins
+            .collect()
+            .map { bins_folder -> [ [id: "aggregated" ], bins_folder ] },
         file(params.checkm2_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( CHECKM2.out.versions.first() )
 
-    /* --  Dereplicate and filter good quality bins -- */
-    prok_drep_args = channel.value('-pa 0.9 -sa 0.95 -nc 0.6 -cm larger -comp 50 -con 5')
-
-    DREP_PROKS (
-        CHECKM2.out.bins_and_stats,
-        prok_drep_args
+    /* --  Remove genomes with completeness < 50 or contamination > 5 -- */
+    /* --  to produce final set of bins -- */
+    FILTER_QUALITY (
+        CHECKM2.out.bins_and_stats.map { meta, bins_folder, stats -> [meta, stats, bins_folder] },
+        "," // delimiter
     )
-    dereplicated_genomes = DREP_PROKS.out.dereplicated_genomes.map { it -> it[1] }.flatten()
-    ch_versions = ch_versions.mix( DREP_PROKS.out.versions )
 
-    /* --  Calculate coverage -- */
+    /* --  Dereplicate and filter good quality bins -- */
+    DREP_DEREPLICATE (
+        FILTER_QUALITY.out.qs50_filtered_genomes,
+        [[id:''], []]   // No previous dRep work directory
+    )
+    ch_versions = ch_versions.mix( DREP_DEREPLICATE.out.versions )
+
+    /* --  Calculate coverage for all bins -- */
+    all_bins = FILTER_QUALITY.out.qs50_filtered_genomes.map { meta, bins, _quality_file -> [ meta, bins ] }
+
     COVERAGE_RECYCLER ( 
-        DREP_PROKS.out.dereplicated_genomes,
+        all_bins,
         all_metabat_depths
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER.out.versions.first() )
 
-    /* --  Change underscores to dots in fasta headers for MAGs -- */
-    CHANGE_UNDERSCORE_TO_DOT ( 
-        dereplicated_genomes 
-    )
-
-    /* --  Detect RNA -- */
+    /* --  Detect RNA for cluster representatives -- */
+    dereplicated_genomes = DREP_DEREPLICATE.out.fastas.map { _meta, bins_list -> bins_list }.flatten()
     DETECT_RRNA(
         dereplicated_genomes,
         file(params.rfam_rrna_models, checkIfExists: true)
@@ -111,9 +108,9 @@ workflow PROK_MAGS_GENERATION {
     rna_out = rna_out.mix( DETECT_RRNA.out.rrna_out_files.collect(), DETECT_RRNA.out.trna_out_files.collect()  )
     ch_versions = ch_versions.mix( DETECT_RRNA.out.versions.first() )
 
-    /* --  Assign taxonomy -- */
+    /* --  Assign taxonomy to cluster representatives -- */
     GTDBTK (
-        CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect(),
+        dereplicated_genomes.collect(),
         file(params.gtdbtk_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( GTDBTK.out.versions.first() )
@@ -125,37 +122,51 @@ workflow PROK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( GTDBTK_TO_NCBI_TAXONOMY.out.versions.first() )
 
-    /* --  Modify CheckM table -- */
-    // checkm_results_mags.txt 
-    // Both channels will have only one element
-    CHECKM2_TABLE_FOR_DREP_GENOMES (
-        CHECKM2.out.bins_and_stats.map { _map, _bins, stats -> stats },
-        DREP_PROKS.out.dereplicated_genomes_list.map { _meta, genomes_list_tsv -> genomes_list_tsv }
+    /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
+    // TODO what will happen if all clusters are singletons
+    clustering_csvs = DREP_DEREPLICATE.out.summary_tables
+        .map { meta, summary_table -> 
+            def cdb_file = summary_table.find { it.name == "Cdb.csv" }
+            def wdb_file = summary_table.find { it.name == "Wdb.csv" }
+
+            // Check if both files exist
+            if (cdb_file && wdb_file) {
+                [meta, cdb_file, wdb_file]
+            } else {
+                error "Missing required CSV files: Cdb.csv or Wdb.csv not found for sample ${meta.id}"
+            }
+        }
+    PROPAGATE_TAXONOMY_TO_BINS (
+        clustering_csvs,
+        GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy,
+        "proks" // type defines the format of taxonomy file
     )
+    ch_versions = ch_versions.mix( PROPAGATE_TAXONOMY_TO_BINS.out.versions.first() )
 
     /* --  Compress MAGs -- */
     COMPRESS_MAGS (
-        CHANGE_UNDERSCORE_TO_DOT.out.return_files.collect().flatten()
+        dereplicated_genomes
     )
-    compressed_mags = COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/${params.subdir_proks}/${params.subdir_mags}/${cluster_fasta.name}")
-    })
 
-    // TODO bins
+    /* --  Compress bins -- */
+    COMPRESS_BINS (
+        all_bins.map { _meta, bins -> bins }.flatten()
+    )
 
     /* --  Finalize logging -- */
     ch_log = Channel.empty()
     ch_log = ch_log.mix( BINETTE.out.progress_log )
     ch_log = ch_log.mix( CHECKM2.out.progress_log )
-    ch_log = ch_log.mix( DREP_PROKS.out.progress_log )
+    ch_log = ch_log.mix( FILTER_QUALITY.out.progress_log )
+    ch_log = ch_log.mix( DREP_DEREPLICATE.out.progress_log )
 
     emit:
-
-    genomes = COMPRESS_MAGS.out.compressed.collect()
-    stats = CHECKM2_TABLE_FOR_DREP_GENOMES.out.checkm_results_mags
-    coverage = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
-    rna = rna_out.collect()
-    taxonomy = GTDBTK_TO_NCBI_TAXONOMY.out.ncbi_taxonomy
-    versions = ch_versions
+    mags_fastas  = COMPRESS_MAGS.out.compressed.collect()
+    bins_fastas  = COMPRESS_BINS.out.compressed.collect()
+    stats        = FILTER_QUALITY.out.qs50_filtered_genomes.map { _map, _bins_folder, stats -> stats }
+    coverage     = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
+    mags_rna     = rna_out.collect()
+    taxonomy     = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy.map { _meta, taxonomy_file -> taxonomy_file }.collect()
+    versions     = ch_versions
     progress_log = ch_log
 }

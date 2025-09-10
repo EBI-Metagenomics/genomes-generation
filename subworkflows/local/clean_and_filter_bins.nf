@@ -1,11 +1,10 @@
 include { CAT as MAG_CLEANUP_CAT    } from '../../modules/local/cat/cat/main'
 include { DETECT_CONTAMINATION      } from '../../modules/local/detect_contamination/main'
 include { GUNC                      } from '../../modules/local/gunc/main'
-include { PIGZ as COMPRESS_BINS     } from '../../modules/local/compress/pigz'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     Run subworkflow cleaning and filtering with GUNC
+    Run subworkflow cleaning and filtering with GUNC
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Run subwf on each bin.fa
     input: bins - channel of one bin.fa
@@ -45,17 +44,6 @@ workflow CLEAN_AND_FILTER_BINS {
         it[2].name.contains('_complete.txt')
     }).map({ _name, cluster_fasta, _cluster_gunc ->
         return cluster_fasta
-    })
-
-    // --- compress prok bins
-    COMPRESS_BINS (
-        filtered_bins
-    )
-    compressed_output = COMPRESS_BINS.out.compressed
-    // The subscribe / copyTo is a hack to publish the bins
-    // https://github.com/nextflow-io/nextflow/discussions/1933    
-    compressed_output.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/bins/prokaryotes/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
     })
 
     emit:

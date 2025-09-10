@@ -13,7 +13,7 @@ process GTDBTK_TO_NCBI_TAXONOMY {
 
     output:
     path "ncbi_taxonomy.txt", emit: ncbi_taxonomy
-    path "versions.yml"         , emit: versions
+    path "versions.yml"     , emit: versions
 
 
     script:

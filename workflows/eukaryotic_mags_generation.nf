@@ -10,21 +10,23 @@ include { EUKCC_MERGE as EUKCC_MERGE_METABAT          } from '../subworkflows/lo
     MODULES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { BAT                                         } from '../modules/local/cat/bat/bat'
-include { BAT_TAXONOMY_WRITER                         } from '../modules/local/cat/bat/bat_taxonomy_writer'
-include { BUSCO                                       } from '../modules/local/busco'
-include { BUSCO_EUKCC_QC                              } from '../modules/local/busco_qc'
-include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK  } from '../modules/local/coverage_recycler'
-include { DREP as DREP_EUKS_RUNS                      } from '../modules/local/drep'
-include { DREP as DREP_EUKS_MAGS                      } from '../modules/local/drep'
-include { PIGZ as COMPRESS_MAGS                       } from '../modules/local/compress/pigz'
-include { FILTER_QUALITY                              } from '../modules/local/euk_utils'
-include { CONCATENATE_QUALITY_FILES                   } from '../modules/local/euk_utils'
-include { MODIFY_QUALITY_FILE                         } from '../modules/local/euk_utils'
+include { BAT                                        } from '../modules/local/cat/bat/bat'
+include { BAT_TAXONOMY_WRITER                        } from '../modules/local/cat/bat/bat_taxonomy_writer'
+include { PROPAGATE_TAXONOMY_TO_BINS                 } from '../modules/local/propagate_taxonomy_to_bins'
+include { BUSCO                                      } from '../modules/local/busco'
+include { BUSCO_EUKCC_QC                             } from '../modules/local/busco_qc'
+include { COVERAGE_RECYCLER as COVERAGE_RECYCLER_EUK } from '../modules/local/coverage_recycler'
+include { DREP_DEREPLICATE as DREP_DEREPLICATE_RUNS  } from '../modules/nf-core/drep/dereplicate/main'
+include { DREP_DEREPLICATE as DREP_DEREPLICATE_MAGS  } from '../modules/nf-core/drep/dereplicate/main'
+include { PIGZ as COMPRESS_MAGS                      } from '../modules/local/compress/pigz'
+include { PIGZ as COMPRESS_BINS                      } from '../modules/local/compress/pigz'
+include { FILTER_QUALITY                             } from '../modules/local/utils'
+include { CONCATENATE_QUALITY_FILES                  } from '../modules/local/euk_utils'
+include { MODIFY_QUALITY_FILE                        } from '../modules/local/euk_utils'
 
 /*
     ~~~~~~~~~~~~~~~~~~~~~~~~
-     Eukaryotes workflow
+    Eukaryotes workflow
     ~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -90,13 +92,17 @@ workflow EUK_MAGS_GENERATION {
             // Collect all files from all folders
             def all_files = []
             [concoct, metabat, eukcc_concoct, eukcc_metabat].each { folder ->
-                if (folder && folder.exists()) {
-                    if (folder.isDirectory()) {
-                        folder.listFiles()?.each { file ->
-                            if (file.isFile()) all_files.add(file)
+                if (folder) {
+                    // Convert to file object to check properties
+                    def folderFile = file(folder)
+                    if (folderFile.exists()) {
+                        if (folderFile.isDirectory()) {
+                            folderFile.listFiles()?.each { file ->
+                                if (file.isFile()) all_files.add(file)
+                            }
+                        } else {
+                            all_files.add(folderFile)
                         }
-                    } else {
-                        all_files.add(folder)
                     }
                 }
             }
@@ -104,18 +110,20 @@ workflow EUK_MAGS_GENERATION {
         }
 
     FILTER_QUALITY( 
-        quality.join( eukcc_bins )
+        quality.join( eukcc_bins ),
+        "\t"  // delimiter
     )
-    bins = FILTER_QUALITY.out.qs50_filtered_genomes.map{ _meta, genomes, _quality -> genomes }.flatten()
 
     /* -- Dereplicate per-run -- //
     // input: tuple (meta, genomes/*, quality_file)
     */
-    DREP_EUKS_RUNS(
+    DREP_DEREPLICATE_RUNS(
         FILTER_QUALITY.out.qs50_filtered_genomes, 
-        params.euk_drep_args
+        [[id:''], []]   // No previous dRep work directory
     )
-    ch_versions = ch_versions.mix(DREP_EUKS_RUNS.out.versions)
+    ch_versions = ch_versions.mix(DREP_DEREPLICATE_RUNS.out.versions)
+    
+    bins = DREP_DEREPLICATE_RUNS.out.fastas.map{ _meta, genomes -> genomes }.collect()
 
     /* -- Aggregate quality file for all runs -- */
     MODIFY_QUALITY_FILE( 
@@ -123,91 +131,103 @@ workflow EUK_MAGS_GENERATION {
         "aggregated_euk_quality.csv"
     )
     aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { modified_csv ->
-        return tuple([id: "aggregated"], modified_csv)
+        [[id: "aggregated"], modified_csv]
     }
 
     /* -- Dereplicate all MAGs in a study -- */
-    DREP_EUKS_MAGS(
-        DREP_EUKS_RUNS.out.dereplicated_genomes.map{ _meta, drep_genomes -> drep_genomes }.flatten().collect()
-          .map{ agg_genomes ->
-              return tuple([id: "aggregated"], agg_genomes)
-          }.join( aggregated_quality ), 
-        params.euk_drep_args_mags
+    DREP_DEREPLICATE_MAGS(
+        bins.map{ agg_genomes -> [[id: "aggregated"], agg_genomes]}
+            .join( aggregated_quality ), 
+        [[id:''], []]   // No previous dRep work directory
     )
-    drep_result = DREP_EUKS_MAGS.out.dereplicated_genomes.map { _meta, drep_genomes -> drep_genomes }.flatten()
-    ch_versions = ch_versions.mix( DREP_EUKS_MAGS.out.versions)
+    ch_versions = ch_versions.mix( DREP_DEREPLICATE_MAGS.out.versions)
 
     /* -- coverage generation -- */
+    depth_file = input.concoct_input
+        .map{_meta, _assemblies, _reads, _metabat, depth -> depth}
+        .collectFile(name: "euks_depth.txt.gz")
     COVERAGE_RECYCLER_EUK(
-        DREP_EUKS_MAGS.out.dereplicated_genomes,
-        input.concoct_input.map{_meta, _assemblies, _reads, _metabat, depth -> depth}.collectFile(name: "euks_depth.txt.gz")
+        DREP_DEREPLICATE_RUNS.out.fastas,
+        depth_file
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions)
 
     /* -- BUSCO QC generation -- */
     BUSCO( 
-        drep_result, 
+        bins.flatten(), 
         file(params.busco_db, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( BUSCO.out.versions)
 
     /* -- Combine BUSCO and EukCC quality -- */
+    genomes_list = bins.flatten()
+        .map { file_path -> file_path.name }
+        .collectFile(name: "genomes_list.txt", newLine: true)
+
     BUSCO_EUKCC_QC( 
         aggregated_quality.map { _meta, agg_quality_file -> agg_quality_file },
         BUSCO.out.busco_summary.collect(), 
-        DREP_EUKS_MAGS.out.dereplicated_genomes_list.map { _meta, drep_genomes -> drep_genomes }
+        genomes_list
     )
     ch_versions = ch_versions.mix( BUSCO_EUKCC_QC.out.versions)
 
     /* --  BAT taxonomy generation -- */
+    dereplicated_genomes = DREP_DEREPLICATE_MAGS.out.fastas.map { _meta, drep_genomes -> drep_genomes }.flatten()
     BAT( 
-        drep_result, 
+        dereplicated_genomes, 
         file(params.cat_db_folder, checkIfExists: true), 
         file(params.cat_taxonomy_db, checkIfExists: true) 
     )
     ch_versions = ch_versions.mix( BAT.out.versions)
 
-    /* --  Cleanup BAT outputs -- */
+    /* --  Create user-friendly taxonomy files and concatenated taxonomy from BAT outputs -- */
     BAT_TAXONOMY_WRITER( 
         BAT.out.bat_names.collect() 
     )
     ch_versions = ch_versions.mix( BAT_TAXONOMY_WRITER.out.versions)
 
+    /* --  Propagate taxonomy to from cluster representatives to cluster members -- */
+    clustering_csvs = DREP_DEREPLICATE_MAGS.out.summary_tables
+        .map { meta, summary_table -> 
+            def cdb_file = summary_table.find { it.name == "Cdb.csv" }
+            def wdb_file = summary_table.find { it.name == "Wdb.csv" }
+
+            // Check if both files exist
+            if (cdb_file && wdb_file) {
+                [meta, cdb_file, wdb_file]
+            } else {
+                error "Missing required CSV files: Cdb.csv or Wdb.csv not found for sample ${meta.id}"
+            }
+        }
+    PROPAGATE_TAXONOMY_TO_BINS(
+        clustering_csvs,
+        BAT_TAXONOMY_WRITER.out.all_bin2classification,
+        "euks" // type defines the format of taxonomy file
+    )
+
     /* --  Compress MAGs and publish -- */
     COMPRESS_MAGS(
-        drep_result
+        dereplicated_genomes
     )
-    COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_mags}/${cluster_fasta.name}")
-    })
+
+    COMPRESS_BINS(
+        bins.flatten()
+    )
+    ch_versions = ch_versions.mix( COMPRESS_BINS.out.versions )
 
     /* --  Collect custom logging -- */
     ch_log = ch_log.mix( EUKCC_MERGE_METABAT.out.progress_log )
     ch_log = ch_log.mix( EUKCC_MERGE_CONCOCT.out.progress_log )
     ch_log = ch_log.mix( FILTER_QUALITY.out.progress_log )
-    ch_log = ch_log.mix( DREP_EUKS_RUNS.out.progress_log )
-    ch_log = ch_log.mix( DREP_EUKS_MAGS.out.progress_log )
-
-    // TODO
-    /* 
-    // ---- Generate files for bins upload ----
-    */
-    if ( params.upload_bins ) {
-        // choose bins that are not MAGs
-        drep_result.view()
-        bins.view()
-        // COVERAGE_RECYCLER_EUK
-        // BAT
-        // BAT_TAXONOMY_WRITER
-        // PREPARE_UPLOAD_FILES
-    }
-
+    ch_log = ch_log.mix( DREP_DEREPLICATE_RUNS.out.progress_log )
+    ch_log = ch_log.mix( DREP_DEREPLICATE_MAGS.out.progress_log )
 
     emit:
-    genomes                   = COMPRESS_MAGS.out.compressed.collect()
+    mags_fastas               = COMPRESS_MAGS.out.compressed.collect()
+    bins_fastas               = COMPRESS_BINS.out.compressed.collect()
     stats                     = BUSCO_EUKCC_QC.out.eukcc_final_qc
     coverage                  = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
-    taxonomy                  = BAT_TAXONOMY_WRITER.out.all_bin2classification
+    taxonomy                  = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy.map { _meta, taxonomy_file -> taxonomy_file }.collect()
     versions                  = ch_versions
     progress_log              = ch_log
     // for multiqc

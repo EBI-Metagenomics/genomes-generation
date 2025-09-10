@@ -21,14 +21,16 @@ include { PIGZ as COMPRESS_BINS       } from '../modules/local/compress/pigz'
     SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { EUK_MAGS_GENERATION  } from './eukaryotic_mags_generation'
-include { PROK_MAGS_GENERATION } from './prokaryotic_mags_generation'
+include { EUK_MAGS_GENERATION        } from './eukaryotic_mags_generation'
+include { PROK_MAGS_GENERATION       } from './prokaryotic_mags_generation'
 
-include { BINNING              } from '../subworkflows/local/binning'
-include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
-include { INPUT_PREPROCESSING  } from '../subworkflows/local/input_preprocessing'
-include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
-include { UPLOAD_MAGS          } from '../subworkflows/local/upload'
+include { BINNING                    } from '../subworkflows/local/binning'
+include { DECONTAMINATION            } from '../subworkflows/local/decontamination'
+include { INPUT_PREPROCESSING        } from '../subworkflows/local/input_preprocessing'
+include { QC_AND_MERGE_READS         } from '../subworkflows/local/qc_and_merge'
+include { UPLOAD_MAGS                } from '../subworkflows/local/upload'
+include { UPLOAD_MAGS as UPLOAD_BINS } from '../subworkflows/local/upload'
+
 
 
 /*
@@ -52,11 +54,13 @@ workflow GGP {
     ch_versions    = Channel.empty()
     ch_log         = Channel.empty()
 
-    euk_genomes    = Channel.empty()
+    euk_mags       = Channel.empty()
+    euk_bins       = Channel.empty()
     stats_euks     = Channel.empty()
     coverage_euks  = Channel.empty()
     taxonomy_euks  = Channel.empty()
-    prok_genomes   = Channel.empty()
+    prok_mags      = Channel.empty()
+    prok_bins      = Channel.empty()
     stats_proks    = Channel.empty()
     coverage_proks = Channel.empty()
     rna_proks      = Channel.empty()
@@ -183,7 +187,8 @@ workflow GGP {
             .join(all_metabat_bins)
             .join(all_jgi_depth)
         )
-        euk_genomes   = euk_genomes.mix( EUK_MAGS_GENERATION.out.genomes )
+        euk_mags      = euk_mags.mix( EUK_MAGS_GENERATION.out.mags_fastas )
+        euk_bins      = euk_bins.mix( EUK_MAGS_GENERATION.out.bins_fastas )
         stats_euks    = stats_euks.mix( EUK_MAGS_GENERATION.out.stats )
         coverage_euks = coverage_euks.mix( EUK_MAGS_GENERATION.out.coverage )
         taxonomy_euks = taxonomy_euks.mix( EUK_MAGS_GENERATION.out.taxonomy )
@@ -203,33 +208,25 @@ workflow GGP {
             collected_binners_assembly_and_depth
         )
 
-        prok_genomes = prok_genomes.mix( PROK_MAGS_GENERATION.out.genomes )
-        stats_proks = stats_proks.mix( PROK_MAGS_GENERATION.out.stats )
+        prok_mags      = prok_mags.mix( PROK_MAGS_GENERATION.out.mags_fastas )
+        prok_bins      = prok_bins.mix( PROK_MAGS_GENERATION.out.bins_fastas )
+        stats_proks    = stats_proks.mix( PROK_MAGS_GENERATION.out.stats )
         coverage_proks = coverage_proks.mix( PROK_MAGS_GENERATION.out.coverage )
-        rna_proks = rna_proks.mix( PROK_MAGS_GENERATION.out.rna )
+        rna_proks      = rna_proks.mix( PROK_MAGS_GENERATION.out.mags_rna )
         taxonomy_proks = taxonomy_proks.mix( PROK_MAGS_GENERATION.out.taxonomy )
-        ch_versions = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
-        ch_log = ch_log.mix( PROK_MAGS_GENERATION.out.progress_log )
+        ch_versions    = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
+        ch_log         = ch_log.mix( PROK_MAGS_GENERATION.out.progress_log )
     }
-
-    // TODO find bins proks and euks and publish
-    /* --  Compress bins and publish -- */
-    //COMPRESS_BINS(
-    //    bins
-    //)
-    //COMPRESS_BINS.out.compressed.subscribe({ cluster_fasta ->
-    //    cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_bins}/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
-    //})
-
     
     if ( params.skip_euk && params.skip_prok ) {
-        println "You skipped proks and euks. No results for MAGs. Exit."
+        log.error "You skipped both prokaryotes and eukaryotes. No results for MAGs. Exiting."
         exit(1)
     }
-    else {
+
+    if ( params.upload_mags ) {
         UPLOAD_MAGS (
-            euk_genomes.ifEmpty([]),
-            prok_genomes.ifEmpty([]),
+            euk_mags.ifEmpty([]),
+            prok_mags.ifEmpty([]),
             assembly_software_file,
             stats_euks.ifEmpty([]),
             stats_proks.ifEmpty([]),
@@ -237,8 +234,25 @@ workflow GGP {
             coverage_proks.ifEmpty([]),
             rna_proks.ifEmpty([]),
             taxonomy_euks.ifEmpty([]),
-            taxonomy_proks.ifEmpty([]))
+            taxonomy_proks.ifEmpty([]),
+            "mags")  // mags_or_bins_flag = "mags"
         ch_versions = ch_versions.mix( UPLOAD_MAGS.out.versions )
+    }
+
+    if ( params.upload_bins ) {
+        UPLOAD_BINS (
+                euk_bins.ifEmpty([]),
+                prok_bins.ifEmpty([]),
+                assembly_software_file,
+                stats_euks.ifEmpty([]),
+                stats_proks.ifEmpty([]),
+                coverage_euks.ifEmpty([]),
+                coverage_proks.ifEmpty([]),
+                [],   // empty input, because we skip rRNA prediction for bins
+                taxonomy_euks.ifEmpty([]),
+                taxonomy_proks.ifEmpty([])
+                , "bins")  // mags_or_bins_flag = "bins"
+        ch_versions = ch_versions.mix( UPLOAD_BINS.out.versions )
     }
 
 
