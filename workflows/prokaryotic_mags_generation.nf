@@ -157,6 +157,7 @@ workflow PROK_MAGS_GENERATION {
     ch_log = Channel.empty()
     ch_log = ch_log.mix( BINETTE.out.progress_log )
     ch_log = ch_log.mix( CHECKM2.out.progress_log )
+    ch_log = ch_log.mix( FILTER_QUALITY.out.progress_log )
     ch_log = ch_log.mix( DREP_DEREPLICATE.out.progress_log )
 
     emit:
