@@ -217,16 +217,6 @@ workflow GGP {
         ch_versions    = ch_versions.mix( PROK_MAGS_GENERATION.out.versions )
         ch_log         = ch_log.mix( PROK_MAGS_GENERATION.out.progress_log )
     }
-
-    // TODO find bins proks and euks and publish
-    /* --  Compress bins and publish -- */
-    //COMPRESS_BINS(
-    //    bins
-    //)
-    //COMPRESS_BINS.out.compressed.subscribe({ cluster_fasta ->
-    //    cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_bins}/${cluster_fasta.name.split('_')[0]}/${cluster_fasta.name}")
-    //})
-
     
     if ( params.skip_euk && params.skip_prok ) {
         log.error "You skipped both prokaryotes and eukaryotes. No results for MAGs. Exiting."

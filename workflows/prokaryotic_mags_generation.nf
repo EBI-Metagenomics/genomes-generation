@@ -147,9 +147,6 @@ workflow PROK_MAGS_GENERATION {
     COMPRESS_MAGS (
         dereplicated_genomes
     )
-    compressed_mags = COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/${params.subdir_proks}/${params.subdir_mags}/${cluster_fasta.name}")
-    })
 
     /* --  Compress bins -- */
     COMPRESS_BINS (

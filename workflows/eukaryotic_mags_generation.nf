@@ -211,9 +211,6 @@ workflow EUK_MAGS_GENERATION {
             .map { _meta, drep_genomes -> drep_genomes }
             .flatten()
     )
-    COMPRESS_MAGS.out.compressed.subscribe({ cluster_fasta ->
-        cluster_fasta.copyTo("${params.outdir}/${params.subdir_euks}/${params.subdir_mags}/${cluster_fasta.name}")
-    })
 
     COMPRESS_BINS(
         bins.flatten()
