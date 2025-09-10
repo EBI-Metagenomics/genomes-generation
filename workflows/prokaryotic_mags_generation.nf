@@ -162,7 +162,7 @@ workflow PROK_MAGS_GENERATION {
     emit:
     mags_fastas  = COMPRESS_MAGS.out.compressed.collect()
     bins_fastas  = COMPRESS_BINS.out.compressed.collect()
-    stats        = CHECKM2.out.bins_and_stats.map { _map, _bins_folder, stats -> stats }
+    stats        = FILTER_QUALITY.out.qs50_filtered_genomes.map { _map, _bins_folder, stats -> stats }
     coverage     = COVERAGE_RECYCLER.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
     mags_rna     = rna_out.collect()
     taxonomy     = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy.map { _meta, taxonomy_file -> taxonomy_file }.collect()

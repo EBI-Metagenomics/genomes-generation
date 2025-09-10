@@ -229,7 +229,7 @@ workflow EUK_MAGS_GENERATION {
     bins_fastas               = COMPRESS_BINS.out.compressed.collect()
     stats                     = BUSCO_EUKCC_QC.out.eukcc_final_qc
     coverage                  = COVERAGE_RECYCLER_EUK.out.mag_coverage.map{ _meta, coverage_file -> coverage_file }.collect()
-    taxonomy                  = BAT_TAXONOMY_WRITER.out.all_bin2classification
+    taxonomy                  = PROPAGATE_TAXONOMY_TO_BINS.out.ncbi_taxonomy.map { _meta, taxonomy_file -> taxonomy_file }.collect()
     versions                  = ch_versions
     progress_log              = ch_log
     // for multiqc
