@@ -142,7 +142,6 @@ workflow EUK_MAGS_GENERATION {
     )
     ch_versions = ch_versions.mix( DREP_DEREPLICATE_MAGS.out.versions)
 
-    
     /* -- coverage generation -- */
     depth_file = input.concoct_input
         .map{_meta, _assemblies, _reads, _metabat, depth -> depth}
@@ -173,8 +172,9 @@ workflow EUK_MAGS_GENERATION {
     ch_versions = ch_versions.mix( BUSCO_EUKCC_QC.out.versions)
 
     /* --  BAT taxonomy generation -- */
+    dereplicated_genomes = DREP_DEREPLICATE_MAGS.out.fastas.map { _meta, drep_genomes -> drep_genomes }.flatten()
     BAT( 
-        bins.flatten(), 
+        dereplicated_genomes, 
         file(params.cat_db_folder, checkIfExists: true), 
         file(params.cat_taxonomy_db, checkIfExists: true) 
     )
@@ -207,9 +207,7 @@ workflow EUK_MAGS_GENERATION {
 
     /* --  Compress MAGs and publish -- */
     COMPRESS_MAGS(
-        DREP_DEREPLICATE_MAGS.out.fastas
-            .map { _meta, drep_genomes -> drep_genomes }
-            .flatten()
+        dereplicated_genomes
     )
 
     COMPRESS_BINS(
