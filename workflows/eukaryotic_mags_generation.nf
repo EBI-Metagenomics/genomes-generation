@@ -92,13 +92,17 @@ workflow EUK_MAGS_GENERATION {
             // Collect all files from all folders
             def all_files = []
             [concoct, metabat, eukcc_concoct, eukcc_metabat].each { folder ->
-                if (folder && folder.exists()) {
-                    if (folder.isDirectory()) {
-                        folder.listFiles()?.each { file ->
-                            if (file.isFile()) all_files.add(file)
+                if (folder) {
+                    // Convert to file object to check properties
+                    def folderFile = file(folder)
+                    if (folderFile.exists()) {
+                        if (folderFile.isDirectory()) {
+                            folderFile.listFiles()?.each { file ->
+                                if (file.isFile()) all_files.add(file)
+                            }
+                        } else {
+                            all_files.add(folderFile)
                         }
-                    } else {
-                        all_files.add(folder)
                     }
                 }
             }
@@ -127,7 +131,7 @@ workflow EUK_MAGS_GENERATION {
         "aggregated_euk_quality.csv"
     )
     aggregated_quality = MODIFY_QUALITY_FILE.out.modified_result.map { modified_csv ->
-3        [[id: "aggregated"], modified_csv]
+        [[id: "aggregated"], modified_csv]
     }
 
     /* -- Dereplicate all MAGs in a study -- */
@@ -144,7 +148,7 @@ workflow EUK_MAGS_GENERATION {
         .map{_meta, _assemblies, _reads, _metabat, depth -> depth}
         .collectFile(name: "euks_depth.txt.gz")
     COVERAGE_RECYCLER_EUK(
-        bins,
+        DREP_DEREPLICATE_RUNS.out.fastas,
         depth_file
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions)
