@@ -5,6 +5,7 @@ import csv
 import sys
 import re
 import os
+import fileinput
 
 
 def input_args():
@@ -14,6 +15,9 @@ def input_args():
     )
     parser.add_argument(
         "-i", "--input", help="indicate input FASTA file", required=False
+    )
+    parser.add_argument(
+        "-m", "--map", help="map file for names", required=False, default="map.txt"
     )
     parser.add_argument(
         "-p", "--prefix", help="Prefix that would be included to header <prefix><digit>", required=False
@@ -29,8 +33,7 @@ def rename(args):
     mapping between new and old files in tsv
     """
     print("Renaming " + args.input)
-    # TODO add compressed support
-    with open(args.input, "r") as fasta_in:
+    with fileinput.hook_compressed(args.input, "r", encoding="utf-8") as fasta_in:
         with open(args.output, "w") as fasta_out, open(args.map, "w") as map_tsv:
             count = 0
             tsv_map = csv.writer(map_tsv, delimiter="\t")

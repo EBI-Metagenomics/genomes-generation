@@ -86,11 +86,13 @@ workflow GGP {
     * skip that step with --skip_preprocessing_input
     * sanitise and trim fastq files, merge with fastp is regulated with --merge_pairs (default: false)
     * change contig headers to short names and create mapping file
+    * if binners input presented - no need to rename contigs
     */
+    // TODO exclude rename in binners input
     INPUT_QC(
         assembly_and_reads
     )
-    ch_versions = ch_versions.mix(INPUT_PREPROCESSING.out.versions)
+    ch_versions = ch_versions.mix(INPUT_QC.out.versions)
 
     /*
     * --- reads decontamination ----
@@ -99,7 +101,7 @@ workflow GGP {
     reference_genome         = file(params.ref_genome, checkIfExists: true)
     reference_genome_index   = file("${reference_genome.parent}/*.fa*.*")
     DECONTAMINATION(
-        QC_AND_MERGE_READS.out.reads,
+        INPUT_QC.out.assembly_and_reads.map{ meta, _assembly, reads -> [meta, reads] },
         reference_genome,
         reference_genome_index
     )
@@ -112,7 +114,7 @@ workflow GGP {
     ch_versions = ch_versions.mix( FASTQC.out.versions )
 
     // --- make data structure for binning
-    tool_availability = INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
+    tool_availability = INPUT_QC.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
         .join(DECONTAMINATION.out.decontaminated_reads)
         .combine(concoct_sample_ids.map { [it] })
         .combine(metabat_sample_ids.map { [it] })
@@ -166,7 +168,7 @@ workflow GGP {
     */ 
     if ( !params.skip_euk ) {
         EUK_MAGS_GENERATION(
-            INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
+            INPUT_QC.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
             .join(DECONTAMINATION.out.decontaminated_reads)
             .join(all_concoct_bins)
             .join(all_metabat_bins)
@@ -185,7 +187,7 @@ workflow GGP {
         collected_binners_assembly_and_depth = all_concoct_bins
             .join( all_maxbin_bins, remainder: true ) 
             .join( all_metabat_bins, remainder: true ) 
-            .join( INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _reads -> [meta, assembly] }, remainder: true ) 
+            .join( INPUT_QC.out.assembly_and_reads.map{ meta, assembly, _reads -> [meta, assembly] }, remainder: true )
             .join( all_jgi_depth, remainder: true )
 
         PROK_MAGS_GENERATION(

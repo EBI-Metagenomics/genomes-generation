@@ -5,8 +5,8 @@
 include { RENAME_CONTIGS          } from '../../modules/local/rename_contigs'
 
 include { FASTQC                  } from '../../modules/nf-core/fastqc/main'
-inclide { SEQKIT_PAIR             } from '../../modules/nf-core/seqkit/pair'
-inclide { SEQKIT_SANA             } from '../../modules/nf-core/seqkit/sana'
+include { SEQKIT_PAIR             } from '../../modules/nf-core/seqkit/pair'
+include { SEQKIT_SANA             } from '../../modules/nf-core/seqkit/sana'
 
 include { FASTQ_TRIM_FASTP_FASTQC } from '../nf-core/fastq_trim_fastp_fastqc'
 
@@ -61,19 +61,20 @@ workflow INPUT_QC {
         )
         ch_versions = ch_versions.mix(SEQKIT_SANA.out.versions)
 
+        // TODO do not need for SE
         SEQKIT_PAIR(
-            SEQKIT_SANA.out.reads_sanitised
+            SEQKIT_SANA.out.reads
         )
         ch_versions = ch_versions.mix(SEQKIT_PAIR.out.versions)
 
-        /* --- fastqc_raw - fastp - fastqc_trim
+        /* --- fastqc_raw - fastp - fastqc_trim */
         // fastp args: reads, [], false, params.merge_pairs (should be false in config)
         FASTQ_TRIM_FASTP_FASTQC(
             SEQKIT_PAIR.out.reads,
             [],
-            false?,
             false,
-            params.merge_pairs ??? - is it correct arg? I need to turn off merging in fastp,
+            false,
+            params.merge_pairs,
             false,
             false
         )

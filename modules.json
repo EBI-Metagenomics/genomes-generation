@@ -82,6 +82,11 @@
             "branch": "master",
             "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
             "installed_by": ["modules"]
+          },
+          "seqkit/sana": {
+            "branch": "master",
+            "git_sha": "1f3c71326a3e83bc92e88fabe4bdd1304cd11fe3",
+            "installed_by": ["modules"]
           }
         }
       },
