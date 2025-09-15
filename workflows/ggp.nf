@@ -26,10 +26,8 @@ include { PROK_MAGS_GENERATION } from './prokaryotic_mags_generation'
 
 include { BINNING              } from '../subworkflows/local/binning'
 include { DECONTAMINATION      } from '../subworkflows/local/decontamination'
-include { INPUT_PREPROCESSING  } from '../subworkflows/local/input_preprocessing'
-include { QC_AND_MERGE_READS   } from '../subworkflows/local/qc_and_merge'
+include { INPUT_QC             } from '../subworkflows/local/qc'
 include { UPLOAD_MAGS          } from '../subworkflows/local/upload'
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,22 +84,15 @@ workflow GGP {
     /*
     * --- pre-processing input files ---
     * skip that step with --skip_preprocessing_input
-    * change ERR to ERZ in reads
-    * change . to _ in assembly files
+    * sanitise and trim fastq files, merge with fastp is regulated with --merge_pairs (default: false)
+    * change contig headers to short names and create mapping file
+    * if binners input presented - no need to rename contigs
     */
-    INPUT_PREPROCESSING(
+    // TODO exclude rename in binners input
+    INPUT_QC(
         assembly_and_reads
     )
-    ch_versions = ch_versions.mix(INPUT_PREPROCESSING.out.versions)
-
-    /*
-    * --- trimming reads ----
-    * merge step is regulated with --merge_pairs (default: false)
-    */
-    QC_AND_MERGE_READS(
-        INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, _1, reads -> [meta, reads] }
-    )
-    ch_versions = ch_versions.mix( QC_AND_MERGE_READS.out.versions )
+    ch_versions = ch_versions.mix(INPUT_QC.out.versions)
 
     /*
     * --- reads decontamination ----
@@ -110,7 +101,7 @@ workflow GGP {
     reference_genome         = file(params.ref_genome, checkIfExists: true)
     reference_genome_index   = file("${reference_genome.parent}/*.fa*.*")
     DECONTAMINATION(
-        QC_AND_MERGE_READS.out.reads,
+        INPUT_QC.out.assembly_and_reads.map{ meta, _assembly, reads -> [meta, reads] },
         reference_genome,
         reference_genome_index
     )
@@ -123,7 +114,7 @@ workflow GGP {
     ch_versions = ch_versions.mix( FASTQC.out.versions )
 
     // --- make data structure for binning
-    tool_availability = INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
+    tool_availability = INPUT_QC.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
         .join(DECONTAMINATION.out.decontaminated_reads)
         .combine(concoct_sample_ids.map { [it] })
         .combine(metabat_sample_ids.map { [it] })
@@ -177,7 +168,7 @@ workflow GGP {
     */ 
     if ( !params.skip_euk ) {
         EUK_MAGS_GENERATION(
-            INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
+            INPUT_QC.out.assembly_and_reads.map{ meta, assembly, _2 -> [meta, assembly] }
             .join(DECONTAMINATION.out.decontaminated_reads)
             .join(all_concoct_bins)
             .join(all_metabat_bins)
@@ -196,7 +187,7 @@ workflow GGP {
         collected_binners_assembly_and_depth = all_concoct_bins
             .join( all_maxbin_bins, remainder: true ) 
             .join( all_metabat_bins, remainder: true ) 
-            .join( INPUT_PREPROCESSING.out.assembly_and_reads.map{ meta, assembly, _reads -> [meta, assembly] }, remainder: true ) 
+            .join( INPUT_QC.out.assembly_and_reads.map{ meta, assembly, _reads -> [meta, assembly] }, remainder: true )
             .join( all_jgi_depth, remainder: true )
 
         PROK_MAGS_GENERATION(
@@ -244,7 +235,7 @@ workflow GGP {
 
     // for multiqc
     // binning samtools for multiqc
-    // TODO return fastqc from INPUT_PREPROCESSING
+    // TODO return fastqc from qc
     // TODO return fastqc result after decontamination
     // TODO return ALIGN samtools stats
 
