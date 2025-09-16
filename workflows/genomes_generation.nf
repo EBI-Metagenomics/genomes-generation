@@ -43,7 +43,7 @@ gtdbtk_db          = file(params.gtdbtk_db, checkIfExists: true)
 rfam_rrna_models   = file(params.rfam_rrna_models, checkIfExists: true)
 
 ref_genome         = file(params.ref_genome)
-ref_genome_index   = file("${ref_genome.parent}/*.fa.*")
+ref_genome_index   = file("${ref_genome.parent}/bwa-mem2/*.fna.*")
 
 
 /*
