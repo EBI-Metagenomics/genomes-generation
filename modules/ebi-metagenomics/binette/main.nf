@@ -13,8 +13,8 @@ process BINETTE {
     path checkm2_db
 
     output:
-    tuple val(meta), path("${meta.id}_final_bins/*")                  , emit: refined_bins
-    tuple val(meta), path("${meta.id}_final_bins_quality_reports.tsv"), emit: refined_bins_report
+    tuple val(meta), path("${meta.id}_final_bins/*")                  , emit: refined_bins, optional:true
+    tuple val(meta), path("${meta.id}_final_bins_quality_reports.tsv"), emit: refined_bins_report, optional:true
     path "progress.log"                                               , emit: progress_log
     path "versions.yml"                                               , emit: versions
 
@@ -35,6 +35,8 @@ process BINETTE {
     }
 
     """
+    # Run binette with error handling
+    set +e
     binette \\
         ${input_arg} input_binning/* \\
         ${protein_arg} \\
@@ -42,13 +44,27 @@ process BINETTE {
         --threads ${task.cpus} \\
         --checkm2_db ${checkm2_db} \\
         -o . \\
-        ${args}
+        ${args} 2> binette_stderr.log
+    
+    BINETTE_EXIT_CODE=\$?
+    set -e
 
-    # add run accession to all bin names
-    for file in final_bins/*.fa*; do mv "\$file" "final_bins/${meta.id}_\$(basename "\$file")"; done
-    # add run accession to the bin folder and report with stats
-    mv final_bins "${meta.id}_final_bins"
-    mv final_bins_quality_reports.tsv ${meta.id}_final_bins_quality_reports.tsv
+    # Check if binette failed with the specific ValueError
+    if [ \$BINETTE_EXIT_CODE -ne 0 ]; then
+        if grep -q "ValueError: Columns must be same length as key" binette_stderr.log; then
+            echo "Binette crashed due to empty DIAMOND output"
+            echo "Check file temporary_files/diamond_result.tsv.gz for details"
+            echo "This likely means no bins could be refined from the input data"
+            
+            # Create empty output directory to create progress.log
+            mkdir -p final_bins
+        else
+            # Re-throw the error if it's not the expected ValueError
+            echo "binette failed with unexpected error:"
+            cat binette_stderr.log >&2
+            exit \$BINETTE_EXIT_CODE
+        fi
+    fi
 
     # Count number of bins before and after refinement
     BINNER_COUNTS=""
@@ -63,8 +79,21 @@ process BINETTE {
 
     cat <<-END_LOGGING > progress.log
     ${meta.id}\t${task.process}
-        \${BINNER_COUNTS}refined: \$(ls -1 ${meta.id}_final_bins/ | wc -l)
+        \${BINNER_COUNTS}refined: \$(ls -1 final_bins/ 2>/dev/null | wc -l)
     END_LOGGING
+
+    # add run accession to all bin names if there are any bins
+    if [ -d "final_bins" ] && [ "\$(ls -A final_bins)" ]; then
+        for file in final_bins/*.fa*; do 
+            if [ -f "\$file" ]; then
+                mv "\$file" "final_bins/${meta.id}_\$(basename "\$file")"
+            fi
+        done
+
+        # add run accession to output folder and report with stats
+        mv final_bins "${meta.id}_final_bins"
+        mv final_bins_quality_reports.tsv ${meta.id}_final_bins_quality_reports.tsv
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
