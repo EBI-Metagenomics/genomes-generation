@@ -46,13 +46,13 @@ process METABAT2_METABAT2 {
     rm -f ${prefix}.tsv.gz
     gzip ${prefix}.tsv
 
-    mkdir -p ${meta.id}_metabat_bins
     # I had to hardcode the version, it was failling with erro 141 for some reason
     version="2.15"
 
     if [ -z "\$(ls -A bins/*.[0-9]*.fa)" ]; then
         echo "Folder is empty"
     else
+        mkdir -p ${meta.id}_metabat_bins;
         for i in bins/*.[0-9]*.fa; do
             original_name=\$(basename \${i})
             new_filename=\${original_name#*-}
