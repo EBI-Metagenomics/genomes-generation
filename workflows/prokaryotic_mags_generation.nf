@@ -44,14 +44,29 @@ workflow PROK_MAGS_GENERATION {
 
     /* --  Bins refinement -- */
     ch_binette_input = collected_binners_assembly_and_depth.map { meta, concoct_bins, maxbin_bins, metabat_bins, assembly, _depth ->
-        def valid_bins = [concoct_bins, maxbin_bins, metabat_bins].findAll { it != null && it != [] }
-        [
-            meta,
-            valid_bins,    // Combined binning results
-            assembly,
-            []             // Placeholder for predicted proteins (optional BINETTE input)
-        ]
-    }
+        // Filter out null/empty and check if directories contain files
+        def valid_bins = [concoct_bins, maxbin_bins, metabat_bins].findAll { bin_dir ->
+            if (bin_dir == null || bin_dir == []) {
+                return false
+            }
+            // Check if directory exists and contains files
+            def dir_path = file(bin_dir)
+            return dir_path.exists() && dir_path.isDirectory() && dir_path.list().length > 0
+        }
+
+        // Only proceed if we have at least one valid bin directory
+        if (valid_bins.size() > 0) {
+            return [
+                meta,
+                valid_bins,    // Combined binning results
+                assembly,
+                []             // Placeholder for predicted proteins (optional BINETTE input)
+            ]
+        } else {
+            // Return null to filter out this sample entirely
+            return null
+        }
+    }.filter { it != null }  // Remove null entries
 
     BINETTE(
         ch_binette_input,
