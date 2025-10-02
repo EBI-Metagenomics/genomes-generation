@@ -1,6 +1,6 @@
 /*
     ~~~~~~~~~~~~~~~~~~
-     compress
+    compress
     ~~~~~~~~~~~~~~~~~~
 */
 process PIGZ {
@@ -13,8 +13,8 @@ process PIGZ {
     file(file_to_compress)
 
     output:
-    path("*.gz"), emit: compressed
-    path "versions.yml"                       , emit: versions
+    path "*.gz"        , emit: compressed
+    path "versions.yml", emit: versions
 
     script:
     """

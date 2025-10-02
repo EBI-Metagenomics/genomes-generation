@@ -46,8 +46,17 @@ workflow CLEAN_AND_FILTER_BINS {
         return cluster_fasta
     })
 
+    gunc_report = GUNC.out.gunc_result.collectFile(name: "gunc_contamination_report.txt")
+    gunc_report.subscribe { file ->
+        // Create directory if it does not exist
+        def destination_dir = "${params.outdir}/${params.subdir_proks}/${params.subdir_stats}"
+        destination_dir.mkdirs()
+        // Copy file to the directory
+        file.copyTo(destination_dir)
+    }
+
     emit:
     bins        = filtered_bins
-    gunc_report = GUNC.out.gunc_result.collectFile(name: "gunc_report.txt")
+    gunc_report = gunc_report
     versions    = ch_versions
 }

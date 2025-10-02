@@ -87,7 +87,7 @@ process MAXBIN2 {
     else
         for i in maxbin_output/*; do
             number=\$(echo "\$i" | cut -d '.' -f 2 | sed 's/^0*//')
-            new_name="maxbin_output/${meta.id}_maxbin2_\${number}.fa"
+            new_name="maxbin_output/${meta.id}_\${number}.fa"
             echo "\${i} to \${new_name}"
             mv \${i} \${new_name}
         done

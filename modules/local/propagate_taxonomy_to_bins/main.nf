@@ -10,18 +10,20 @@ process PROPAGATE_TAXONOMY_TO_BINS {
     val(type)
 
     output:
-    tuple val(meta), path("ncbi_taxonomy_propagated.txt"), emit: ncbi_taxonomy
-    path "versions.yml"                                  , emit: versions
+    tuple val(meta), path("*_bins_ncbi_taxonomy.txt"), emit: ncbi_taxonomy
+    path "versions.yml"                              , emit: versions
 
 
     script:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+
     """
     propagate_taxonomy_to_bins.py \
         --cdb ${drep_cdb_csv} \
         --wdb ${drep_wdb_csv} \
         --taxonomy ${taxonomy_tsv} \
         --type ${type} \
-        --output ncbi_taxonomy_propagated.txt
+        --output ${prefix}_bins_ncbi_taxonomy.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

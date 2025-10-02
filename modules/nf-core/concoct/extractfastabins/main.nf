@@ -43,7 +43,7 @@ process CONCOCT_EXTRACTFASTABINS
         for i in ${prefix}/*.fa; do
             original_name=\$(basename \${i})
             original_name_without_extension=\${original_name%.*}
-            name_with_binner=\${original_name_without_extension//bin./concoct_}
+            name_with_binner=\${original_name_without_extension//bin./}
             new_name="${meta.id}_concoct_bins/\${name_with_binner}.fa"
             mv \${i} \${new_name}
         done

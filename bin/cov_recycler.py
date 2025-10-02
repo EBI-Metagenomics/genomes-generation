@@ -88,7 +88,7 @@ if __name__ == "__main__":
         primary_dir = os.path.join(COVERAGE_FOLDER_NAME, final_bin+'_coverage')
         if not os.path.exists(primary_dir):
             os.mkdir(primary_dir)
-        cov_ave_out = os.path.join(primary_dir, final_bin+'_MAGcoverage.txt')
+        cov_ave_out = os.path.join(primary_dir, final_bin+'_coverage.txt')
         cov_table = os.path.join(primary_dir, 'coverage.tab')
 
         with open(cov_table, "w") as large_out, open(cov_ave_out, "w") as short_out:
