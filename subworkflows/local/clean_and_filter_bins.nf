@@ -46,7 +46,7 @@ workflow CLEAN_AND_FILTER_BINS {
         return cluster_fasta
     })
 
-    gunc_report = GUNC.out.gunc_result.collectFile(name: "gunc_contamination_report.txt")
+    gunc_report = GUNC.out.gunc_result.collectFile(name: "${params.ena_assembly_study_accession}_gunc_contamination_report.txt")
     gunc_report.subscribe { file ->
         // Create directory if it does not exist
         def destination_path = "${params.outdir}/${params.subdir_proks}/${params.subdir_stats}"
