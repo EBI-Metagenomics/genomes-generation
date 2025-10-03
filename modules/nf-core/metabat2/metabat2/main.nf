@@ -15,7 +15,8 @@ process METABAT2_METABAT2 {
     tuple val(meta), path("bins/*.lowDepth.fa")                    , optional:true , emit: lowdepth
     tuple val(meta), path("bins/*.unbinned.fa")                    , optional:true , emit: unbinned
     tuple val(meta), path("*.tsv.gz")                              , optional:true , emit: membership
-    tuple val(meta), path("${meta.id}_metabat_bins")               , optional:true , emit: fasta
+    tuple val(meta), path("${meta.id}_metabat_bins")               , optional:true , emit: fastas_dir
+    tuple val(meta), path("${meta.id}_metabat_bins/*.fa")          , optional:true , emit: fastas
     path "versions.yml"                                            , emit: versions
 
     when:
