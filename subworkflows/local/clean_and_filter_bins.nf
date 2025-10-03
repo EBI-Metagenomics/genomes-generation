@@ -49,10 +49,10 @@ workflow CLEAN_AND_FILTER_BINS {
     gunc_report = GUNC.out.gunc_result.collectFile(name: "gunc_contamination_report.txt")
     gunc_report.subscribe { file ->
         // Create directory if it does not exist
-        def destination_dir = "${params.outdir}/${params.subdir_proks}/${params.subdir_stats}"
-        destination_dir.mkdirs()
+        def destination_path = "${params.outdir}/${params.subdir_proks}/${params.subdir_stats}"
+        new File(destination_path).mkdirs()
         // Copy file to the directory
-        file.copyTo(destination_dir)
+        file.copyTo(destination_path)
     }
 
     emit:
