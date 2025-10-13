@@ -84,8 +84,14 @@ workflow SAMPLESHEET_GENERATION
             "${meta.id}\t${meta.assembler}"
         }
     }
-
-
+    assembly_software.subscribe { file ->
+        // Create directory if it does not exist
+        def destination_path = "${params.outdir}/input/"
+        new File(destination_path).mkdirs()
+        // Copy file to the directory
+        file.copyTo(destination_path)
+    }
+    
     emit:
     assembly_and_reads   = assembly_and_reads // channel: [ val(meta), assembly, [ reads ] ]
     concoct_bins         = input.concoct
