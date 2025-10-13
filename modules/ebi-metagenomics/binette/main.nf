@@ -15,6 +15,7 @@ process BINETTE {
     output:
     tuple val(meta), path("${meta.id}_final_bins/*")                  , emit: refined_bins, optional:true
     tuple val(meta), path("${meta.id}_final_bins_quality_reports.tsv"), emit: refined_bins_report, optional:true
+    tuple val(meta), path("${meta.id}_input_bins_quality_reports/*")  , emit: input_bins_report
     path "progress.log"                                               , emit: progress_log
     path "versions.yml"                                               , emit: versions
 
