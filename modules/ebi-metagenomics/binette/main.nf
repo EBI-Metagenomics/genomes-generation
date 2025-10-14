@@ -94,6 +94,7 @@ process BINETTE {
         # add run accession to output folder and report with stats
         mv final_bins "${meta.id}_final_bins"
         mv final_bins_quality_reports.tsv ${meta.id}_final_bins_quality_reports.tsv
+        mv input_bins_quality_reports "${meta.id}_input_bins_quality_reports"
     fi
 
     cat <<-END_VERSIONS > versions.yml
