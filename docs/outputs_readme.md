@@ -57,9 +57,15 @@ eukatyotes
 ├── coverage
 │   ├── <mag>_coverage.txt
 │   └── <study>_contigs2bins.txt
-├── drep                                                   [exp] 
-│   └── data_tables
-│       └── *.csv
+├── drep
+│   ├── per-run                                            [exp]
+│   │   └── <run>
+│   │       ├── data_tables
+│   │       │   └── *.csv
+│   │       └── dereplicated_genomes.tsv
+│   ├── data_tables                                        [exp] 
+│   │   └── *.csv
+│   └── <study>_dereplicated_genomes.tsv
 ├── mags
 │   └── <mags>.fa.gz
 ├── refinement                                             [exp] 
@@ -87,9 +93,10 @@ prokaryotes
 ├── coverage
 │   ├── <mag>_coverage.txt
 │   └── <study>_contigs2bins.txt
-├── drep                                                   [exp] 
-│   └── data_tables
-│       └── *.csv
+├── drep
+│   ├── data_tables                                        [exp] 
+│   │   └── *.csv
+│   └── <study>_dereplicated_genomes.tsv
 ├── mags
 │   └── <mags>.fa.gz
 ├── refinement                                             [exp] 

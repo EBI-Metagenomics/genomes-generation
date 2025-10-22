@@ -12,12 +12,13 @@ process DREP_DEREPLICATE {
     tuple val(meta2), path(drep_work, stageAs: 'drep_work/')
 
     output:
-    tuple val(meta), path("dereplicated_genomes/*"), optional: true, emit: fastas
-    tuple val(meta), path("data_tables/*.csv")     , optional: true, emit: summary_tables
-    tuple val(meta), path("figures/*pdf")          , optional: true, emit: figures
-    tuple val(meta), path("logger.log")            , optional: true, emit: log
-    path "versions.yml"                                            , emit: versions
-    path "progress.log"                                            , emit: progress_log
+    tuple val(meta), path("dereplicated_genomes/*")  , optional: true, emit: fastas
+    tuple val(meta), path("dereplicated_genomes.txt"), optional: true, emit: fastas_list
+    tuple val(meta), path("data_tables/*.csv")       , optional: true, emit: summary_tables
+    tuple val(meta), path("figures/*pdf")            , optional: true, emit: figures
+    tuple val(meta), path("logger.log")              , optional: true, emit: log
+    path "versions.yml"                                              , emit: versions
+    path "progress.log"                                              , emit: progress_log
 
     when:
     task.ext.when == null || task.ext.when
@@ -38,9 +39,13 @@ process DREP_DEREPLICATE {
 
     elif [[ \$GENOME_COUNT -eq 1 ]]; then
         echo "Only one genome detected. Skipping dRep and copying genome directly."
-        
+        mkdir dereplicated_genomes/ figures/ data_tables
+
         # Copy the single genome to dereplicated_genomes
         cp input_fastas/* dereplicated_genomes/
+
+        # Create a list of dereplicated genomes
+        ls -1 drep_output/dereplicated_genomes > dereplicated_genomes.txt
         
         # Create minimal output files required by PROPAGATE_TAXONOMY_TO_BINS process
         GENOME_NAME=\$(basename input_fastas/*)
@@ -67,6 +72,9 @@ process DREP_DEREPLICATE {
         cp drep_work/figures/* figures/
         cp drep_work/data_tables/* data_tables/
         cp drep_work/log/logger.log logger.log
+
+        # Create a list of dereplicated genomes
+        ls -1 drep_output/dereplicated_genomes > dereplicated_genomes.txt
     fi
 
     cat <<-END_VERSIONS > versions.yml
