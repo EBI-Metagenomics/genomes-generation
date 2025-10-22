@@ -16,6 +16,7 @@ Expanded results can be included using argument `--publish_all`.
 
 ### input
 `samplesheet.csv`: generated pipeline input samplesheet \
+`assembly_software.tsv`: file listing assembler tool used to assemble each run \
 `runs_assemblies.tsv`: mapping file contains raw_reads_run_identifier and corresponding assembly_identifier
 
 ### qc [expanded output]
@@ -24,10 +25,11 @@ Quality control statistics.
 TODO: add fastQC
 ```commandline
 qc
-├── fastp
-│   ├── *fastp.html
-│   ├── *fastp.json
-│   └── *fastp.log
+└── fastp
+    └── <run>
+        ├── <run>.fastp.html
+        ├── <run>.fastp.json
+        └── <run>.fastp.log
 ```
 
 ### binning [expanded output]
@@ -36,77 +38,107 @@ Binning results for CONCOCT, MetaBAT2 and Maxbin2. MaxBin2 and MetaBAT2 produce 
 ```commandline
 binning
 ├── concoct
-│   ├── <bins>*.fa
+│   ├── <bins>.fa
 │   └── coverage.tsv
 ├── maxbin2
-│   ├── <bins>*.fa
+│   ├── <bins>.fa
 │   └── discarded
-├── metabat2
-│   ├── <bins>*.fa
-│   ├── depth.tsv
-│   └── discarded
+└── metabat2
+    ├── <bins>.fa
+    ├── depth.tsv
+    └── discarded
 ```
 
 ### eukaryotes 
 ```commandline
 eukatyotes
-├── bins
-│   ├── <bins>.fa.gz
+├── bins                                                   [exp]
+│   └── <bins>.fa.gz
 ├── coverage
 │   ├── <mag>_coverage.txt
-│   └── aggregated_contigs2bins.txt
+│   └── <study>_contigs2bins.txt
+├── drep                                                   [exp] 
+│   └── data_tables
+│       └── *.csv
 ├── mags
-│   ├── <mags>.fa.gz
-├── refinement                        [exp] 
+│   └── <mags>.fa.gz
+├── refinement                                             [exp] 
 │   ├── eukcc
-│   │   ├── merged_bins.csv
-│   │   └── 
-│   ├── binlinks
+│   │   └── <run>
+│   │       ├── merged_bins.csv
+│   │       └── eukcc.csv
+│   └── binlinks
+│       └── <run>.links.csv
 ├── stats
-│   ├── eukcc_final_qc.csv
-│   └── combined_busco_eukcc.csv
+│   ├── <study>_eukcc_before_filter_and_dedup.csv
+│   ├── <study>_eukcc_bins_quality_filtered.csv
+│   └── <study>_eukcc_busco_bins_quality_filtered.csv      [exp] 
 └── taxonomy
-    ├── all_bin2classification.txt
-    └── human_readble.tsv
+    ├── <study>_bins_ncbi_taxonomy.txt
+    ├── <study>_mags_bat_output.txt
+    └── <study>_mags_ncbi_taxonomy.txt
 ```
 
 ### prokaryotes 
 ```commandline
 prokaryotes
-├── bins
-│   ├── <bins>.fa.gz
+├── bins                                                   [exp]
+│   └── <bins>.fa.gz
 ├── coverage
 │   ├── <mag>_coverage.txt
-│   └── aggregated_contigs2bins.txt
+│   └── <study>_contigs2bins.txt
+├── drep                                                   [exp] 
+│   └── data_tables
+│       └── *.csv
 ├── mags
-│   ├── <mags>.fa.gz
-├── refinement                        [exp] 
-│   ├── 
-├── rna  
+│   └── <mags>.fa.gz
+├── refinement                                             [exp] 
+│   └── binette
+│       ├── <run>_final_bins_quality_reports.tsv
+│       └── <run>_input_bins_quality_reports
+│           └── <binner>*.tsv
+├── rna
+│   └── <bin>
+│       ├── <bin>_rRNAs.fasta
+│       ├── <bin>_rRNAs.out
+│       └── <bin>_tRNA_20aa.out
 ├── stats
-│   ├── 
-│   └── 
+│   ├── <study>_checkm2_all_bins.csv
+│   ├── <study>_checkm2_bins_quality_filtered.tsv
+│   └── <study>_gunc_contamination_report.txt
 └── taxonomy
-    ├── 
-    └── 
+    ├── <study>_bins_ncbi_taxonomy.txt
+    ├── <study>_gtdbtk_results.tar.gz
+    └── <study>_mags_ncbi_taxonomy.txt
 ```
 
-### upload [optional]
+### upload [expanded output]
 ```
-    ├── unclassified_genomes.txt
-    ├── final_table_for_uploader.tsv
-    ├── upload
-    │  ├── create_manifests
-    │  │   ├── ENA_backup.json
-    │  │   ├── genome_samples.xml
-    │  │   ├── manifests
-    │  │      ├── MAG_IDENTIFIER.manifest
-    │  │      ├── registered_MAGs.tsv
-    │  │      └── submission.xml
-    │  ├── ena_submission_summary.txt
-    │  └── webin_cli
-    │      ├── MAG_IDENTIFIER_webin-cli.report
-
+└── upload
+    ├── bins
+    │   ├── ena_submission_summary.txt
+    │   ├── genome_uploader
+    │   │   ├── ENA_backup.json
+    │   │   ├── final_table_for_uploader.tsv
+    │   │   ├── genome_samples.xml
+    │   │   ├── manifests
+    │   │   │   └── <bins>.manifest
+    │   │   ├── registered_bins.tsv
+    │   │   └── submission.xml
+    │   └── webin_cli
+    │       └── *_webin-cli.report
+    └── mags
+        ├── ena_submission_summary.txt
+        ├── genome_uploader
+        │   ├── ENA_backup.json
+        │   ├── final_table_for_uploader.tsv
+        │   ├── genome_samples.xml
+        │   ├── manifests
+        │   │   └── <mags>.manifest
+        │   ├── registered_MAGs.tsv
+        │   └── submission.xml
+        └── webin_cli
+            └── *_webin-cli.report
 ```
 
 ### pipeline_info
