@@ -83,25 +83,15 @@ workflow UPLOAD_MAGS {
         .map { _sample_id, status -> status == "success" ? 1 : 0 }
         .sum()
         .combine( WEBIN_CLI_UPLOAD.out.upload_status.count() )
-        .combine(mags_or_bins_flag)  // Add the flag to the channel to use in file naming
-        .map { success_count_value, total_count_value, flag ->
-            [
-                flag,
-                """ENA Submission Summary Report
-                Generated: ${new Date()}
-                Total successful submissions: ${success_count_value}
-                Total submissions processed: ${total_count_value}
-                Status: ${success_count_value == total_count_value ? 'ALL SUBMISSIONS SUCCESSFUL' : 'SOME SUBMISSIONS FAILED'}
-                """
-            ]
+        .map { success_count_value, total_count_value ->
+            """ENA Submission Summary Report
+            Generated: ${new Date()}
+            Total successful submissions: ${success_count_value}
+            Total submissions processed: ${total_count_value}
+            Status: ${success_count_value == total_count_value ? 'ALL SUBMISSIONS SUCCESSFUL' : 'SOME SUBMISSIONS FAILED'}
+            """
         }
-        .collectFile { flag, content ->
-            [
-                "ena_submission_summary.txt",
-                content,
-                [storeDir: "${params.outdir}/upload/${flag}"]
-            ]
-        }
+        .collectFile(name: 'ena_submission_summary.txt', storeDir: "${params.outdir}/upload/${mags_or_bins_flag}/")
 
     emit:
     versions = ch_versions
