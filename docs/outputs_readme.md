@@ -119,7 +119,7 @@ prokaryotes
     └── <study>_mags_ncbi_taxonomy.txt
 ```
 
-### upload [expanded output]
+### upload [optional output]
 ```
 └── upload
     ├── bins
