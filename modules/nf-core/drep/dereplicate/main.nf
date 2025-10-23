@@ -45,7 +45,7 @@ process DREP_DEREPLICATE {
         cp input_fastas/* dereplicated_genomes/
 
         # Create a list of dereplicated genomes
-        ls -1 drep_output/dereplicated_genomes > dereplicated_genomes.txt
+        ls -1 dereplicated_genomes > dereplicated_genomes.txt
         
         # Create minimal output files required by PROPAGATE_TAXONOMY_TO_BINS process
         GENOME_NAME=\$(basename input_fastas/*)
@@ -74,7 +74,7 @@ process DREP_DEREPLICATE {
         cp drep_work/log/logger.log logger.log
 
         # Create a list of dereplicated genomes
-        ls -1 drep_output/dereplicated_genomes > dereplicated_genomes.txt
+        ls -1 dereplicated_genomes > dereplicated_genomes.txt
     fi
 
     cat <<-END_VERSIONS > versions.yml
@@ -84,7 +84,7 @@ process DREP_DEREPLICATE {
 
     cat <<-END_LOGGING > progress.log
     ${meta.id}\t${task.process}
-        genomes_folder: \$(ls genomes_folder | wc -l), dereplicated: \$(ls drep_output/dereplicated_genomes | wc -l)
+        input_fastas: \$(ls input_fastas | wc -l), dereplicated: \$([ -d dereplicated_genomes ] && ls dereplicated_genomes | wc -l || echo "0")
     END_LOGGING
     """
 
