@@ -38,16 +38,23 @@ Binning results for CONCOCT, MetaBAT2 and Maxbin2. MaxBin2 and MetaBAT2 produce 
 ```commandline
 binning
 ├── concoct
-│   ├── <bins>.fa
-│   └── coverage.tsv
+│   └── <run>
+│       ├── bins
+│       │   └── <bin>.fa
+│       └── coverage
+│           └── *.tsv
 ├── maxbin2
-│   ├── <bins>.fa
-│   └── discarded
+│   └── <run>
+│       ├── bins
+│       │   └── <bin>.fa
+│       └── discarded
 └── metabat2
-    ├── <bins>.fa
-    ├── depth.tsv
-    └── discarded
-```
+    └── <run>
+        ├── bins
+        │   └── <bin>.fa
+        ├── depth
+        │   └── *.txt.gz
+        └── discarded
 
 ### eukaryotes 
 ```commandline
