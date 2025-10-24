@@ -11,14 +11,13 @@ process MAXBIN2 {
     tuple val(meta), path(contigs), path(reads), path(abund)
 
     output:
-    tuple val(meta), path("maxbin_output")     , emit: fastas_dir
-    tuple val(meta), path("maxbin_output/*.fa"), emit: fastas, optional: true
-    tuple val(meta), path("*.summary")         , emit: summary, optional: true
-    tuple val(meta), path("*.log.gz")          , emit: log
-    tuple val(meta), path("*.marker.gz")       , emit: marker_counts, optional: true
-    tuple val(meta), path("*.noclass.gz")      , emit: unbinned_fasta, optional: true
-    tuple val(meta), path("*.tooshort.gz")     , emit: tooshort_fasta, optional: true
-    path "versions.yml"                        , emit: versions
+    tuple val(meta), path("maxbin_output"), emit: fastas_dir
+    tuple val(meta), path("*.summary")    , emit: summary, optional: true
+    tuple val(meta), path("*.log.gz")     , emit: log
+    tuple val(meta), path("*.marker.gz")  , emit: marker_counts, optional: true
+    tuple val(meta), path("*.noclass.gz") , emit: unbinned_fasta, optional: true
+    tuple val(meta), path("*.tooshort.gz"), emit: tooshort_fasta, optional: true
+    path "versions.yml"                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -88,7 +87,7 @@ process MAXBIN2 {
     else
         for i in maxbin_output/*; do
             number=\$(echo "\$i" | cut -d '.' -f 2 | sed 's/^0*//')
-            new_name="maxbin_output/${meta.id}_\${number}.fa"
+            new_name="maxbin_output/${meta.id}_maxbin2_\${number}.fa"
             echo "\${i} to \${new_name}"
             mv \${i} \${new_name}
         done

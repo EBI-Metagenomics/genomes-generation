@@ -11,16 +11,15 @@ process CONCOCT_EXTRACTFASTABINS {
     tuple val(meta), path(original_fasta), path(csv)
 
     output:
-    tuple val(meta), path("${meta.id}_concoct_bins")     , emit: fastas_dir, optional: true
-    tuple val(meta), path("${meta.id}_concoct_bins/*.fa"), emit: fastas, optional: true
-    path "versions.yml"                                  , emit: versions
+    tuple val(meta), path("${meta.id}_concoct_bins"), emit: fastas_dir, optional: true
+    path "versions.yml"                             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
+    prefix   = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p ${prefix}
 
@@ -35,9 +34,9 @@ process CONCOCT_EXTRACTFASTABINS {
         echo "Result folder is empty"
     else
         ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
-        ## renames 1.fa to accession_1.fa
+        ## renames 1.fa to accession_concoct_1.fa
         for i in ${prefix}/*.fa; do
-            mv \${i} \${i/\\///${prefix}_}
+            mv \${i} \${i/\\///${prefix}_concoct_}
         done
 
         ## Create final output folder
