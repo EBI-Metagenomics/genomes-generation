@@ -60,10 +60,10 @@ binning
 ```commandline
 eukatyotes
 ├── bins                                                   [exp]
-│   └── <bins>.fa.gz
+│   └── <bin>.fa.gz
 ├── coverage
 │   ├── <mag>_coverage.txt
-│   └── <study>_contigs2bins.txt
+│   └── <project>_contigs2bins.txt
 ├── drep
 │   ├── per-run                                            [exp]
 │   │   └── <run>
@@ -72,9 +72,9 @@ eukatyotes
 │   │       └── dereplicated_genomes.tsv
 │   ├── data_tables                                        [exp] 
 │   │   └── *.csv
-│   └── <study>_dereplicated_genomes.tsv
+│   └── <project>_dereplicated_genomes.tsv
 ├── mags
-│   └── <mags>.fa.gz
+│   └── <mag>.fa.gz
 ├── refinement                                             [exp] 
 │   ├── eukcc
 │   │   └── <run>
@@ -83,29 +83,29 @@ eukatyotes
 │   └── binlinks
 │       └── <run>.links.csv
 ├── stats
-│   ├── <study>_eukcc_before_filter_and_dedup.csv
-│   ├── <study>_eukcc_bins_quality_filtered.csv
-│   └── <study>_eukcc_busco_bins_quality_filtered.csv      [exp] 
+│   ├── <project>_eukcc_before_filter_and_dedup.csv
+│   ├── <project>_eukcc_bins_quality_filtered.csv
+│   └── <project>_eukcc_busco_bins_quality_filtered.csv      [exp] 
 └── taxonomy
-    ├── <study>_bins_ncbi_taxonomy.txt
-    ├── <study>_mags_bat_output.txt
-    └── <study>_mags_ncbi_taxonomy.txt
+    ├── <project>_bins_ncbi_taxonomy.txt
+    ├── <project>_mags_bat_output.txt
+    └── <project>_mags_ncbi_taxonomy.txt
 ```
 
 ### prokaryotes 
 ```commandline
 prokaryotes
 ├── bins                                                   [exp]
-│   └── <bins>.fa.gz
+│   └── <bin>.fa.gz
 ├── coverage
 │   ├── <mag>_coverage.txt
-│   └── <study>_contigs2bins.txt
+│   └── <project>_contigs2bins.txt
 ├── drep
 │   ├── data_tables                                        [exp] 
 │   │   └── *.csv
-│   └── <study>_dereplicated_genomes.tsv
+│   └── <project>_dereplicated_genomes.tsv
 ├── mags
-│   └── <mags>.fa.gz
+│   └── <mag>.fa.gz
 ├── refinement                                             [exp] 
 │   └── binette
 │       ├── <run>_final_bins_quality_reports.tsv
@@ -117,13 +117,13 @@ prokaryotes
 │       ├── <bin>_rRNAs.out
 │       └── <bin>_tRNA_20aa.out
 ├── stats
-│   ├── <study>_checkm2_all_bins.csv
-│   ├── <study>_checkm2_bins_quality_filtered.tsv
-│   └── <study>_gunc_contamination_report.txt
+│   ├── <project>_checkm2_all_bins.csv
+│   ├── <project>_checkm2_bins_quality_filtered.tsv
+│   └── <project>_gunc_contamination_report.txt
 └── taxonomy
-    ├── <study>_bins_ncbi_taxonomy.txt
-    ├── <study>_gtdbtk_results.tar.gz
-    └── <study>_mags_ncbi_taxonomy.txt
+    ├── <project>_bins_ncbi_taxonomy.txt
+    ├── <project>_gtdbtk_results.tar.gz
+    └── <project>_mags_ncbi_taxonomy.txt
 ```
 
 ### upload [optional output]
@@ -136,7 +136,7 @@ prokaryotes
     │   │   ├── final_table_for_uploader.tsv
     │   │   ├── genome_samples.xml
     │   │   ├── manifests
-    │   │   │   └── <bins>.manifest
+    │   │   │   └── <bin>.manifest
     │   │   ├── registered_bins.tsv
     │   │   └── submission.xml
     │   └── webin_cli
@@ -148,7 +148,7 @@ prokaryotes
         │   ├── final_table_for_uploader.tsv
         │   ├── genome_samples.xml
         │   ├── manifests
-        │   │   └── <mags>.manifest
+        │   │   └── <mag>.manifest
         │   ├── registered_MAGs.tsv
         │   └── submission.xml
         └── webin_cli
