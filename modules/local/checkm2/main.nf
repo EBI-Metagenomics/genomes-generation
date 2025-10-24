@@ -41,11 +41,6 @@ process CHECKM2 {
 
     export BINS=\$(restructure_input.py -i bins -o bins_folder)
 
-    cat <<-END_LOGGING > progress.log
-    ${meta.id}\t${task.process}
-        bins_folder: \$(ls bins_folder | wc -l)
-    END_LOGGING
-
     echo "Check the number of bins"
     if [ \$BINS -eq 0 ]; then
         echo "Bins folder is empty"
@@ -103,7 +98,7 @@ process CHECKM2 {
     done
 
     cat <<-END_LOGGING >> progress.log
-        filtered: \$(ls ${prefix}_filtered_genomes | wc -l)
+        bins_folder: \$(ls bins_folder | wc -l), filtered: \$(ls ${prefix}_filtered_genomes | wc -l)
     END_LOGGING
     """
 }

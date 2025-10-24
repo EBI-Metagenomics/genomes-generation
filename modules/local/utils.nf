@@ -98,7 +98,7 @@ process FILTER_QUALITY {
 
     cat <<-END_LOGGING > progress.log
     ${meta.id}\t${task.process}
-        input_bins: \$(ls input_bins | wc -l)
+        input_bins: \$(( \$(ls input_bins | wc -l) + \$(ls output_genomes | wc -l) )), filtered_bins: \$(ls output_genomes | wc -l)
     END_LOGGING
     """
 }
