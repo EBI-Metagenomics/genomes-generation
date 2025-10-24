@@ -37,7 +37,8 @@ workflow UPLOAD_MAGS {
         coverage_proks,
         rna,
         taxonomy_euks,
-        taxonomy_proks
+        taxonomy_proks,
+        mags_or_bins_flag
     )
     ch_versions = ch_versions.mix( PREPARE_TSV_FOR_UPLOADER.out.versions )
 
@@ -53,12 +54,14 @@ workflow UPLOAD_MAGS {
 
     /* --   combine MAG with corresponding manifest -- */
     mags_ch = mags.flatten().map { bin ->
+        // remove extension from file name
         def prefix = bin.name.replaceAll(/\.fa\.gz$/, '')
         [prefix, bin]
     }
     manifests_ch = CREATE_MANIFESTS_FOR_UPLOAD.out.manifests.flatten()
         .map { manifest ->
-        def prefix = manifest.name.replaceAll(/\.manifest$/, '')
+        // remove timestamp (added if test_upload = true) and extension from manifest name
+        def prefix = manifest.name.replaceAll(/(_\d+)?\.manifest$/, '')
         [prefix, manifest]
         }
     combined_ch = mags_ch.join(manifests_ch)
