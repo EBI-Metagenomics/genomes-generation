@@ -98,6 +98,7 @@ process CHECKM2 {
     done
 
     cat <<-END_LOGGING >> progress.log
+    ${meta.id}\t${task.process}
         bins_folder: \$(ls bins_folder | wc -l), filtered: \$(ls ${prefix}_filtered_genomes | wc -l)
     END_LOGGING
     """
