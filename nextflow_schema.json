@@ -58,10 +58,7 @@
         {
           "required": ["samplesheet"],
           "not": {
-            "anyOf": [
-              {"required": ["ena_assembly_study_accession"]},
-              {"required": ["ena_raw_reads_study_accession"]}
-            ]
+            "required": ["ena_raw_reads_study_accession"]
           }
         }
       ]
@@ -174,11 +171,11 @@
         {
           "properties": {
             "metagenome": { "type": "string" },
-            "biomes": { "type": "boolean" },
+            "biomes": { "type": "string" },
             "centre_name": { "type": "string" },
             "upload_tpa": { "type": "boolean" },
-            "upload_mags": { "const": true },
-            "upload_bins": { "const": false }
+            "upload_mags": { "type": "boolean" },
+            "upload_bins": { "type": "boolean" }
           }
         },
         {

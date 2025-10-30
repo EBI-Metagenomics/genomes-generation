@@ -86,7 +86,7 @@ workflow BINNING {
     )
     ch_versions = ch_versions.mix( METABAT2_METABAT2.out.versions )
 
-    metabat_output = METABAT2_METABAT2.out.fasta
+    metabat_output = METABAT2_METABAT2.out.fastas_dir
 
     /* 
     * --- binning with MAXBIN2 ---
@@ -110,7 +110,7 @@ workflow BINNING {
         )  // output can be empty folder
         ch_versions = ch_versions.mix( MAXBIN2.out.versions )
 
-        maxbin_output = MAXBIN2.out.binned_fastas
+        maxbin_output = MAXBIN2.out.fastas_dir
     }
     
     emit:

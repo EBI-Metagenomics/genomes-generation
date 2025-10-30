@@ -21,12 +21,12 @@ The pipeline performs the following tasks:
 
 Afterward, the pipeline:
 
-- Runs a decontamination step using BWA to remove any host reads. By default, it uses the [hg39.fna](https://example.com/hg39.fna).
+- Runs a decontamination step using BWA to remove any host reads. By default, it uses the [hg38 human genome reference](https://ftp.ebi.ac.uk/pub/databases/metagenomics/pipelines/references/human_GCF_000001405.40/).
 - Bins the contigs using [Concoct](https://github.com/BinPro/CONCOCT), [MetaBAT2](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6662567/) and [MaxBin2](https://flowcraft.readthedocs.io/en/latest/user/components/maxbin2.html).
-- Refines the bins using the [metaWRAP](https://github.com/bxlab/metaWRAP) bin_refinement compatible subworkflow [supported separately](https://github.com/EBI-Metagenomics/mgbinrefinder).
 
 For prokaryotes:
 
+- Refines the bins using [Binette](https://github.com/genotoul-bioinfo/Binette).
 - Conducts bin quality control with [CAT](https://github.com/dutilh/CAT), [GUNC](https://github.com/CK7/GUNC), and [CheckM](https://github.com/Ecogenomics/CheckM).
 - Performs dereplication with [dRep](https://github.com/MrOlm/drep).
 - Calculates coverage using MetaBAT2 calculated depths.
@@ -59,12 +59,12 @@ Don't forget to add this configuration to the main `.nextflow.config`.
 
 - [BUSCO](https://busco.ezlab.org/)
 - [CAT](https://github.com/dutilh/CAT)
-- [CheckM](https://github.com/Ecogenomics/CheckM)
+- [CheckM2](https://github.com/chklovski/CheckM2)
 - [EukCC](https://github.com/EBI-Metagenomics/EukCC)
 - [GUNC](https://github.com/grp-bork/gunc)
 - [GTDB-Tk](https://github.com/Ecogenomics/GTDBTk) + ar53_metadata_r*.tsv, bac120_metadata_r*.tsv from [here](https://data.ace.uq.edu.au/public/gtdb/data/releases/)
 - [Rfam](https://ftp.ebi.ac.uk/pub/databases/metagenomics/genomes-pipeline/rfam_14.9/rfams_cms/)
-- The reference genome of your choice for decontamination. Example, human genome [hg38](https://ftp.ebi.ac.uk/pub/databases/metagenomics/pipeline-5.0/ref-dbs/hg38/)
+- The reference genome of your choice for decontamination. Example, human genome [hg38](https://ftp.ebi.ac.uk/pub/databases/metagenomics/pipelines/references/human_GCF_000001405.40/)
 
 ## Pipeline inputs
 

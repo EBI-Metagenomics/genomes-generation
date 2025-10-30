@@ -41,6 +41,6 @@ workflow CONCOCT_SUBWF {
 
     emit:
 
-    bins     = CONCOCT_EXTRACTFASTABINS.out.fasta       // channel: [ val(meta), [ fasta ] ]
+    bins     = CONCOCT_EXTRACTFASTABINS.out.fastas_dir       // channel: [ val(meta), [ fasta ] ]
     versions = ch_versions                                         // channel: [ versions.yml ]
 }

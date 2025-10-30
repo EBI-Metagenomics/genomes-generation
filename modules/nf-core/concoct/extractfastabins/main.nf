@@ -1,5 +1,4 @@
-process CONCOCT_EXTRACTFASTABINS 
-{
+process CONCOCT_EXTRACTFASTABINS {
     tag "$meta.id"
     label 'process_medium'
 
@@ -12,17 +11,17 @@ process CONCOCT_EXTRACTFASTABINS
     tuple val(meta), path(original_fasta), path(csv)
 
     output:
-    tuple val(meta), path("${meta.id}_concoct_bins"), emit: fasta
+    tuple val(meta), path("${meta.id}_concoct_bins"), emit: fastas_dir, optional: true
     path "versions.yml"                             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def args = task.ext.args ?: ''
+    prefix   = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p ${prefix} ${meta.id}_concoct_bins
+    mkdir -p ${prefix}
 
     extract_fasta_bins.py \\
         $args \\
@@ -35,17 +34,18 @@ process CONCOCT_EXTRACTFASTABINS
         echo "Result folder is empty"
     else
         ## Add prefix to each file to disambiguate one sample's 1.fa, 2.fa from sample2
-        ## renames 1.fa to accession_bin.1.fa
+        ## renames 1.fa to accession_concoct_1.fa
         for i in ${prefix}/*.fa; do
-            mv \${i} \${i/\\///${prefix}_bin.}
+            mv \${i} \${i/\\///${prefix}_concoct_}
         done
 
+        ## Create final output folder
+        ## This helps to avoid output folder being empty
+        mkdir -p ${meta.id}_concoct_bins
+
+        ## Move files to the output folder
         for i in ${prefix}/*.fa; do
-            original_name=\$(basename \${i})
-            original_name_without_extension=\${original_name%.*}
-            name_with_binner=\${original_name_without_extension//bin./concoct_}
-            new_name="${meta.id}_concoct_bins/\${name_with_binner}.fa"
-            mv \${i} \${new_name}
+            mv \${i} ${meta.id}_concoct_bins/
         done
     fi
 
