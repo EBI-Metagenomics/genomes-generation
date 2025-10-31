@@ -33,12 +33,13 @@ def rename(args):
     mapping between new and old files in tsv
     """
     print("Renaming " + args.input)
-    with fileinput.hook_compressed(args.input, "r", encoding="utf-8") as fasta_in:
+    with fileinput.hook_compressed(args.input, "r") as fasta_in:
         with open(args.output, "w") as fasta_out, open(args.map, "w") as map_tsv:
             count = 0
             tsv_map = csv.writer(map_tsv, delimiter="\t")
             tsv_map.writerow(["original", "temporary", "short"])
             for line in fasta_in:
+                line = str(line)
                 if line.startswith(">"):
                     count += 1
                     fasta_out.write(f">{args.prefix}{count}\n")

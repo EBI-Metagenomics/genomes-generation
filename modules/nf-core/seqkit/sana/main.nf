@@ -20,7 +20,7 @@ process SEQKIT_SANA {
 
     script:
     def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: reads.getSimpleName()
     extension = reads.getName() - reads.getSimpleName()
     """
     seqkit sana \\

@@ -18,7 +18,7 @@ process RENAME_CONTIGS {
 
     script:
     """
-    rename_contigs \\
+    rename_contigs.py \\
        --input ${contigs} \\
        --output ${meta.id}_renamed.fasta \\
        --prefix ${meta.assembly_accession}

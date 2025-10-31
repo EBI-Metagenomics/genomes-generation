@@ -51,20 +51,35 @@ workflow INPUT_QC {
         )
         ch_versions = ch_versions.mix(RENAME_CONTIGS.out.versions)
 
+        reads
+            .flatMap { meta, reads_files ->
+                // Check if single-end or paired-end based on the number of files
+                if (reads_files.size() == 1) {
+                    // Single-end: return one tuple for SEQKIT_SANA
+                    return [[meta, reads_files[0]]]
+                } else {
+                    // Paired-end: return two tuples for SEQKIT_SANA (one for each read)
+                    return [
+                        [meta, reads_files[0]],
+                        [meta, reads_files[1]]
+                    ]
+                }
+            }
+            .set { reads_for_seqkit_sana }
+
+        // Run SEQKIT_SANA on individual reads
+        SEQKIT_SANA(reads_for_seqkit_sana)
+        // Run SEQKIT_PAIR on grouped PE results
+        SEQKIT_PAIR(SEQKIT_SANA.out.reads.groupTuple(by:0))
+
         /*
         * --- CHECK READS with SEQKIT
         *  input: tuple(meta, [reads]])
         *  output: tuple(meta, [modified_pe_reads]/modified_se_reads])
         */
-        SEQKIT_SANA(
-            reads
-        )
+
         ch_versions = ch_versions.mix(SEQKIT_SANA.out.versions)
 
-        // TODO do not need for SE
-        SEQKIT_PAIR(
-            SEQKIT_SANA.out.reads
-        )
         ch_versions = ch_versions.mix(SEQKIT_PAIR.out.versions)
 
         /* --- fastqc_raw - fastp - fastqc_trim */
