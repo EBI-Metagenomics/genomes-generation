@@ -66,6 +66,7 @@ By default, nextflow should be able to execute pipeline using direct links to fi
 ### ENA upload
 You will need to add the following arguments to your `genomes-generation` command.
 
+
 #### Metagenome
 - `--metagenome ` \
 Manually choose the most appropriate metagenome type from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree. \
@@ -84,3 +85,4 @@ For example, `marine sediments,subtropical gyre,sinking marine particle`
 - `--test_upload`: use **test** server for upload, not live mode
 
 A further description of some of these arguments is described [here](https://github.com/EBI-Metagenomics/genome_uploader).
+

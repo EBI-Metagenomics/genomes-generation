@@ -12,18 +12,24 @@ process GTDBTK_TO_NCBI_TAXONOMY {
     path(gtdbtk_refdata)
 
     output:
-    path "ncbi_taxonomy.txt", emit: ncbi_taxonomy
-    path "versions.yml"         , emit: versions
+    path "*mags_ncbi_taxonomy.txt", emit: ncbi_taxonomy
+    path "versions.yml"           , emit: versions
 
 
     script:
+    def prefix = "${task.ext.prefix}_" ?: ""
+
     """
     export GTDBTK_DATA_PATH=/opt/gtdbtk_refdata
 
     echo "Create NCBI taxonomy"
     gtdb_to_ncbi_majority_vote.py \
         --gtdbtk_output_dir ${gtdbtk_results} \
+<<<<<<< HEAD
         --output_file ncbi_taxonomy.txt \
+=======
+        --output_file ${prefix}mags_ncbi_taxonomy.txt \
+>>>>>>> feature/allow-bins-input
         --ar53_metadata_file ${gtdbtk_refdata}/ar53_metadata_r???.tsv \
         --bac120_metadata_file ${gtdbtk_refdata}/bac120_metadata_r???.tsv
 

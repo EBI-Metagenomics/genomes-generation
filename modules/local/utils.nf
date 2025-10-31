@@ -23,126 +23,6 @@ process GUNZIP {
     """
 }
 
-/*
-    ~~~~~~~~~~~~~~~~~~
-     compress
-    ~~~~~~~~~~~~~~~~~~
-*/
-process GZIP {
-
-    label 'process_low'
-    stageInMode 'copy'
-    tag "${file_to_compress}"
-
-    input:
-    file(file_to_compress)
-
-    output:
-    path("*.gz"), emit: compressed
-    path "versions.yml"                       , emit: versions
-
-    script:
-    """
-    pigz ${file_to_compress}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        pigz: \$(pigz --version 2>&1 | sed 's/pigz //g')
-    END_VERSIONS
-    """
-}
-
-/*
- * clean reads, change . to _ from contigs
-*/
-process MODIFY_CONTIGS {
-
-    label 'process_low'
-    tag "${meta.id}"
-
-    input:
-    tuple val(meta), path(contigs)
-
-    output:
-    tuple val(meta), path("${meta.id}_underscore.fasta.gz"), emit: underscore_contigs
-
-    script:
-    """
-    zcat ${contigs} | sed 's/\\./\\_/' | gzip > ${meta.id}_underscore.fasta.gz
-    """
-}
-
-process ERR_TO_ERZ {
-
-    label 'process_medium'
-    tag "${meta.id}"
-
-    container 'quay.io/biocontainers/seqkit:2.7.0--h9ee0642_0'
-
-    input:
-    tuple val(meta), path(reads)
-
-    output:
-    tuple val(meta), path("*sanitized*.*.gz"), emit: modified_reads
-    path "versions.yml"                       , emit: versions
-
-    script:
-    input_ch = reads.collect()
-    if (meta.single_end ) {
-        """
-        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_sanitized.fastq.gz
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            seqkit: \$(seqkit version 2>&1 | sed 's/seqkit //g')
-        END_VERSIONS
-        """
-    }
-    else {
-        """
-        echo "read1"
-        seqkit sana ${input_ch[0]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_sanitized_1.fastq.gz
-
-        echo "read2"
-        seqkit sana ${input_ch[1]} | seqkit replace -p ${meta.id} -r ${meta.erz} -o ${meta.id}_sanitized_2.fastq.gz
-
-        echo "sync read1 and read2"
-        seqkit pair -1 ${meta.id}_sanitized_1.fastq.gz -2 ${meta.id}_sanitized_2.fastq.gz -O result
-
-        mv result/${meta.id}_sanitized_1.fastq.gz ${meta.id}_sanitized_1.fastq.gz
-        mv result/${meta.id}_sanitized_2.fastq.gz ${meta.id}_sanitized_2.fastq.gz
-        rm -rf result
-
-        echo "Done"
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            seqkit: \$(seqkit version 2>&1 | sed 's/seqkit //g')
-        END_VERSIONS
-        """
-    }
-}
-
-/*
- * clean reads, change . to _ from contigs
-*/
-process CHANGE_UNDERSCORE_TO_DOT {
-
-    label 'process_low'
-    tag "${contigs}"
-
-    input:
-    path(contigs)
-
-    output:
-    path("${contigs}"), emit: return_files
-
-    script:
-    """
-    sed -i 's/\\_/\\./' ${contigs}
-    """
-}
-
 
 process FINALIZE_LOGGING {
 
@@ -161,5 +41,64 @@ process FINALIZE_LOGGING {
     script:
     """
     logging_stats.py -i ${logging_file} -o ${output}
+    """
+}
+
+
+process FILTER_QUALITY {
+    tag "${meta.id}"
+
+    label 'process_light'
+
+    input:
+    tuple val(meta), path(quality_file), path(bins)
+    val delimiter
+
+    output:
+    tuple val(meta), path("output_genomes/*"), path("quality_file.csv"), emit: qs50_filtered_genomes, optional: true
+    path "progress.log"                                                , emit: progress_log
+
+    script:
+    """
+    mkdir -p output_genomes input_bins
+    touch quality_file.csv
+
+    # Handle both directory and file list inputs
+    if [ -d "${bins}" ]; then
+        echo "Input is a directory, copying contents..."
+        cp -r ${bins}/* input_bins/ || echo "Directory is empty or no files to copy"
+    else
+        echo "Input is file(s), staging them..."
+        # Check if bins is a single file or multiple files
+        for bin_file in ${bins}; do
+            if [ -f "\$bin_file" ]; then
+                cp "\$bin_file" input_bins/
+            fi
+        done
+    fi
+
+    echo "Prepare drep quality"
+    grep -v "completeness" ${quality_file} |\
+    awk -F "${delimiter}" '{{if(\$2>=50 && \$2<=100 && \$3>=0 && \$3<=5){{print \$0}}}}' |\
+    sort -k 2,3 -n | cut -d "${delimiter}" -f1 > filtered_genomes.txt || true
+
+    echo "bins count"
+    export BINS=\$(cat filtered_genomes.txt | wc -l)
+    echo "\$BINS"
+    if [ \$BINS -lt 2 ];
+    then
+        echo "No genomes"
+    else
+        for i in \$(ls input_bins | grep -w -f filtered_genomes.txt); do
+            mv input_bins/\${i} output_genomes; done
+
+        echo "genome,completeness,contamination" > quality_file.csv
+        grep -w -f filtered_genomes.txt ${quality_file} | cut -d "${delimiter}" -f1-3 | tr '\\t' ',' >> quality_file.csv
+    fi
+
+    cat <<-END_LOGGING > progress.log
+    ${meta.id}\t${task.process}
+        input_bins: \$(( \$(ls input_bins | wc -l) + \$(ls output_genomes | wc -l) )), filtered_bins: \$(ls output_genomes | wc -l)
+    END_LOGGING
     """
 }

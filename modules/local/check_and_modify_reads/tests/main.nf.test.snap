@@ -1,0 +1,43 @@
+{
+    "Should run without failures": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "SRR3960572",
+                            "assembly_accession": "ERZ505209"
+                        },
+                        [
+                            "SRR3960572_sanitized_1.fastq.gz:md5,7f451611c96c9f7a6f3d02fd738fcba3",
+                            "SRR3960572_sanitized_2.fastq.gz:md5,f32e13bbb68de431cbb22167db434bdf"
+                        ]
+                    ]
+                ],
+                "1": [
+                    "versions.yml:md5,ba8fc5e4d803f79d878a30606ac3a8a8"
+                ],
+                "modified_reads": [
+                    [
+                        {
+                            "id": "SRR3960572",
+                            "assembly_accession": "ERZ505209"
+                        },
+                        [
+                            "SRR3960572_sanitized_1.fastq.gz:md5,7f451611c96c9f7a6f3d02fd738fcba3",
+                            "SRR3960572_sanitized_2.fastq.gz:md5,f32e13bbb68de431cbb22167db434bdf"
+                        ]
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,ba8fc5e4d803f79d878a30606ac3a8a8"
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.01.0"
+        },
+        "timestamp": "2025-06-11T12:59:13.721499"
+    }
+}

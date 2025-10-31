@@ -202,7 +202,7 @@ def main():
             for input_file in args.busco_files:
                 logging.info(f"Processing {input_file}")
                 stats = busco_stats(input_file)
-                prefix = input_file.replace('.short_summary.specific.txt', '') + '.fa'
+                prefix = input_file.replace('short_summary.specific_', '').replace('.txt', '.fa')
                 busco_data[prefix] = stats
                 if prefix in genomes_list:
                     file_out.write(",".join([prefix, stats['BUSCO_completeness'], stats['BUSCO_contamination'],

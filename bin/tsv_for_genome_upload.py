@@ -10,11 +10,13 @@ import logging
 LIMIT_RRNA = 80
 LIMIT_TRNA = 18
 
-DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v1.2.0"
+DEFAULT_BINNING_SOFTWARE = "MGnify-genomes-generation-pipeline_v2.0.0"
+
 DEFAULT_BINNING_SOFTWARE_PARAMS = "default"
 
-EUK_PATH = os.path.join("genomes_drep", "eukaryotes", "genomes")
-PROK_PATH = os.path.join("genomes_drep", "prokaryotes", "genomes")
+EUK_SUBDIR = "eukaryotes"
+PROK_SUBDIR = "prokaryotes"
+
 
 STATS_SOFTWARE = {
     "eukaryotes": "EukCC_v2.1.0",
@@ -176,6 +178,8 @@ def parse_args():
                                                                              "(biome,feature,material)")
     parser.add_argument('--absolute-path', type=str, required=True, help="Absolute path to result folder of pipeline")
 
+    parser.add_argument('--genome-type', required=True, choices=["mags", "bins"], help='Either "mags" or "bins". '
+                        'Defines subdir that will be used to specify paths of fasta files in the table for uploader.')
     args = parser.parse_args()
 
     if not (args.mags_proks or args.mags_euks):
@@ -231,6 +235,7 @@ class MAGupload:
         self.tax_proks = args.tax_proks if args.tax_proks else None
         self.absolute_path = args.absolute_path
         self.output_file = args.output
+        self.genome_type = args.genome_type
 
     def process_mags(self):
         # genomes
@@ -289,11 +294,11 @@ class MAGupload:
         if self.euk_mag:
             genomes.extend([os.path.basename(i).replace('.gz', '') for i in self.euk_mag])
             stats_software.extend([STATS_SOFTWARE["eukaryotes"] for _ in range(len(self.euk_mag))])
-            paths.extend([os.path.join(self.absolute_path, EUK_PATH, os.path.basename(i)) for i in self.euk_mag])
+            paths.extend([os.path.join(self.absolute_path, EUK_SUBDIR, self.genome_type, os.path.basename(i)) for i in self.euk_mag])
         if self.prok_mag:
             genomes.extend([os.path.basename(i).replace('.gz', '') for i in self.prok_mag])
             stats_software.extend([STATS_SOFTWARE["prokaryotes"] for _ in range(len(self.prok_mag))])
-            paths.extend([os.path.join(self.absolute_path, PROK_PATH, os.path.basename(i)) for i in self.prok_mag])
+            paths.extend([os.path.join(self.absolute_path, PROK_SUBDIR, self.genome_type, os.path.basename(i)) for i in self.prok_mag])
         return genomes, stats_software, paths
 
     def get_assembly_software(self, genomes):

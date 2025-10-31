@@ -12,15 +12,17 @@ process COVERAGE_RECYCLER {
     path metabat_depth
 
     output:
-    tuple val(meta), path("coverage/*_coverage/*"),                 emit: coverage_files
-    tuple val(meta), path("coverage/*_contigs2bins.txt"),           emit: coverage_contigs2bins
-    tuple val(meta), path("coverage/*_coverage/*_MAGcoverage.txt"), emit: mag_coverage
-    path "versions.yml",                                            emit: versions
+    tuple val(meta), path("coverage/*_coverage/*"),              emit: coverage_files
+    tuple val(meta), path("coverage/*_contigs2bins.txt"),        emit: coverage_contigs2bins
+    tuple val(meta), path("coverage/*_coverage/*_coverage.txt"), emit: mag_coverage
+    path "versions.yml",                                         emit: versions
 
     script:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+
     """
     zcat ${metabat_depth} > depth.txt
-    cov_recycler.py -g genomes_dir -m depth.txt -n ${meta.id}
+    cov_recycler.py -g genomes_dir -m depth.txt -n ${prefix}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -35,8 +35,28 @@
             "assembler": {
               "type": "string",
               "default": null,
-              "description": "Tool that was used to perform assembly in format: Tool_vVersion (i.e. MetaSpades_v4.0.0)",
+              "description": "Tool that was used to perform assembly in format: Tool_vVersion",
               "meta": ["assembler"]
+            },
+            "concoct_bins": {
+              "type": "string",
+              "default": null,
+              "description": "Folder of pre-generated concoct bins"
+            },
+            "metabat_bins": {
+              "type": "string",
+              "default": null,
+              "description": "Folder of pre-generated metabat bins"
+            },
+            "maxbins_bins": {
+              "type": "string",
+              "default": null,
+              "description": "Folder of pre-generated metabat bins"
+            },
+            "jgi_depth": {
+              "type": "string",
+              "default": null,
+              "description": "coverage depth calculated with jgi tool"
             }
         },
         "required": ["id", "fastq_1", "assembly_accession", "assembly_fasta"]

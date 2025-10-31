@@ -1,0 +1,39 @@
+name: CHECK_AND_MODIFY_READS
+description: "Apply sanity check for raw-reads and change run_accession to assembly_accession"
+keywords:
+  - seqkit_sana
+  - change_reads
+tools:
+  - seqkit:
+      description: "A cross-platform and ultrafast toolkit for FASTA/Q file manipulation"
+      homepage: "https://bioinf.shenwei.me/seqkit/"
+      documentation: "https://bioinf.shenwei.me/seqkit/"
+
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'run_accession', assembly_accession:'assembly_accession' ]
+  - reads:
+      type: file
+      description: Input reads 
+      pattern: "*.{fastq,fastq.gz,fq,fq.gz}"
+
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'run_accession', assembly_accession:'assembly_accession' ]
+  - modified_reads:
+      type: file
+      description: Sanitised reads
+      pattern: "*sanitized*.{fastq,fastq.gz,fq,fq.gz}"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+
+authors:
+  - "@KateSakharova"
