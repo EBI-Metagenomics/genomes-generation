@@ -112,7 +112,7 @@ workflow GGP {
     * skip that step with --skip_decontamination
     */
     reference_genome         = file(params.ref_genome, checkIfExists: true)
-    reference_genome_index   = file("${reference_genome.parent}/*.fa*.*")
+    reference_genome_index   = file("${reference_genome.parent}/bwa-mem2/*")
     DECONTAMINATION(
         QC_AND_MERGE_READS.out.reads,
         reference_genome,
