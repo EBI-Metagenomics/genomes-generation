@@ -25,11 +25,7 @@ process GTDBTK_TO_NCBI_TAXONOMY {
     echo "Create NCBI taxonomy"
     gtdb_to_ncbi_majority_vote.py \
         --gtdbtk_output_dir ${gtdbtk_results} \
-<<<<<<< HEAD
-        --output_file ncbi_taxonomy.txt \
-=======
         --output_file ${prefix}mags_ncbi_taxonomy.txt \
->>>>>>> feature/allow-bins-input
         --ar53_metadata_file ${gtdbtk_refdata}/ar53_metadata_r???.tsv \
         --bac120_metadata_file ${gtdbtk_refdata}/bac120_metadata_r???.tsv
 
