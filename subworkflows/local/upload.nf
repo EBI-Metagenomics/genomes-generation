@@ -61,7 +61,7 @@ workflow UPLOAD_MAGS {
     manifests_ch = CREATE_MANIFESTS_FOR_UPLOAD.out.manifests.flatten()
         .map { manifest ->
         // remove timestamp (added if test_upload = true) and extension from manifest name
-        def prefix = manifest.name.replaceAll(/(_\d+)?\.manifest$/, '')
+        def prefix = manifest.name.replaceAll(/(_\d+)(?:_.*)?\.manifest$/, '$1')
         [prefix, manifest]
         }
     combined_ch = mags_ch.join(manifests_ch)

@@ -250,8 +250,8 @@ workflow GGP {
                 coverage_proks.ifEmpty([]),
                 [],   // empty input, because we skip rRNA prediction for bins
                 taxonomy_euks.ifEmpty([]),
-                taxonomy_proks.ifEmpty([])
-                , "bins")  // mags_or_bins_flag = "bins"
+                taxonomy_proks.ifEmpty([]),
+                "bins")  // mags_or_bins_flag = "bins"
         ch_versions = ch_versions.mix( UPLOAD_BINS.out.versions )
     }
 
