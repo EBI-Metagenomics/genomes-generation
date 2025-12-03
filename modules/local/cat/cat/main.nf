@@ -25,7 +25,8 @@ process CAT {
     -t ${taxonomy_db} \
     --path_to_diamond ${cat_diamond_db} \
     --tmpdir cat_tmp \
-    --out_prefix ${meta.id}
+    --out_prefix ${meta.id} \
+    --force
 
     echo "[MAG clean-up] Adding taxonomy names"
     CAT add_names \
