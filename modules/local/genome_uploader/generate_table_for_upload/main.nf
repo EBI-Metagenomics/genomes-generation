@@ -17,6 +17,7 @@ process PREPARE_TSV_FOR_UPLOADER {
     path rna
     path taxonomy_euks
     path taxonomy_proks
+    val genome_type
 
     output:
     path "*.tsv"                   , optional: true, emit: tsv_for_uploader
@@ -34,21 +35,24 @@ process PREPARE_TSV_FOR_UPLOADER {
     def args_rna = rna ? "--rna-outs ${rna}": "" ;
     def args_tax_euks = taxonomy_euks ? "--tax-euks ${taxonomy_euks}": "" ;
     def args_tax_proks = taxonomy_proks ? "--tax-proks ${taxonomy_proks}": "" ;
+    def absolute_outdir = file(params.outdir).toRealPath()
     """
-    tsv_for_genome_upload.py \
-        $args_genomes_euks \
-        $args_genomes_proks \
-        $args_stats_euks \
-        $args_stats_proks \
-        $args_coverage_euks \
-        $args_coverage_proks \
-        $args_assembly_file \
-        ${args_rna} \
-        ${args_tax_euks} \
-        ${args_tax_proks} \
-        --metagenome '$params.metagenome' \
-        --biomes '${params.biomes}' \
-        --absolute-path "$params.outdir"
+
+    tsv_for_genome_upload.py \\
+        $args_genomes_euks \\
+        $args_genomes_proks \\
+        $args_stats_euks \\
+        $args_stats_proks \\
+        $args_coverage_euks \\
+        $args_coverage_proks \\
+        $args_assembly_file \\
+        ${args_rna} \\
+        ${args_tax_euks} \\
+        ${args_tax_proks} \\
+        --genome-type ${genome_type} \\
+        --metagenome '$params.metagenome' \\
+        --biomes '${params.biomes}' \\
+        --absolute-path $absolute_outdir
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

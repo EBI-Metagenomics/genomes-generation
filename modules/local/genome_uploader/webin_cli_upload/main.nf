@@ -4,11 +4,11 @@ process WEBIN_CLI_UPLOAD {
     tag "${id}"
     stageInMode 'copy'
     container "quay.io/biocontainers/ena-webin-cli:8.2.0--hdfd78af_0"
-    errorStrategy = { task.exitStatus in ((130..145) + 104 + 1) ? 'retry' : 'finish' }
 
-    input:
     secret 'WEBIN_ACCOUNT'
     secret 'WEBIN_PASSWORD'
+
+    input:
     tuple val(id), path(mag), path(manifest)
 
     output:

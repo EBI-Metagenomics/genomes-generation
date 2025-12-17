@@ -58,10 +58,7 @@
         {
           "required": ["samplesheet"],
           "not": {
-            "anyOf": [
-              {"required": ["ena_assembly_study_accession"]},
-              {"required": ["ena_raw_reads_study_accession"]}
-            ]
+            "required": ["ena_raw_reads_study_accession"]
           }
         }
       ]
@@ -78,6 +75,29 @@
           "format": "directory-path",
           "description": "The output directory where the results will be saved. This value must be an absolute path.",
           "fa_icon": "fas fa-folder-open"
+        },
+        "publish_all": {
+          "type": "boolean",
+          "default": false,
+          "description": "Publish intermediate outputs"
+        }
+      }
+    },
+    "pre_processing_options": {
+      "title": "Pre-processing and decontamination",
+      "type": "object",
+      "description": "pre-processing related parameters",
+      "default": "",
+      "properties": {
+        "skip_preprocessing_input": {
+          "type": "boolean",
+          "description": "Skip input files modification steps",
+          "default": false
+        },
+        "skip_decontamination": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip host decontamination step"
         }
       }
     },
@@ -138,7 +158,7 @@
         },
         "upload_mags": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "Upload MAGs (Metagenome-Assembled Genomes)"
         },
         "upload_bins": {
@@ -151,11 +171,11 @@
         {
           "properties": {
             "metagenome": { "type": "string" },
-            "biomes": { "type": "boolean" },
+            "biomes": { "type": "string" },
             "centre_name": { "type": "string" },
             "upload_tpa": { "type": "boolean" },
-            "upload_mags": { "const": true },
-            "upload_bins": { "const": false }
+            "upload_mags": { "type": "boolean" },
+            "upload_bins": { "type": "boolean" }
           }
         },
         {
@@ -376,6 +396,9 @@
     },
     {
       "$ref": "#/definitions/output_options"
+    },
+    {
+      "$ref": "#/definitions/pre_processing_options"
     },
     {
       "$ref": "#/definitions/quality_control"

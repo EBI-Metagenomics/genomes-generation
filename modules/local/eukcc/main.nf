@@ -1,46 +1,3 @@
-process LINKTABLE {
-
-    label 'process_medium'
-    tag "${meta.id} ${binner}"
-
-    // Multi-Package BioContainer
-    // TODO: this is using old version of biopython and pysam
-    // FIXME: EukCC include biopython and pysam in the EukCC conda package
-    container 'quay.io/biocontainers/mulled-v2-3a59640f3fe1ed11819984087d31d68600200c3f:185a25ca79923df85b58f42deb48f5ac4481e91f-0'
-
-    input:
-    tuple val(meta), path(fasta), path(bam), path(bai), path(bins, stageAs: "bins/*")
-    val(binner)
-
-    output:
-    tuple val(meta), path("*.links.csv"), emit: links_table
-    path "versions.yml"                 , emit: versions
-
-    script:
-    """
-    mkdir -p bins
-    export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
-    if [ \$BINS -eq 0 ]; then
-        echo "Bins directory is empty"
-        touch ${meta.id}.${binner}.links.csv
-    else
-        binlinks.py --ANI 99 \
-        --within 1500 \
-        --out ${meta.id}.${binner}.links.csv \
-        --debug \
-        --bindir bins \
-        --bam ${bam[0]}
-    fi
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version 2>&1 | sed 's/Python //g')
-        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
-        pysam: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
-    END_VERSIONS
-    """
-}
-
 /*
  * EukCC
 --- Examples of outputs:
@@ -62,38 +19,36 @@ if exit code is 204 - metaeuk return empty faa -> no results for eukcc
 process EUKCC {
 
     label 'process_long'
-    tag "${meta.id} ${binner}"
+    tag "${meta.id} ${bins.baseName}"
 
     container 'quay.io/microbiome-informatics/eukcc:2.1.3'
 
     input:
-    val binner
-    tuple val(meta), path(links), path(bins, stageAs: "bins/*")
+    tuple val(meta), path(links), path(bins)
     path eukcc_db
 
     output:
-    tuple val(meta), path("${binner}_${meta.id}_merged_bins/merged_bins"),    emit: eukcc_merged_bins
-    tuple val(meta), path("${meta.id}_${binner}.eukcc.csv"),                  emit: eukcc_csv
-    tuple val(meta), path("${meta.id}_${binner}.merged_bins.csv"),            emit: eukcc_merged_csv
-    path "versions.yml",                                                      emit: versions
-    path "progress.log",                                                      emit: progress_log
+    tuple val(meta), path("${bins.baseName}_results/merged_bins"),        emit: eukcc_merged_bins
+    tuple val(meta), path("${bins.baseName}.eukcc.csv"),                  emit: eukcc_csv
+    tuple val(meta), path("${bins.baseName}.merged_bins.csv"),            emit: eukcc_merged_csv
+    path "versions.yml",                                                  emit: versions
+    path "progress.log",                                                  emit: progress_log
 
     script:
     """
-    mkdir -p bins ${binner}_${meta.id}_merged_bins
-    touch ${meta.id}_${binner}.eukcc.csv ${meta.id}_${binner}.merged_bins.csv
+    mkdir -p ${bins.baseName}_results/merged_bins
+    touch ${bins.baseName}.eukcc.csv ${bins.baseName}.merged_bins.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         EukCC: \$( eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+' )
     END_VERSIONS
 
-    export BINS=\$(ls bins | wc -l)
+    export BINS=\$(ls $bins | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "No bins in input"
-        mkdir -p ${binner}_${meta.id}_merged_bins/merged_bins
         cat <<-END_LOGGING > progress.log
-        ${meta.id}\t${task.process}\t${binner}
+        ${meta.id}\t${task.process}\t${bins.baseName}
             bins: 0, merged: 0
     END_LOGGING
     else
@@ -108,29 +63,27 @@ process EUKCC {
             --min_links 100 \
             --suffix .fa \
             --db ${eukcc_db} \
-            --out ${binner}_${meta.id}_merged_bins \
-            --prefix "${meta.id}_${binner}_merged." \
-            bins
+            --out ${bins.baseName}_results \
+            --prefix "${bins.baseName}_merged." \
+            $bins
         EUKCC_EXITCODE="\$?"
 
         if [ "\$EUKCC_EXITCODE" == "0" ]; then
             echo "EukCC finished"
-            mv ${binner}_${meta.id}_merged_bins/eukcc.csv ${meta.id}_${binner}.eukcc.csv
-            mv ${binner}_${meta.id}_merged_bins/merged_bins.csv ${meta.id}_${binner}.merged_bins.csv
+            mv ${bins.baseName}_results/eukcc.csv ${bins.baseName}.eukcc.csv
+            mv ${bins.baseName}_results/merged_bins.csv ${bins.baseName}.merged_bins.csv
         fi
 
         if [ "\$EUKCC_EXITCODE" == "204" ]; then
             echo "Metaeuk returned zero proteins"
         fi
 
-        mkdir -p ${binner}_${meta.id}_merged_bins/merged_bins
-
         set -e
 
         if [ "\$EUKCC_EXITCODE" == "0" ] || [ "\$EUKCC_EXITCODE" == "204" ]; then
             cat <<-END_LOGGING > progress.log
-            ${meta.id}\t${task.process}\t${binner}
-                bins: \$(ls bins | wc -l), merged: \$(ls ${binner}_${meta.id}_merged_bins/merged_bins | wc -l)
+            ${meta.id}\t${task.process}\t${bins.baseName}
+                bins: \$(ls bins | wc -l), merged: \$(ls ${bins.baseName}_results/merged_bins | wc -l)
     END_LOGGING
             exit 0
         else:

@@ -11,8 +11,8 @@ process MAXBIN2 {
     tuple val(meta), path(contigs), path(reads), path(abund)
 
     output:
-    tuple val(meta), path("maxbin_output"), emit: binned_fastas
-    tuple val(meta), path("*.summary")    , emit: summary,  optional: true
+    tuple val(meta), path("maxbin_output"), emit: fastas_dir
+    tuple val(meta), path("*.summary")    , emit: summary, optional: true
     tuple val(meta), path("*.log.gz")     , emit: log
     tuple val(meta), path("*.marker.gz")  , emit: marker_counts, optional: true
     tuple val(meta), path("*.noclass.gz") , emit: unbinned_fasta, optional: true

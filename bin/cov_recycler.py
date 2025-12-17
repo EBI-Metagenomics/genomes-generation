@@ -85,16 +85,18 @@ if __name__ == "__main__":
     for final_bin in bin_list:
         assembled_pairs = 0
         assembly_length = 0
-        primary_dir = os.path.join(COVERAGE_FOLDER_NAME, final_bin+'_coverage')
+        # Remove the .fa extension from final_bin
+        bin_name = os.path.splitext(final_bin)[0]
+        primary_dir = os.path.join(COVERAGE_FOLDER_NAME, bin_name + '_coverage')
         if not os.path.exists(primary_dir):
             os.mkdir(primary_dir)
-        cov_ave_out = os.path.join(primary_dir, final_bin+'_MAGcoverage.txt')
+        cov_ave_out = os.path.join(primary_dir, bin_name + '_coverage.txt')
         cov_table = os.path.join(primary_dir, 'coverage.tab')
 
         with open(cov_table, "w") as large_out, open(cov_ave_out, "w") as short_out:
             large_out.write(cov_tab_header+'\n')
 
-            for contig in bin_contigs[final_bin.replace('.fa','')]:
+            for contig in bin_contigs[bin_name]:
                 large_out.write(contig+'\t'+'\t'.join(contig_cov[contig])+'\n')
                 length = float(contig_cov[contig][0])
                 read_depth = float(contig_cov[contig][1])
@@ -102,6 +104,6 @@ if __name__ == "__main__":
                 assembly_length += length
 
             cov = assembled_pairs/assembly_length
-            short_out.write(final_bin+'\t'+str(cov)+'\n')
+            short_out.write(final_bin + '\t' + str(cov) + '\n')
 
     print('Done!', file=sys.stdout)
