@@ -1,7 +1,5 @@
 # Genomes Generation Pipeline
 
-<img align="right" width="160" height="120" src="assets/GGP_logo.png">
-
 MGnify genomes generation pipeline (GGP) produces prokaryotic and eukaryotic MAGs from raw reads and corresponding assemblies.
 
 <p align="center">
