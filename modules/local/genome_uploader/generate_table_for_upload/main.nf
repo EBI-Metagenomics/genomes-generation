@@ -15,8 +15,8 @@ process PREPARE_TSV_FOR_UPLOADER {
     path coverage_euks
     path coverage_proks
     path rna
-    path taxonomy_euks
-    path taxonomy_proks
+    path taxonomy_euks, name: "euk_bins_ncbi_taxonomy.tsv"
+    path taxonomy_proks, name: "prok_bins_ncbi_taxonomy.tsv"
     val genome_type
 
     output:
