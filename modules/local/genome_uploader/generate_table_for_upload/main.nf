@@ -7,16 +7,16 @@ process PREPARE_TSV_FOR_UPLOADER {
         'quay.io/biocontainers/pandas:0.24.1' }"
 
     input:
-    path genomes_euks
-    path genomes_proks
+    path genomes_euks          , stageAs: "genomes_euks/*"
+    path genomes_proks         , stageAs: "genomes_proks/*"
     path assembly_software_file
     path stats_euks
     path stats_proks
-    path coverage_euks
-    path coverage_proks
-    path rna
-    path taxonomy_euks, name: "euk_bins_ncbi_taxonomy.tsv"
-    path taxonomy_proks, name: "prok_bins_ncbi_taxonomy.tsv"
+    path coverage_euks         , stageAs: "coverage_euks/*"
+    path coverage_proks        , stageAs: "coverage_proks/*"
+    path rna                   , stageAs: "rna/*"
+    path taxonomy_euks         , name: "euk_bins_ncbi_taxonomy.tsv"
+    path taxonomy_proks        , name: "prok_bins_ncbi_taxonomy.tsv"
     val genome_type
 
     output:
