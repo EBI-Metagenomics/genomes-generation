@@ -148,9 +148,8 @@ def parse_args():
     parser.add_argument('--debug', action='store_true', help="logging.DEBUG output")
     parser.add_argument('-o', '--output', type=str, required=False, help="Output files", default="final_table_for_uploader.tsv")
 
-    parser.add_argument('-mp', '--mags-proks', type=str, required=False, help="Prokaryotic MAGs list of files", nargs='*')
-    parser.add_argument('-me', '--mags-euks', type=str, required=False, help="Eukaryotic MAGs list of files",
-                        nargs='*')
+    parser.add_argument('-mp', '--mags-proks', type=str, required=False, help="Folder containing prokaryotic MAG/bin fasta files")
+    parser.add_argument('-me', '--mags-euks', type=str, required=False, help="Folder containing eukaryotic MAG/bin fasta files")
     parser.add_argument('-a', '--assembly-software-file', type=str, required=True,
                         help="File with assembler for each assembly")
     parser.add_argument('--coassemblies', type=str, default=None,
@@ -166,12 +165,10 @@ def parse_args():
     parser.add_argument('--metagenome', type=str, required=True, choices=metagenomes,
                         help="choose the most appropriate metagenome "
                              "from https://www.ebi.ac.uk/ena/browser/view/408169?show=tax-tree")
-    parser.add_argument('-ce', '--coverage-euks', type=str, required=False,
-                        help="path to eukaryotic coverage files", nargs="*")
-    parser.add_argument('-cp', '--coverage-proks', type=str, required=False, help="path to prokaryotic coverage files",
-                        nargs="*")
-    parser.add_argument('-rna', '--rna-outs', type=str, required=False, help="path to tRNA and rRNA .out files",
-                        nargs="*")
+    parser.add_argument('-ce', '--coverage-euks', type=str, required=False, 
+                        help="Folder containing coverage files for eukaryotic MAGs/bins")
+    parser.add_argument('-cp', '--coverage-proks', type=str, required=False, help="Folder containing coverage files for prokaryotic MAGs/bins")
+    parser.add_argument('-rna', '--rna-outs', type=str, required=False, help="Folder containing tRNA and rRNA .out files")
     parser.add_argument('-te', '--tax-euks', type=str, required=False, help="path to eukaryotic taxonomy")
     parser.add_argument('-tp', '--tax-proks', type=str, required=False, help="path to prokaryotic taxonomy")
     parser.add_argument('--biomes', type=str, required=True, help="comma-separated environment parameters "
@@ -193,6 +190,20 @@ def parse_args():
     if not os.path.exists(args.assembly_software_file):
         print(f'Assembly software file {args.assembly_software_file} does not exist')
         sys.exit(1)
+
+    # Define paths to validate with their descriptions
+    paths_to_validate = [
+        (args.mags_proks, 'Prokaryotic MAGs'),
+        (args.mags_euks, 'Eukaryotic MAGs'),
+        (args.coverage_euks, 'Eukaryotic coverage'),
+        (args.coverage_proks, 'Prokaryotic coverage'),
+        (args.rna_outs, 'RNA'),
+    ]
+    
+    for path, description in paths_to_validate:
+        if path and not os.path.isdir(path):
+            print(f'{description} folder {path} does not exist or is not a directory')
+            sys.exit(1)
 
     if len(args.biomes.split(',')) != 3:
         print(f'Environment variables must be 3: biome, feature, and material. Got {args.biomes}')
@@ -292,13 +303,15 @@ class MAGupload:
     def get_genomes_info(self):
         genomes, stats_software, paths = [[] for _ in range(3)]
         if self.euk_mag:
-            genomes.extend([os.path.basename(i).replace('.gz', '') for i in self.euk_mag])
-            stats_software.extend([STATS_SOFTWARE["eukaryotes"] for _ in range(len(self.euk_mag))])
-            paths.extend([os.path.join(self.absolute_path, EUK_SUBDIR, self.genome_type, os.path.basename(i)) for i in self.euk_mag])
+            euk_fastas = sorted([f for f in os.listdir(self.euk_mag) if os.path.isfile(os.path.join(self.euk_mag, f))])
+            genomes.extend([f.replace('.gz', '') for f in euk_fastas])
+            stats_software.extend([STATS_SOFTWARE["eukaryotes"] for _ in range(len(euk_fastas))])
+            paths.extend([os.path.join(self.absolute_path, EUK_SUBDIR, self.genome_type, f) for f in euk_fastas])
         if self.prok_mag:
-            genomes.extend([os.path.basename(i).replace('.gz', '') for i in self.prok_mag])
-            stats_software.extend([STATS_SOFTWARE["prokaryotes"] for _ in range(len(self.prok_mag))])
-            paths.extend([os.path.join(self.absolute_path, PROK_SUBDIR, self.genome_type, os.path.basename(i)) for i in self.prok_mag])
+            prok_fastas = sorted([f for f in os.listdir(self.prok_mag) if os.path.isfile(os.path.join(self.prok_mag, f))])
+            genomes.extend([f.replace('.gz', '') for f in prok_fastas])
+            stats_software.extend([STATS_SOFTWARE["prokaryotes"] for _ in range(len(prok_fastas))])
+            paths.extend([os.path.join(self.absolute_path, PROK_SUBDIR, self.genome_type, f) for f in prok_fastas])
         return genomes, stats_software, paths
 
     def get_assembly_software(self, genomes):
@@ -329,28 +342,35 @@ class MAGupload:
                 stats[line[0]] = [comp, cont]
         return stats
 
-    def get_coverage(self, files):
-        coverage = {}
-        if not files:
-            return coverage
-        for coverage_file in files:
-            with open(coverage_file, 'r') as file_in:
-                for line in file_in:
-                    line = line.strip().split('\t')
-                    coverage[line[0]] = round(float(line[1]), 2)
-        return coverage
+    def get_coverage(self, folder):
+        """Collect coverage values from all coverage files in the input folder to a dictionary {bin_id: coverage_value}"""
+        bin2coverage = {}
+        if not folder:
+            return bin2coverage
+        for filename in os.listdir(folder):
+            filepath = os.path.join(folder, filename)
+            if os.path.isfile(filepath):
+                with open(filepath, 'r') as file_in:
+                    for line in file_in:
+                        line = line.strip().split('\t')
+                        bin_id = line[0]
+                        coverage_value = round(float(line[1]), 2)
+                        bin2coverage[bin_id] = coverage_value
+        return bin2coverage
 
     def get_rna(self, genomes):
         rrna, trna = {}, {}
         if not self.rna:
             return ['False' for _ in genomes]
-        for filename in self.rna:
-            if filename.endswith('_rRNAs.out'):
-                genome = filename.split('_rRNAs.out')[0] + '.fa'
-                rrna[genome] = self.check_rna(filename, LIMIT_RRNA, 2)
-            if filename.endswith('_tRNA_20aa.out'):
-                genome = filename.split('_tRNA_20aa.out')[0] + '.fa'
-                trna[genome] = self.check_rna(filename, LIMIT_TRNA, 1)
+        for filename in os.listdir(self.rna):
+            filepath = os.path.join(self.rna, filename)
+            if os.path.isfile(filepath):
+                if filename.endswith('_rRNAs.out'):
+                    genome = filename.split('_rRNAs.out')[0] + '.fa'
+                    rrna[genome] = self.check_rna(filepath, LIMIT_RRNA, 2)
+                if filename.endswith('_tRNA_20aa.out'):
+                    genome = filename.split('_tRNA_20aa.out')[0] + '.fa'
+                    trna[genome] = self.check_rna(filepath, LIMIT_TRNA, 1)
         final_decision = []
         for genome in genomes:
             if genome not in trna or genome not in rrna:
