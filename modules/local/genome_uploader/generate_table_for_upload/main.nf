@@ -3,20 +3,20 @@ process PREPARE_TSV_FOR_UPLOADER {
     label 'process_low'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/pandas:0.24.1':
-        'quay.io/biocontainers/pandas:0.24.1' }"
+        'https://depot.galaxyproject.org/singularity/pandas:2.2.1':
+        'quay.io/biocontainers/pandas:2.2.1' }"
 
     input:
-    path genomes_euks
-    path genomes_proks
+    path genomes_euks          , stageAs: "genomes_euks/*"
+    path genomes_proks         , stageAs: "genomes_proks/*"
     path assembly_software_file
     path stats_euks
     path stats_proks
-    path coverage_euks
-    path coverage_proks
-    path rna
-    path taxonomy_euks
-    path taxonomy_proks
+    path coverage_euks         , stageAs: "coverage_euks/*"
+    path coverage_proks        , stageAs: "coverage_proks/*"
+    path rna                   , stageAs: "rna/*"
+    path taxonomy_euks         , name: "euk_bins_ncbi_taxonomy.tsv"
+    path taxonomy_proks        , name: "prok_bins_ncbi_taxonomy.tsv"
     val genome_type
 
     output:
@@ -25,14 +25,14 @@ process PREPARE_TSV_FOR_UPLOADER {
     path "versions.yml"                            , emit: versions
 
     script:
-    def args_genomes_euks = genomes_euks ? "--mags-euks ${genomes_euks}" : "" ;
-    def args_genomes_proks = genomes_proks ? "--mags-proks ${genomes_proks}": "" ;
+    def args_genomes_euks = genomes_euks ? "--mags-euks genomes_euks/" : "" ;
+    def args_genomes_proks = genomes_proks ? "--mags-proks genomes_proks/": "" ;
     def args_stats_euks = stats_euks ? "--stats-euks ${stats_euks}": "" ;
     def args_stats_proks = stats_proks ? "--stats-proks ${stats_proks}": "" ;
-    def args_coverage_euks = coverage_euks ? "--coverage-euks ${coverage_euks}": "" ;
-    def args_coverage_proks = coverage_proks ? "--coverage-proks ${coverage_proks}": "" ;
+    def args_coverage_euks = coverage_euks ? "--coverage-euks coverage_euks/": "" ;
+    def args_coverage_proks = coverage_proks ? "--coverage-proks coverage_proks/": "" ;
     def args_assembly_file = assembly_software_file ? "--assembly-software-file ${assembly_software_file}": "" ;
-    def args_rna = rna ? "--rna-outs ${rna}": "" ;
+    def args_rna = rna ? "--rna-outs rna/": "" ;
     def args_tax_euks = taxonomy_euks ? "--tax-euks ${taxonomy_euks}": "" ;
     def args_tax_proks = taxonomy_proks ? "--tax-proks ${taxonomy_proks}": "" ;
     def absolute_outdir = file(params.outdir).toRealPath()

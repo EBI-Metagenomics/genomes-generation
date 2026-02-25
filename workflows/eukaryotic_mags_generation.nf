@@ -111,7 +111,7 @@ workflow EUK_MAGS_GENERATION {
 
     FILTER_QUALITY( 
         quality.join( eukcc_bins ),
-        "\t"  // delimiter
+        "\t"  // delimiter in quality file is tab
     )
 
     /* -- Dereplicate per-run -- //
@@ -147,7 +147,7 @@ workflow EUK_MAGS_GENERATION {
         .map{_meta, _assemblies, _reads, _metabat, depth -> depth}
         .collectFile(name: "euks_depth.txt.gz")
     COVERAGE_RECYCLER_EUK(
-        DREP_DEREPLICATE_RUNS.out.fastas,
+        bins.map{ all_bins -> [[id: "aggregated"], all_bins]},
         depth_file
     )
     ch_versions = ch_versions.mix( COVERAGE_RECYCLER_EUK.out.versions)
