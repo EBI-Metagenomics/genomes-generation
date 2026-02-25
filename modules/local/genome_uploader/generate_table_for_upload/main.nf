@@ -25,14 +25,14 @@ process PREPARE_TSV_FOR_UPLOADER {
     path "versions.yml"                            , emit: versions
 
     script:
-    def args_genomes_euks = genomes_euks ? "--mags-euks ${genomes_euks}" : "" ;
-    def args_genomes_proks = genomes_proks ? "--mags-proks ${genomes_proks}": "" ;
+    def args_genomes_euks = genomes_euks ? "--mags-euks genomes_euks/" : "" ;
+    def args_genomes_proks = genomes_proks ? "--mags-proks genomes_proks/": "" ;
     def args_stats_euks = stats_euks ? "--stats-euks ${stats_euks}": "" ;
     def args_stats_proks = stats_proks ? "--stats-proks ${stats_proks}": "" ;
-    def args_coverage_euks = coverage_euks ? "--coverage-euks ${coverage_euks}": "" ;
-    def args_coverage_proks = coverage_proks ? "--coverage-proks ${coverage_proks}": "" ;
+    def args_coverage_euks = coverage_euks ? "--coverage-euks coverage_euks/": "" ;
+    def args_coverage_proks = coverage_proks ? "--coverage-proks coverage_proks/": "" ;
     def args_assembly_file = assembly_software_file ? "--assembly-software-file ${assembly_software_file}": "" ;
-    def args_rna = rna ? "--rna-outs ${rna}": "" ;
+    def args_rna = rna ? "--rna-outs rna/": "" ;
     def args_tax_euks = taxonomy_euks ? "--tax-euks ${taxonomy_euks}": "" ;
     def args_tax_proks = taxonomy_proks ? "--tax-proks ${taxonomy_proks}": "" ;
     def absolute_outdir = file(params.outdir).toRealPath()
