@@ -3,8 +3,8 @@ process PREPARE_TSV_FOR_UPLOADER {
     label 'process_low'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/pandas:0.24.1':
-        'quay.io/biocontainers/pandas:0.24.1' }"
+        'https://depot.galaxyproject.org/singularity/pandas:2.2.1':
+        'quay.io/biocontainers/pandas:2.2.1' }"
 
     input:
     path genomes_euks          , stageAs: "genomes_euks/*"
