@@ -73,7 +73,7 @@ Changes in module 'nf-core/maxbin2'
 +                exit \$MAXBIN_EXITCODE
 +            else
 +                echo "Checking for all contigs were moved to .tooshort file"
-+                export INITIAL_NUMBER=\$(grep '>' $contigs | wc -l)
++                export INITIAL_NUMBER=\$(zcat $contigs | grep '>' | wc -l)
 +                export TOO_SHORT_NUMBER=\$(grep '>' ${prefix}.tooshort | wc -l)
 +                if [[ \$INITIAL_NUMBER -eq \$TOO_SHORT_NUMBER ]]; then
 +                    echo "All contigs are short"
