@@ -56,8 +56,8 @@ process MAXBIN2 {
                 exit \$MAXBIN_EXITCODE
             else
                 echo "Checking for all contigs were moved to .tooshort file"
-                export INITIAL_NUMBER=\$(grep '>' $contigs | wc -l)
-                export TOO_SHORT_NUMBER=\$(grep '>' ${prefix}.tooshort | wc -l)
+                export INITIAL_NUMBER=\$(zgrep -c '>' $contigs)
+                export TOO_SHORT_NUMBER=\$(grep -c '>' ${prefix}.tooshort)
                 if [[ \$INITIAL_NUMBER -eq \$TOO_SHORT_NUMBER ]]; then
                     echo "All contigs are short"
                     gzip *log
