@@ -238,14 +238,10 @@ class TestFetchDataRunCoverage:
 
 
 # ---------------------------------------------------------------------------
-# Integration test — real ENA API call (skipped by default)
+# Integration test — real ENA API call
 # ---------------------------------------------------------------------------
 
 class TestIntegration:
-    """
-    Calls the live ENA XML API.  Run with:
-        pytest -m integration tests/unit/test_generate_inputs.py
-    """
 
     # A known assembly from study ERP190907
     ASSEMBLY_ACC = 'ERZ3834802'
