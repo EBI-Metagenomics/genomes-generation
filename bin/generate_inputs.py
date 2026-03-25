@@ -4,6 +4,7 @@
 import argparse
 import glob
 import os
+import re
 import sys
 import requests
 import xmltodict
@@ -162,6 +163,54 @@ def write_samplesheet_line(assembly, assembly_path, run, run_path, samplesheet):
     return 0
 
 
+def get_run_from_assembly_xml(assembly):
+    erz_acc = assembly['analysis_accession']
+    json_analysis = load_xml(erz_acc)
+    if not json_analysis:
+        print(f"Could not load XML for assembly {erz_acc}")
+        return None
+
+    analysis = json_analysis.get("ANALYSIS_SET", {}).get("ANALYSIS", {})
+    run_acc = None
+
+    # 1. Try RUN_REF accession
+    run_ref = analysis.get("RUN_REF")
+    if run_ref:
+        if isinstance(run_ref, list):
+            run_acc = run_ref[0].get("@accession")
+        elif isinstance(run_ref, dict):
+            run_acc = run_ref.get("@accession")
+
+    # 2. Try ANALYSIS_TYPE/SEQUENCE_ASSEMBLY/NAME
+    if not run_acc:
+        try:
+            name = analysis["ANALYSIS_TYPE"]["SEQUENCE_ASSEMBLY"]["NAME"]
+            match = re.search(r'[EDS]RR\d+', name)
+            if match:
+                run_acc = match.group(0)
+        except (KeyError, TypeError):
+            pass
+
+    # 3. Try FILES/FILE @filename
+    if not run_acc:
+        try:
+            files = analysis["FILES"]["FILE"]
+            if isinstance(files, list):
+                files = files[0]
+            filename = files.get("@filename", "")
+            match = re.search(r'[EDS]RR\d+', filename)
+            if match:
+                run_acc = match.group(0)
+        except (KeyError, TypeError):
+            pass
+
+    if not run_acc or not run_acc.startswith(('ERR', 'DRR', 'SRR')):
+        print(f"Invalid run name {run_acc} for assembly {erz_acc}")
+        sys.exit(1)
+
+    return run_acc
+
+
 def fetch_data(raw_reads_study, assembly_study, outdir, input_scientific_name, input_env_biome, keep_metat):
     allowed_library_source = ['METAGENOMIC']
     run_fields = 'library_source,library_strategy,fastq_ftp'
@@ -192,20 +241,34 @@ def fetch_data(raw_reads_study, assembly_study, outdir, input_scientific_name, i
         run_paths[run['run_accession']] = run['fastq_ftp']
     print(f'Received {len(list_runs)} runs after filtering')
     assembly_run, assembly_path = {}, {}
-    assemblies = handler.get_study_assemblies(assembly_study, fields='submitted_ftp,generated_ftp')
+    assemblies = handler.get_study_assemblies(assembly_study, fields='generated_ftp')
     print(f'Received {len(assemblies)} assemblies from {assembly_study}')
 
+    assemblies_without_run = []
     with open(os.path.join(outdir, 'runs_assemblies.tsv'), 'w') as file_out:
         for assembly in assemblies:
-            retrieved_run = assembly['submitted_ftp'].split('/')[-1].split('.')[0].split('_')[0]
-            if not retrieved_run.startswith(('ERR', 'DRR', 'SRR')):
-                print('Invalid run name {} for assembly {}'.format(run_acc, erz_acc))
-                sys.exit(1)
+            erz_acc = assembly['analysis_accession']
+            retrieved_run = get_run_from_assembly_xml(assembly)
+            if retrieved_run is None:
+                assemblies_without_run.append(erz_acc)
+                continue
             if retrieved_run not in list_runs:
                 continue
-            file_out.write('\t'.join([retrieved_run, assembly['analysis_accession']]) + '\n')
-            assembly_run[assembly['analysis_accession']] = retrieved_run
-            assembly_path[assembly['analysis_accession']] = assembly['generated_ftp']
+            file_out.write('\t'.join([retrieved_run, erz_acc]) + '\n')
+            assembly_run[erz_acc] = retrieved_run
+            assembly_path[erz_acc] = assembly['generated_ftp']
+
+    if assemblies_without_run:
+        print(f"WARNING: {len(assemblies_without_run)} assemblies had no run detected: "
+              f"{', '.join(assemblies_without_run)}")
+
+    resolved = len(assembly_run)
+    total = len(assemblies)
+    print(f"Resolved runs for {resolved}/{total} assemblies")
+    if resolved == 0:
+        print("ERROR: no assemblies could be matched to a run. Aborting.")
+        sys.exit(1)
+
     return assembly_run, assembly_path, run_paths
 
 

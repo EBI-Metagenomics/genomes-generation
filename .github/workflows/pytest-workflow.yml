@@ -1,0 +1,32 @@
+name: Run pytest on push and PR
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  pytest:
+    name: Run pytest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
+      - name: Install dependencies
+        run: pip install ".[test]"
+
+      - name: Run tests
+        run: pytest
