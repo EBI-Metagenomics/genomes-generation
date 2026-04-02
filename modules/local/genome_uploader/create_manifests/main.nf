@@ -2,7 +2,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
 
     label 'process_low'
 
-    container "community.wave.seqera.io/library/genome-uploader:2.4.0--c32667b153eea137"
+    container "quay.io/microbiome-informatics/genome_uploader:webin-v2"
 
     secret 'WEBIN_ACCOUNT'
     secret 'WEBIN_PASSWORD'
