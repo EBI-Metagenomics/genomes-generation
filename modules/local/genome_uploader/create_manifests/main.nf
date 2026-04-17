@@ -23,6 +23,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     def tpa      = params.upload_tpa  ? "--tpa"  : ""
     def force    = params.upload_force  ? "--force"  : ""
     def mode     = (!params.test_upload) ? "--live" : ""
+    def private  = secrets.WEBIN_ACCOUNT.contains('mg-') ? "--private" : ""
     def args     = task.ext.args ?: ''
 
     """
@@ -37,6 +38,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${tpa} \
       ${force} \
       ${mode} \
+      ${private} \
       --out results \
       ${args}
 
