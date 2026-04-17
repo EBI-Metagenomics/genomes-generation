@@ -2,7 +2,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
 
     label 'process_low'
 
-    container "community.wave.seqera.io/library/genome-uploader:2.4.0--c32667b153eea137"
+    container "quay.io/microbiome-informatics/genome_uploader:webin-v2"
 
     secret 'WEBIN_ACCOUNT'
     secret 'WEBIN_PASSWORD'
@@ -17,13 +17,13 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     path "results/{MAG,bin}_upload/ENA_backup.json"             , emit: ena_upload_backup_json
     path "results/{MAG,bin}_upload/genome_samples.xml"          , emit: upload_genome_samples
     path "results/{MAG,bin}_upload/registered_{MAGs,bins}*.tsv" , emit: upload_registered_mags
-    path "results/{MAG,bin}_upload/submission.xml"              , emit: upload_submission_xml
     path "versions.yml"                                         , emit: versions
 
     script:
     def tpa      = params.upload_tpa  ? "--tpa"  : ""
     def force    = params.upload_force  ? "--force"  : ""
     def mode     = (!params.test_upload) ? "--live" : ""
+    def private  = secret.WEBIN_ACCOUNT.contains('mg-') ? "--private" : ""
     def args     = task.ext.args ?: ''
 
     """
@@ -38,6 +38,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${tpa} \
       ${force} \
       ${mode} \
+      ${private} \
       --out results \
       ${args}
 
