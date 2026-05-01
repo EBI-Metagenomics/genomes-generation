@@ -23,12 +23,16 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     def tpa      = params.upload_tpa  ? "--tpa"  : ""
     def force    = params.upload_force  ? "--force"  : ""
     def mode     = (!params.test_upload) ? "--live" : ""
-    def private  = secret.WEBIN_ACCOUNT.contains('mg-') ? "--private" : ""
     def args     = task.ext.args ?: ''
 
     """
     export ENA_WEBIN=\$WEBIN_ACCOUNT
     export ENA_WEBIN_PASSWORD=\$WEBIN_PASSWORD
+
+    PRIVATE=""
+    if [[ \$WEBIN_ACCOUNT == *"mg-"* ]]; then
+        PRIVATE="--private"
+    fi
 
     genome_upload \
       -u $params.ena_assembly_study_accession \
@@ -38,7 +42,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${tpa} \
       ${force} \
       ${mode} \
-      ${private} \
+      \$PRIVATE \
       --out results \
       ${args}
 
