@@ -252,7 +252,9 @@ class MAGupload:
 
     def process_mags(self):
         # genomes
-        genomes_list, stats_software, genome_paths = self.get_genomes_info()
+        original_genomes_list, stats_software, genome_paths = self.get_genomes_info()
+        # add genome_type to alias (genome_name)
+        genomes_list = [s + self.genome_type for s in original_genomes_list]
         self.output_table = pd.DataFrame({COLUMNS["genome_name"]: genomes_list})
         self.output_table.set_index(COLUMNS["genome_name"], inplace=True)
         self.output_table[COLUMNS["genome_path"]] = genome_paths

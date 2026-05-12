@@ -59,10 +59,13 @@ workflow UPLOAD_MAGS {
         [prefix, bin]
     }
     manifests_ch = CREATE_MANIFESTS_FOR_UPLOAD.out.manifests.flatten()
-        .map { manifest ->
+        .combine(mags_or_bins_flag)
+        .map { manifest, genome_type ->
         // remove timestamp (added if test_upload = true) and extension from manifest name
         def prefix = manifest.name.replaceAll(/(_\d+)(?:_.*)?\.manifest$/, '$1')
-        [prefix, manifest]
+        // add bin or mag to alias depending on submission type
+        def genome_name = "${prefix}_${genome_type}"
+        [genome_name, manifest]
         }
     combined_ch = mags_ch.join(manifests_ch)
 
