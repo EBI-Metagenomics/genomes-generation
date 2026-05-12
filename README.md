@@ -68,7 +68,7 @@ You need to download the mentioned databases and specify as inputs to parameters
 
 ## Pipeline inputs
 
-If you will use ENA data follow [instructions](input_generation/README.md). Otherwise, download your data and keep format as recommended in inputs description below.
+If you will use ENA data follow [instructions](docs/ena_readme.md). Otherwise, download your data and keep format as recommended in inputs description below.
 
 
 ### samplesheet.csv
