@@ -11,7 +11,7 @@ process FEATURED_ALIGNMENT {
 
     tag "${meta.id} align to ${ref_fasta}"
 
-    container 'quay.io/microbiome-informatics/bwa_metabat_concoct:2.2.1_2.16_1.1.0'
+    container 'quay.io/microbiome-informatics/bwa_metabat_concoct:2.3_2.16_1.1.0'
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)
