@@ -2,7 +2,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
 
     label 'process_low'
 
-    container "community.wave.seqera.io/library/genome-uploader:2.4.0--c32667b153eea137"
+    container "community.wave.seqera.io/library/genome-uploader:3.0.0--a9e4f1ef814d4367"
 
     secret 'WEBIN_ACCOUNT'
     secret 'WEBIN_PASSWORD'
@@ -17,7 +17,6 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     path "results/{MAG,bin}_upload/ENA_backup.json"             , emit: ena_upload_backup_json
     path "results/{MAG,bin}_upload/genome_samples.xml"          , emit: upload_genome_samples
     path "results/{MAG,bin}_upload/registered_{MAGs,bins}*.tsv" , emit: upload_registered_mags
-    path "results/{MAG,bin}_upload/submission.xml"              , emit: upload_submission_xml
     path "versions.yml"                                         , emit: versions
 
     script:
@@ -30,6 +29,11 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     export ENA_WEBIN=\$WEBIN_ACCOUNT
     export ENA_WEBIN_PASSWORD=\$WEBIN_PASSWORD
 
+    PRIVATE=""
+    if [[ \$WEBIN_ACCOUNT == *"mg-"* ]]; then
+        PRIVATE="--private"
+    fi
+
     genome_upload \
       -u $params.ena_assembly_study_accession \
       --genome_info ${table_for_upload} \
@@ -38,6 +42,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
       ${tpa} \
       ${force} \
       ${mode} \
+      \$PRIVATE \
       --out results \
       ${args}
 

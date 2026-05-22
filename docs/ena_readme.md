@@ -79,7 +79,7 @@ For example, `marine sediments,subtropical gyre,sinking marine particle`
 #### genome_uploader
 - `--centre_name`: name of the centre generating and uploading genomes
 - `--upload_tpa`: if uploading TPA (Third PArty) generated genomes
-- `--upload_force`: forces reset of submission xml and ENA backup
+- `--upload_force`: forces reset of ENA backup
 - `--upload_mags`: upload MAGs (Metagenome-Assembled Genomes)
 - `--upload_bins`: upload bins
 - `--test_upload`: use **test** server for upload, not live mode

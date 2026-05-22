@@ -137,8 +137,7 @@ prokaryotes
     │   │   ├── genome_samples.xml
     │   │   ├── manifests
     │   │   │   └── <bin>.manifest
-    │   │   ├── registered_bins.tsv
-    │   │   └── submission.xml
+    │   │   └── registered_bins.tsv
     │   └── webin_cli
     │       └── *_webin-cli.report
     └── mags
@@ -149,8 +148,7 @@ prokaryotes
         │   ├── genome_samples.xml
         │   ├── manifests
         │   │   └── <mag>.manifest
-        │   ├── registered_MAGs.tsv
-        │   └── submission.xml
+        │   └── registered_MAGs.tsv
         └── webin_cli
             └── *_webin-cli.report
 ```
