@@ -37,7 +37,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     genome_upload \
       -u $params.ena_assembly_study_accession \
       --genome_info ${table_for_upload} \
-      --centre_name $params.centre_name \
+      --centre_name "$params.centre_name" \
       --${mags_or_bins_flag} \
       ${tpa} \
       ${force} \
