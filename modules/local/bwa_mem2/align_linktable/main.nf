@@ -10,7 +10,7 @@ process ALIGNMENT_LINKTABLE {
 
     tag "${meta.id} align to ${ref_fasta}"
 
-    container 'quay.io/microbiome-informatics/bwa_eukcc:2.2.1_2.0'
+    container 'quay.io/microbiome-informatics/bwa_eukcc:2.3_2.0'
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(bins), path(depth)

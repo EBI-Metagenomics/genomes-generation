@@ -9,7 +9,7 @@ process ALIGNMENT_DECONTAMINATION {
 
     tag "${meta.id} align to ${ref_fasta}"
 
-    container 'quay.io/microbiome-informatics/bwamem2:2.2.1'
+    container 'quay.io/microbiome-informatics/bwamem2:2.3'
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(ref_fasta_index)

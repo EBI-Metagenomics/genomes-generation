@@ -3,7 +3,7 @@ process INDEX_FASTA {
     label 'process_medium'
     tag "${meta.id} index ${fasta}"
 
-    container 'quay.io/microbiome-informatics/bwamem2:2.2.1'
+    container 'quay.io/microbiome-informatics/bwamem2:2.3'
 
     input:
     tuple val(meta), path(fasta)

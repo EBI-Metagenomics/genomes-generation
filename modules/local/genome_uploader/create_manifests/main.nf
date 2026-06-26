@@ -2,7 +2,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
 
     label 'process_low'
 
-    container "quay.io/microbiome-informatics/genome_uploader:webin-v2"
+    container "community.wave.seqera.io/library/genome-uploader:3.0.0--a9e4f1ef814d4367"
 
     secret 'WEBIN_ACCOUNT'
     secret 'WEBIN_PASSWORD'
@@ -37,7 +37,7 @@ process CREATE_MANIFESTS_FOR_UPLOAD {
     genome_upload \
       -u $params.ena_assembly_study_accession \
       --genome_info ${table_for_upload} \
-      --centre_name $params.centre_name \
+      --centre_name "$params.centre_name" \
       --${mags_or_bins_flag} \
       ${tpa} \
       ${force} \
