@@ -87,8 +87,8 @@ process BINETTE {
     if [ -d "final_bins" ] && [ "\$(ls -A final_bins)" ]; then
         for file in final_bins/*.fa*; do
             if [ -f "\$file" ]; then
-                bin_number = echo \${file} | cut -f 2 -d '_'
-                mv "\$file" "final_bins/${meta.id}_\${bin_number}"
+                bin_number=\$(basename "\$file" | cut -f 2 -d '_')   # from bin_1.fa to _1.fa
+                mv "\$file" "final_bins/${meta.id}_\$bin_number"
             fi
         done
 
