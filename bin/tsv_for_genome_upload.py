@@ -253,9 +253,12 @@ class MAGupload:
     def process_mags(self):
         # genomes
         genomes_list, stats_software, genome_paths = self.get_genomes_info()
-        # change name from "ERR10033185_17039" to "ERR10033185_17039_bin/mag"
+        # change name from "ERR10033185_17039.fa" to "ERR10033185_17039_bin/mag.fa"
         genome_type_singular = self.genome_type.split('s')[0]
-        alias_list = [f"{name.split('.')[0]}_{genome_type_singular}.{name.split('.')[1]}" for name in genomes_list]
+        alias_list = []
+        for name in genomes_list:
+            run_and_bin_id, extension = name.split('.')
+            alias_list.append(f"{run_and_bin_id}_{genome_type_singular}.{extension}")
         self.output_table = pd.DataFrame({COLUMNS["genome_name"]: alias_list})
         self.output_table.set_index(COLUMNS["genome_name"], inplace=True)
         self.output_table[COLUMNS["genome_path"]] = genome_paths
