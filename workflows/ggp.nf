@@ -265,4 +265,8 @@ workflow GGP {
     emit:
     versions          = ch_versions        // channel: [ versions.yml ]
     pipeline_logging  = ch_log.collectFile(name: 'pipeline_logging.txt')
+    euk_mags          = euk_mags           // channel: [ [ mags fasta.gz ] ]  study-level dereplicated
+    euk_bins          = euk_bins           // channel: [ [ bins fasta.gz ] ]  per-run dereplicated (qs50)
+    prok_mags         = prok_mags          // channel: [ [ mags fasta.gz ] ]
+    prok_bins         = prok_bins          // channel: [ [ bins fasta.gz ] ]
 }
