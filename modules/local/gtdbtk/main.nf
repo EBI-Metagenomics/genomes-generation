@@ -27,7 +27,6 @@ process GTDBTK {
         --pplacer_cpus ${task.cpus} \
         --genome_dir genomes_dir \
         --extension fa \
-        --skip_ani_screen \
         --out_dir gtdbtk_results
 
     echo "Compress GTDB-Tk"
