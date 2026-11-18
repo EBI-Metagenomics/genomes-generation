@@ -10,11 +10,12 @@ process CONCATENATE_QUALITY_FILES {
 
     script:
     """
-    echo "bin\tcompleteness\tcontamination\tncbi_lng" > "${meta.id}.${output_name}"
+    echo "bin\tcompleteness\tcontamination\tncbi_lng\tncbi_lng_names" > "${meta.id}.${output_name}"
     for i in ${input_files}; do
         tail -n +2 \${i} > help_file
         if [ -s help_file ]; then
-            grep -v "completeness" \${i} >> "${meta.id}.${output_name}"
+            # drop bins EukCC could not estimate (NA), they have no quality to filter or dereplicate on
+            grep -v "completeness" \${i} | awk -F '\t' '\$2 != "NA"' >> "${meta.id}.${output_name}"
         fi
     done
     rm help_file
