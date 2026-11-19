@@ -19,7 +19,7 @@ PROK_SUBDIR = "prokaryotes"
 
 
 STATS_SOFTWARE = {
-    "eukaryotes": "EukCC_v2.1.0",
+    "eukaryotes": "EukCC_v2.3.1",
     "prokaryotes": "CheckM2_v1.0.1"
 }
 

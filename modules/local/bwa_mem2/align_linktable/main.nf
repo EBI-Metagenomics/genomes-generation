@@ -3,14 +3,14 @@ process ALIGNMENT_LINKTABLE {
     /*
     This module aligns reads to the reference using specified arguments and produces output in the form of FASTQ.GZ, BAM and BAM.BAI files.
     It also runs:
-     - eukcc linktable
+     - eukcc binlinks
     */
 
     label 'process_medium'
 
     tag "${meta.id} align to ${ref_fasta}"
 
-    container 'quay.io/microbiome-informatics/bwa_eukcc:2.3_2.0'
+    container 'quay.io/microbiome-informatics/bwa_eukcc:2.3_2.3.1'
 
     input:
     tuple val(meta), path(reads), path(ref_fasta), path(bins), path(depth)
@@ -47,18 +47,19 @@ process ALIGNMENT_LINKTABLE {
     echo "linktable"
     mkdir -p bins
     cp ${bins}/* bins/
+    rm -f bins/*unbinned*
 
-    export BINS=\$(ls bins | grep -v "unbinned" | wc -l)
+    export BINS=\$(ls bins | wc -l)
     if [ \$BINS -eq 0 ]; then
         echo "Bins directory is empty"
         touch ${meta.id}.links.csv
     else
-        ggp_binlinks.py --ANI 99 \
+        binlinks --ANI 99 \
         --within 1500 \
         --out ${meta.id}.links.csv \
         --debug \
-        --bindir bins \
-        --bam output/${meta.id}_sorted.bam
+        --binfolder bins \
+        --alignment output/${meta.id}_sorted.bam
     fi
 
     rm -rf output
@@ -66,8 +67,8 @@ process ALIGNMENT_LINKTABLE {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bwa-mem2: \$(bwa-mem2 version 2> /dev/null)
-        biopython: \$(python3 -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
-        pysam: \$(python3 -c "import pkg_resources; print(pkg_resources.get_distribution('pysam').version)")
+        samtools: \$(samtools --version | head -1 | cut -d' ' -f2)
+        EukCC: \$(eukcc -v | grep -o '[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+')
     END_VERSIONS
     """
 }
